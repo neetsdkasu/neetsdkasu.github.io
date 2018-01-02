@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Links</title>
+<style>
+dt { font-weight: bold; }
+</style>
+</head>
+<body>
+<h2>Links</h2>
+<hr>
+<dl>
+<dt>Twitter</dt>
+    <dd>https://twitter.com/neetsdkasu</dd>
+<dt>Pawoo</dt>
+    <dd>https://pawoo.net/@neetsdkasu</dd>
+<dt>friends.nico</dt>
+    <dd>https://friends.nico/@neetsdkasu</dd>
+<dt>mstdn.jp</dt>
+    <dd>https://mstdn.jp/@neetsdkasu</dd>
+</dl>
+<hr>
+<div><a href="./about.html">Back to about.html</a></div>
+
+<script>
+var dds = document.getElementsByTagName('dd');
+for (var i = 0; i < dds.length; i++) {
+    var url = dds[i].innerHTML;
+    var a = document.createElement('a');
+    a.href = url;
+    a.target = '_blank';
+    a.appendChild(document.createTextNode(url));
+    dds[i].innerHTML = '';
+    dds[i].appendChild(a);
+}
+</script>
+</body>
+</html>
