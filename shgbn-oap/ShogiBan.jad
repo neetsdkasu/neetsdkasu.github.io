@@ -1,9 +1,9 @@
 MIDlet-1: ShogiBan, ShogiBan.png, ShogiBanMIDlet
 MIDlet-Data-Size: 32768
-MIDlet-Jar-Size: 34159
+MIDlet-Jar-Size: 34245
 MIDlet-Jar-URL: ShogiBan.jar
 MIDlet-Name: ShogiBan
 MIDlet-Vendor: Leonardone
-MIDlet-Version: 1.1
+MIDlet-Version: 1.2
 MicroEdition-Configuration: CLDC-1.1
 MicroEdition-Profile: MIDP-2.0
