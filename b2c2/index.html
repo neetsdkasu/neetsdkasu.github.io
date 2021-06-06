@@ -379,13 +379,13 @@ J028      POP       GR5
           END
 </code></pre>
     <script>
-        let basic = document.querySelector('code[class="basic"]');
+        let basic = document.querySelector('code.basic');
         basic.innerHTML = basic
             .textContent
             .replace(/(DIM|NEXT|FOR|AS|MOD|INTEGER|STEP|TO|ELSE|END|SELECT|CASE)/g, '<span class="cmd">$1</span>')
             .replace(/(\'.*)/g, '<span class="comment">$1</span>')
             ;
-        let casl2 = document.querySelector('code[class="casl2"]');
+        let casl2 = document.querySelector('code.casl2');
         casl2.innerHTML = casl2
             .textContent
             .replace(/ (START|END|RPUSH|RPOP|IN|OUT|DS|DC)/g, ' <span class="cmd">$1</span>')
