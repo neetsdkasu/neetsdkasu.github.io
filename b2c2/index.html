@@ -18,19 +18,52 @@
             .cmd { color: #B03; }
             .comet2 { color: #070; }
             .label { color: #039; }
+            a.exit { font-size: 12px; }
+            header { margin-bottom: 2rem; }
+            pre.code { padding-left: 1rem; }
+            .twitter-share-button {
+                background-color: #1b95e0;
+                border-radius: 3px;
+                border-radius: 4px;
+                box-sizing: border-box;
+                color: #fff;
+                cursor: pointer;
+                display: inline-block;
+                font-size: 13px;
+                font-weight: 500;
+                font: normal normal normal 11px/18px ,Arial,sans-serif;
+                height: 26px;
+                line-height: 26px;
+                outline: 0;
+                padding: 1px 10px 1px 9px;
+                position: relative;
+                text-align: left;
+                text-decoration: none;
+                user-select: none;
+                vertical-align: top;
+                white-space: nowrap;
+                zoom: 1;
+            }
         </style>
     </head>
     <body>
-    <h1>b2c2</h1>
 
-    <p><a href="https://github.com/neetsdkasu/b2c2">GitHub リポジトリへ</a></p>
+        <header>
+            <h1>b2c2</h1>
+            <p><a class="twitter-share-button" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fneetsdkasu.github.io%2Fb2c2%2F%3Fb2c2&text=CASL2%E3%81%A7FizzBuzz&via=neetsdkasu">Tweet</a></p>
+        </header>
 
-    <p>BASIC言語風の独自のプログラミング言語(?)のソースコードファイルからCASL2のソースコードファイルを生成しました</p>
+        <main>
 
-    <p>※CASL2コードはIPAのCASL II シミュレータ（Java,V2.00(2005/05/27))で一応は動作確認済みです</p>
+            <p><a href="https://github.com/neetsdkasu/b2c2" class="exit">GitHub リポジトリへ</a></p>
 
-    <h4>BASICソースコード</h4>
-    <pre><code class="basic">'
+            <p>BASIC言語風の独自のプログラミング言語(?)のソースコードファイルからCASL2のソースコードファイルを生成しました</p>
+
+            <p>※CASL2コードはIPAのCASL II シミュレータ（Java,V2.00(2005/05/27))で一応は動作確認済みです</p>
+
+            <h4>BASICソースコード</h4>
+            <pre class="code"><code class="basic">
+'
 ' FIZZ BUZZ (1)
 '
 DIM I AS INTEGER
@@ -50,9 +83,11 @@ FOR I = 1 TO C STEP 1
             PRINT I
     END SELECT
 NEXT I
+
 </code></pre>
-    <h4>生成したCASL2ソースコード</h4>
-    <pre><code class="casl2">MAIN      START
+            <h4>生成したCASL2ソースコード</h4>
+            <pre class="code"><code class="casl2">
+MAIN      START
           RPUSH
                                    ; Init Variables
           LAD       GR1,I001
@@ -386,8 +421,10 @@ J028      POP       GR5
           POP       GR2
           RET
           END
+
 </code></pre>
-    <script>
+        </main>
+        <script>
         let basic = document.querySelector('code.basic');
         basic.innerHTML = basic
             .textContent
@@ -402,6 +439,6 @@ J028      POP       GR5
             .replace(/((I|B|IA|BA|C|F|J|V|T|TL|TB|LL|LB|SL|SB)\d+|MAIN|EOF|EXIT|MEM|ALLOC)/g, '<span class="label">$1</span>')
             .replace(/(\;.*)/g, '<span class="comment">$1</span>')
             ;
-    </script>
+        </script>
     </body>
 </html>
