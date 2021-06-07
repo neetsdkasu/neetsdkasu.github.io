@@ -13,14 +13,19 @@
         <meta property="og:description" content="BASIC言語風の独自のプログラミング言語(?)のソースコードファイルからCASL2のソースコードファイルを生成しました" />
         <title>b2c2</title>
         <style>
-            pre { background-color: #F4F4F4; }
+            body { padding: 1rem 2rem 2rem 2rem; }
+            footer { margin-top: 12rem; }
             .comment { color: #555; }
             .cmd { color: #B03; }
             .comet2 { color: #070; }
             .label { color: #039; }
             a.exit { font-size: 12px; }
-            header { margin-bottom: 2rem; }
-            pre.code { padding-left: 1rem; }
+            pre.code {
+                background-color: #F4F4F4;
+                padding-left: 1rem;
+            }
+            .facebook-share-button,
+            .hatena-bookmark-button,
             .twitter-share-button {
                 background-color: #1b95e0;
                 border-radius: 3px;
@@ -44,13 +49,15 @@
                 white-space: nowrap;
                 zoom: 1;
             }
+            a.facebook-share-button {
+                background-color: #3b5998;
+            }
         </style>
     </head>
     <body>
 
         <header>
             <h1>b2c2</h1>
-            <p><a class="twitter-share-button" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fneetsdkasu.github.io%2Fb2c2%2F%3Fb2c2&text=CASL2%E3%81%A7FizzBuzz&via=neetsdkasu">Tweet</a></p>
         </header>
 
         <main>
@@ -424,6 +431,14 @@ J028      POP       GR5
 
 </code></pre>
         </main>
+        <footer>
+            <p>
+                シェア:
+                <a href="https://b.hatena.ne.jp/entry/s/neetsdkasu.github.io/b2c2/" class="hatena-bookmark-button">B!ブックマーク</a>
+                <a class="twitter-share-button" href="https://twitter.com/intent/tweet?url=https%3A%2F%2Fneetsdkasu.github.io%2Fb2c2%2F%3Fb2c2&text=CASL2%E3%81%A7FizzBuzz&via=neetsdkasu">Tweet</a>
+                <a class="facebook-share-button" href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fneetsdkasu.github.io%2Fb2c2%2F%3Fb2c2">facebook</a>
+            </p>
+        </footer>
         <script>
         let basic = document.querySelector('code.basic');
         basic.innerHTML = basic
