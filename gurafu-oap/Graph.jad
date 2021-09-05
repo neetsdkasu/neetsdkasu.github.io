@@ -1,9 +1,9 @@
 MIDlet-1: Graph, Graph.png, GraphMIDlet
 MIDlet-Data-Size: 32768
-MIDlet-Jar-Size: 19672
+MIDlet-Jar-Size: 19723
 MIDlet-Jar-URL: Graph.jar
 MIDlet-Name: Graph
 MIDlet-Vendor: Leonardone
-MIDlet-Version: 1.2
+MIDlet-Version: 1.3
 MicroEdition-Configuration: CLDC-1.1
 MicroEdition-Profile: MIDP-2.0
