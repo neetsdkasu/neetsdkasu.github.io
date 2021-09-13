@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>IPAddress</title>
+    <style>
+      h1, h6, div, nav { text-align: center; }
+      main {
+        margin: 0 auto;
+      }
+      header { margin-bottom: 4rem; }
+      section, section, hr { margin-top: 3rem; }
+      h6 { margin-top: 0px; margin-bottom: 0px; }
+      footer {
+        font-size: small;
+        margin-top: 3rem;
+        margin-bottom: 3rem;
+      }
+    </style>
+  </head>
+  <body>
+
+    <header>
+      <h1>IPv4 CIDR</h1>
+    </header>
+
+    <main>
+
+        <hr />
+
+        <section>
+            <h6>input</h6>
+            <div>
+                <input id="ip1" type="number" value="192" min="0" max="255" />
+                .
+                <input id="ip2" type="number" value="168" min="0" max="255" />
+                .
+                <input id="ip3" type="number" value="0" min="0" max="255" />
+                .
+                <input id="ip4" type="number" value="0" min="0" max="255" />
+                /
+                <input id="mask" type="number" value="16" min="0" max="32" />
+            </div>
+        </section>
+
+        <section>
+            <h6>output</h6>
+            <div>
+                <output id="output1">192.168.0.0</output>
+                ～
+                <output id="output2">192.168.255.255</output>
+            </div>
+        </section>
+
+        <hr />
+
+    </main>
+
+    <footer>
+      <nav><a href=".">misc</a></nav>
+    </footer>
+
+    <script>
+
+        function update() {
+            let mask = 0;
+            let ip = 0;
+            document.querySelectorAll('input')
+                .forEach( e => {
+                    if (e.id === 'mask') {
+                        mask = e.value;
+                    } else {
+                        ip = (ip << 8) | (e.value & 0xFF);
+                    }
+                });
+
+            ip = (ip >>> (32 - mask)) << (32 - mask);
+
+            let ip1 = (ip >> 24) & 0xFF;
+            let ip2 = (ip >> 16) & 0xFF;
+            let ip3 = (ip >>  8) & 0xFF;
+            let ip4 = (ip >>  0) & 0xFF;
+
+            document.querySelector('#output1')
+                .textContent = `${ip1}.${ip2}.${ip3}.${ip4}`;
+
+            ip = ip | ((1 << (32 - mask)) - 1);
+
+            ip1 = (ip >> 24) & 0xFF;
+            ip2 = (ip >> 16) & 0xFF;
+            ip3 = (ip >>  8) & 0xFF;
+            ip4 = (ip >>  0) & 0xFF;
+
+            document.querySelector('#output2')
+                .textContent = `${ip1}.${ip2}.${ip3}.${ip4}`;
+        }
+
+        document.querySelectorAll('input')
+            .forEach( e => e.addEventListener('change', update) );
+
+    </script>
+  </body>
+</html>
