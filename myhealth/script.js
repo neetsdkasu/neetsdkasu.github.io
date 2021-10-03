@@ -23,7 +23,7 @@ function leadingZeros(z, n) {
 }
 
 function parseData(csv) {
-    const rows = csv.trim().split(/\n+/).map(line => {
+    const rows = csv.trim().split(/\n+/).slice(1).map(line => {
         const tokens = line.split(",");
         const ymd = tokens[0].split("-").map(t => parseInt(t));
         const date = new Date();
