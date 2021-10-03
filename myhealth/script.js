@@ -3,20 +3,31 @@ const LAST_MONTH = 9;
 
 const WEIGHT_LAST_YEAR = LAST_YEAR;
 const WEIGHT_LAST_MONTH = LAST_MONTH;
+const WEIGHT_OMITS = [[2020,6],[2020,7],[2020,8],[2020,9],[2020,10],[2020,11]];
 
 const WAKEUP_LAST_YEAR = LAST_YEAR;
 const WAKEUP_LAST_MONTH = LAST_MONTH;
+const WAKEUP_OMITS = [];
 const TOBED_LAST_YEAR = LAST_YEAR;
 const TOBED_LAST_MONTH = LAST_MONTH;
+const TOBED_OMITS = [];
 const SLEEP_LAST_YEAR = LAST_YEAR;
 const SLEEP_LAST_MONTH = LAST_MONTH;
+const SLEEP_OMITS = [];
 
 const INTERRUPT_LAST_YEAR = LAST_YEAR;
 const INTERRUPT_LAST_MONTH = LAST_MONTH;
+const INTERRUPT_OMITS = [];
 const EARLYTEMP_LAST_YEAR = LAST_YEAR;
 const EARLYTEMP_LAST_MONTH = LAST_MONTH;
+const EARLYTEMP_OMITS = [];
 const NORMALTEMP_LAST_YEAR = LAST_YEAR;
 const NORMALTEMP_LAST_MONTH = LAST_MONTH;
+const NORMALTEMP_OMITS = [];
+
+const DINNER_LAST_YEAR = 2020;
+const DINNER_LAST_MONTH = 5;
+const DINNER_OMITS = [];
 
 function leadingZeros(z, n) {
     return ("0".repeat(z) + n.toString()).slice(-z);
@@ -139,7 +150,7 @@ function makeButtonAction(name) {
     };
 }
 
-function initSelect(title, name, sy, sm, ey, em) {
+function initSelect(title, name, sy, sm, ey, em, omit) {
     const main = document.querySelector("main");
     const article = main.appendChild(document.createElement("article"));
     article.appendChild(document.createElement("h4")).textContent = title;
@@ -150,12 +161,21 @@ function initSelect(title, name, sy, sm, ey, em) {
     let year = sy;
     let month = sm;
     while (year < ey || month <= em) {
-        const opt = sel.appendChild(document.createElement("option"));
-        opt.value = `${year}${leadingZeros(2, month)}`;
-        opt.textContent = `${year}-${leadingZeros(2, month)}`;
-        opt.selected = true;
+        let ok = true;
+        for (let i = 0; i < omit.length; i++) {
+            if (omit[i][0] === year && omit[i][1] === month) {
+                ok = false;
+                break;
+            }
+        }
+        if (ok) {
+            const opt = sel.appendChild(document.createElement("option"));
+            opt.value = `${year}${leadingZeros(2, month)}`;
+            opt.textContent = `${year}-${leadingZeros(2, month)}`;
+            opt.selected = true;
+        }
         month++;
-        if (month >= 12) {
+        if (month > 12) {
             month = 1;
             year++;
         }
@@ -172,13 +192,14 @@ function initSelect(title, name, sy, sm, ey, em) {
 }
 
 function init() {
-    initSelect("weight", "weight", 2020, 12, WEIGHT_LAST_YEAR, WEIGHT_LAST_MONTH);
-    initSelect("wake up", "wakeup", 2021, 7, WAKEUP_LAST_YEAR, WAKEUP_LAST_MONTH);
-    initSelect("go to bed", "tobed", 2021, 7, TOBED_LAST_YEAR, TOBED_LAST_MONTH);
-    initSelect("sleep", "sleep", 2021, 7, SLEEP_LAST_YEAR, SLEEP_LAST_MONTH);
-    initSelect("interrupt sleep", "interrupt", 2021, 9, INTERRUPT_LAST_YEAR, INTERRUPT_LAST_MONTH);
-    initSelect("early body temperature", "earlytemp", 2021, 9, EARLYTEMP_LAST_YEAR, EARLYTEMP_LAST_MONTH);
-    initSelect("normal body temperature ", "normaltemp", 2021, 9, NORMALTEMP_LAST_YEAR, NORMALTEMP_LAST_MONTH);
+    initSelect("weight (wake up)", "weight", 2019, 9, WEIGHT_LAST_YEAR, WEIGHT_LAST_MONTH, WEIGHT_OMITS);
+    initSelect("wake up", "wakeup", 2021, 7, WAKEUP_LAST_YEAR, WAKEUP_LAST_MONTH, WAKEUP_OMITS);
+    initSelect("go to bed", "tobed", 2021, 7, TOBED_LAST_YEAR, TOBED_LAST_MONTH, TOBED_OMITS);
+    initSelect("sleep", "sleep", 2021, 7, SLEEP_LAST_YEAR, SLEEP_LAST_MONTH, SLEEP_OMITS);
+    initSelect("interrupt sleep", "interrupt", 2021, 9, INTERRUPT_LAST_YEAR, INTERRUPT_LAST_MONTH, INTERRUPT_OMITS);
+    initSelect("early body temperature (wake up)", "earlytemp", 2021, 9, EARLYTEMP_LAST_YEAR, EARLYTEMP_LAST_MONTH, EARLYTEMP_OMITS);
+    initSelect("normal body temperature (wake up)", "normaltemp", 2021, 9, NORMALTEMP_LAST_YEAR, NORMALTEMP_LAST_MONTH, NORMALTEMP_OMITS);
+    initSelect("weight (after dinner)", "dinner", 2019, 9, DINNER_LAST_YEAR, DINNER_LAST_MONTH, DINNER_OMITS);
 }
 
 init();
