@@ -1,5 +1,5 @@
 const LAST_YEAR = 2021;
-const LAST_MONTH = 9;
+const LAST_MONTH = 10;
 
 const WEIGHT_LAST_YEAR = LAST_YEAR;
 const WEIGHT_LAST_MONTH = LAST_MONTH;
