@@ -27,7 +27,11 @@ const NORMALTEMP_OMITS = [];
 
 const DINNER_LAST_YEAR = 2020;
 const DINNER_LAST_MONTH = 5;
-const DINNER_OMITS = [];
+const DINNER_OMITS = function(y, m) {
+    return (2006 < y && y < 2019)
+        || (y === 2006 && (m < 7 || m > 11))
+        || (y === 2019 && m < 9);
+};
 
 function leadingZeros(z, n) {
     return ("0".repeat(z) + n.toString()).slice(-z);
@@ -162,10 +166,16 @@ function initSelect(title, name, sy, sm, ey, em, omit) {
     let month = sm;
     while (year < ey || month <= em) {
         let ok = true;
-        for (let i = 0; i < omit.length; i++) {
-            if (omit[i][0] === year && omit[i][1] === month) {
+        if (typeof omit === "array") {
+            for (let i = 0; i < omit.length; i++) {
+                if (omit[i][0] === year && omit[i][1] === month) {
+                    ok = false;
+                    break;
+                }
+            }
+        } else if (typeof omit === "function") {
+            if (omit(year, month)) {
                 ok = false;
-                break;
             }
         }
         if (ok) {
@@ -199,7 +209,7 @@ function init() {
     initSelect("interrupt sleep", "interrupt", 2021, 9, INTERRUPT_LAST_YEAR, INTERRUPT_LAST_MONTH, INTERRUPT_OMITS);
     initSelect("early body temperature (wake up)", "earlytemp", 2021, 9, EARLYTEMP_LAST_YEAR, EARLYTEMP_LAST_MONTH, EARLYTEMP_OMITS);
     initSelect("normal body temperature (wake up)", "normaltemp", 2021, 9, NORMALTEMP_LAST_YEAR, NORMALTEMP_LAST_MONTH, NORMALTEMP_OMITS);
-    initSelect("weight (after dinner)", "dinner", 2019, 9, DINNER_LAST_YEAR, DINNER_LAST_MONTH, DINNER_OMITS);
+    initSelect("weight (after dinner)", "dinner", 2006, 7, DINNER_LAST_YEAR, DINNER_LAST_MONTH, DINNER_OMITS);
 }
 
 init();
