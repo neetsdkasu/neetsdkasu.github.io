@@ -22,6 +22,22 @@ function drawHistogram(map) {
     const list = Array.from(map.entries())
         .map( kv => ({ x: Math.floor(parseFloat(kv[0]) * pow), f: kv[1] }) );
     list.sort( (a, b) => a.x - b.x );
+    // Statistics
+    let sum = 0;
+    let count = 0;
+    for (let i = 0; i < list.length; i++) {
+        sum += list[i].x * list[i].f;
+        count += list[i].f;
+    }
+    let average = sum / count;
+    document.getElementById("avg").textContent = `${average / pow}`;
+    sum = 0;
+    for (let i = 0; i < list.length; i++) {
+        sum += Math.pow(list[i].x - average, 2) * list[i].f;
+    }
+    let sd = Math.sqrt(sum / Math.max(1, (count - 1)));
+    document.getElementById("sd").textContent = `${sd / pow}`;
+    // Histogram
     let width = list[list.length-1].x - list[0].x;
     for (let i = 1; i < list.length; i++) {
         width = Math.min(width, list[i].x - list[i-1].x);
@@ -43,9 +59,8 @@ function drawHistogram(map) {
         const y = 200 - h;
         ctx.strokeRect(x, y, 5, h);
     }
-    console.log(list);
+    // console.log(list);
     lockElements(false);
-    alert((list[list.length-1].x - list[0].x)/width);
 }
 
 function load(list, map) {
