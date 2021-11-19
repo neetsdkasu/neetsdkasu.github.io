@@ -65,7 +65,7 @@ function iterateDays(sy, sm, ey, em, omit, callback) {
     let month = sm;
     while (year < ey || month <= em) {
         let ok = true;
-        if (typeof omit === "array") {
+        if (Array.isArray(omit)) {
             for (let i = 0; i < omit.length; i++) {
                 if (omit[i][0] === year && omit[i][1] === month) {
                     ok = false;

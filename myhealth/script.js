@@ -105,7 +105,7 @@ function init() {
             data.start_month,
             data.end_year,
             data.end_month,
-            data.omits
+            data.omit,
         );
     }
 }

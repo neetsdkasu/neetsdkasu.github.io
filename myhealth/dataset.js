@@ -9,7 +9,7 @@ const dataSet = [
         start_month: 9,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omits: [[2020,6],[2020,7],[2020,8],[2020,9],[2020,10],[2020,11]],
+        omit: [[2020,6],[2020,7],[2020,8],[2020,9],[2020,10],[2020,11]],
     },
     {
         title: "wake up",
@@ -18,7 +18,7 @@ const dataSet = [
         start_month: 7,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omits: [],
+        omit: [],
     },
     {
         title: "go to bed",
@@ -27,7 +27,7 @@ const dataSet = [
         start_month: 7,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omits: [],
+        omit: [],
     },
     {
         title: "sleep",
@@ -36,7 +36,7 @@ const dataSet = [
         start_month: 7,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omits: [],
+        omit: [],
     },
     {
         title: "interrupt sleep",
@@ -45,7 +45,7 @@ const dataSet = [
         start_month: 9,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omits: [],
+        omit: [],
     },
     {
         title: "early body temperature (wake up)",
@@ -54,7 +54,7 @@ const dataSet = [
         start_month: 9,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omits: [],
+        omit: [],
     },
     {
         title: "normal body temperature (wake up)",
@@ -63,7 +63,7 @@ const dataSet = [
         start_month: 9,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omits: [],
+        omit: [],
     },
     {
         title: "weight (after dinner)",
@@ -72,7 +72,7 @@ const dataSet = [
         start_month: 7,
         end_year: 2020,
         end_month: 5,
-        omits: function(y, m) {
+        omit: function(y, m) {
             return (2006 < y && y < 2019)
                 || (y === 2006 && (m < 7 || m > 11))
                 || (y === 2019 && m < 9);
