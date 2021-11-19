@@ -24,18 +24,19 @@ function drawHistogram(map) {
     list.sort( (a, b) => a.x - b.x );
     // Statistics
     let sum = 0;
-    let count = 0;
+    let size = 0;
     for (let i = 0; i < list.length; i++) {
         sum += list[i].x * list[i].f;
-        count += list[i].f;
+        size += list[i].f;
     }
-    let average = sum / count;
+    let average = sum / size;
+    document.getElementById("size").textContent = `${size}`;
     document.getElementById("avg").textContent = `${average / pow}`;
     sum = 0;
     for (let i = 0; i < list.length; i++) {
         sum += Math.pow(list[i].x - average, 2) * list[i].f;
     }
-    let sd = Math.sqrt(sum / Math.max(1, (count - 1)));
+    let sd = Math.sqrt(sum / Math.max(1, (size - 1)));
     document.getElementById("sd").textContent = `${sd / pow}`;
     // Histogram
     let width = list[list.length-1].x - list[0].x;
