@@ -140,6 +140,10 @@ function resetBounds() {
             }
         }
     );
+    const opts0 = bounds[0].querySelectorAll("option");
+    bounds[0].value = opts0[Math.max(0, opts0.length-4)].value;
+    const opts1 = bounds[1].querySelectorAll("option");
+    bounds[1].value = opts1[opts1.length-1].value;
 }
 
 function init() {
@@ -148,8 +152,8 @@ function init() {
         const opt = target.appendChild(document.createElement("option"));
         opt.value = i;
         opt.textContent = dataSet[i].title;
-        opt.checked = i === 0;
     }
+    target.value = target.querySelector("option").value;
     target.addEventListener("change", resetBounds);
     resetBounds();
     document.getElementById("show").addEventListener("click", showHistogram);
