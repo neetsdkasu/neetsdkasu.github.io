@@ -11,11 +11,41 @@ function lockElements(lock) {
 }
 
 function drawHistogram(map) {
-    const list = Array.from(map.entries()).map( kv => [parseFloat(kv[0]), kv[1]]);
-    list.sort( (a, b) => a[0] - b[0] );
+    let power = 0;
+    for (const key of map.keys()) {
+        const ds = key.split(".");
+        if (ds.length > 1) {
+            power = Math.max(power, ds[1].length);
+        }
+    }
+    const pow = Math.pow(10, power);
+    const list = Array.from(map.entries())
+        .map( kv => ({ x: Math.floor(parseFloat(kv[0]) * pow), f: kv[1] }) );
+    list.sort( (a, b) => a.x - b.x );
+    let width = list[list.length-1].x - list[0].x;
+    for (let i = 1; i < list.length; i++) {
+        width = Math.min(width, list[i].x - list[i-1].x);
+    }
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    ctx.fillStyle = "white";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.strokeStyle = "gray";
+    ctx.beginPath();
+    ctx.moveTo(0, 200);
+    ctx.lineTo(canvas.width, 200);
+    ctx.closePath();
+    ctx.stroke();
+    ctx.strokeStyle = "black";
+    for (let i = 0; i < list.length; i++) {
+        const x = (list[i].x - list[0].x) * 5;
+        const h = 5 * list[i].f;
+        const y = 200 - h;
+        ctx.strokeRect(x, y, 5, h);
+    }
     console.log(list);
     lockElements(false);
-    alert("not implementated!");
+    alert((list[list.length-1].x - list[0].x)/width);
 }
 
 function load(list, map) {
