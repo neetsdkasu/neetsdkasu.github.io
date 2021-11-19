@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8" />
+        <title>my health data (Histogram)</title>
+        <link rel="stylesheet" href="./styles.css" />
+        <script src="./dataset.js" defer></script>
+        <script src="./utils.js" defer></script>
+        <script src="./hist.js" defer></script>
+    </head>
+    <body>
+        <header>
+            <h2>my health data (Histogram)</h2>
+        </header>
+
+        <hr />
+
+        <main>
+            <div>
+                <button id="show">show</button>
+                <label>target:
+                    <select name="target" id="target"></select>
+                </label>
+                <label>start:
+                    <select name="start" id="start"></select>
+                </label>
+                <label>end:
+                    <select name="end" id="end"></select>
+                </label>
+            </div>
+            <canvas id="canvas" width="640" height="240"></canvas>
+        </main>
+
+        <hr />
+
+        <footer>
+            <nav><a href="./index.html">Back to index.html</a></nav>
+        </footer>
+    </body>
+</html>

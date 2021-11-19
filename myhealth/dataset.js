@@ -1,6 +1,10 @@
 const LAST_YEAR = 2021;
 const LAST_MONTH = 10;
 
+function csvFileName(id, year, month) {
+    return `${id}${year}${leadingZeros(2, month)}.csv`;
+}
+
 const dataSet = [
     {
         title: "weight (wake up)",
