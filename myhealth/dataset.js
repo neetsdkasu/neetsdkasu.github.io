@@ -9,6 +9,7 @@ const dataSet = [
     {
         title: "weight (wake up)",
         id: "weight",
+        unit: "kg",
         start_year: 2019,
         start_month: 9,
         end_year: LAST_YEAR,
@@ -18,6 +19,7 @@ const dataSet = [
     {
         title: "wake up",
         id: "wakeup",
+        unit: "hour",
         start_year: 2021,
         start_month: 7,
         end_year: LAST_YEAR,
@@ -27,6 +29,7 @@ const dataSet = [
     {
         title: "go to bed",
         id: "tobed",
+        unit: "hour",
         start_year: 2021,
         start_month: 7,
         end_year: LAST_YEAR,
@@ -36,6 +39,7 @@ const dataSet = [
     {
         title: "sleep",
         id: "sleep",
+        unit: "hours",
         start_year: 2021,
         start_month: 7,
         end_year: LAST_YEAR,
@@ -45,6 +49,7 @@ const dataSet = [
     {
         title: "interrupt sleep",
         id: "interrupt",
+        unit: "",
         start_year: 2021,
         start_month: 9,
         end_year: LAST_YEAR,
@@ -54,6 +59,7 @@ const dataSet = [
     {
         title: "early body temperature (wake up)",
         id: "earlytemp",
+        unit: "degrees Celsius",
         start_year: 2021,
         start_month: 9,
         end_year: LAST_YEAR,
@@ -63,6 +69,7 @@ const dataSet = [
     {
         title: "normal body temperature (wake up)",
         id: "normaltemp",
+        unit: "degrees Celsius",
         start_year: 2021,
         start_month: 9,
         end_year: LAST_YEAR,
@@ -72,6 +79,7 @@ const dataSet = [
     {
         title: "weight (after dinner)",
         id: "dinner",
+        unit: "kg",
         start_year: 2006,
         start_month: 7,
         end_year: 2020,

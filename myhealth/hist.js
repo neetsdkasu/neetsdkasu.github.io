@@ -20,7 +20,7 @@ function drawHistogram(map) {
     }
     const pow = Math.pow(10, power);
     const list = Array.from(map.entries())
-        .map( kv => ({ x: Math.floor(parseFloat(kv[0]) * pow), f: kv[1] }) );
+        .map( kv => ({ x: Math.round(parseFloat(kv[0]) * pow), f: kv[1] }) );
     list.sort( (a, b) => a.x - b.x );
     // Statistics
     let sum = 0;
@@ -43,6 +43,10 @@ function drawHistogram(map) {
     for (let i = 1; i < list.length; i++) {
         width = Math.min(width, list[i].x - list[i-1].x);
     }
+    while (5 * Math.ceil((list[list.length-1].x - list[0].x) / width) > 640) {
+        width++;
+    }
+    document.getElementById("width").textContent = `${width / pow}`;
     const canvas = document.getElementById("canvas");
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "white";
@@ -54,13 +58,42 @@ function drawHistogram(map) {
     ctx.closePath();
     ctx.stroke();
     ctx.strokeStyle = "black";
-    for (let i = 0; i < list.length; i++) {
-        const x = (list[i].x - list[0].x) * 5;
-        const h = 5 * list[i].f;
+    let index = 0;
+    let x = 0;
+    let p = list[0].x - 0.5 + width;
+    let c = 0;
+    while (index < list.length) {
+        let f = 0;
+        while (index < list.length && list[index].x < p) {
+            f += list[index].f;
+            index++;
+        }
+        const h = 5 * f;
         const y = 200 - h;
         ctx.strokeRect(x, y, 5, h);
+        c++;
+        if (c % 5 === 0) {
+            ctx.strokeStyle = "magenta";
+            ctx.beginPath();
+            ctx.moveTo(x + 2.5, 201);
+            ctx.lineTo(x + 2.5, 206);
+            ctx.closePath();
+            ctx.stroke();
+            if (Math.floor(c / 5) % 2 === 0) {
+                ctx.beginPath();
+                ctx.moveTo(x + 2.5, 220);
+                ctx.lineTo(x + 2.5, 224);
+                ctx.closePath();
+                ctx.stroke();
+                ctx.strokeText(`${(p - width / 2) / pow}`, x + 2.5, 233);
+            } else {
+                ctx.strokeText(`${(p - width / 2) / pow}`, x + 2.5, 218);
+            }
+            ctx.strokeStyle = "black";
+        }
+        x += 5;
+        p += width;
     }
-    // console.log(list);
     lockElements(false);
 }
 
@@ -97,6 +130,7 @@ function showHistogram() {
         document.getElementById("start").value,
         document.getElementById("end").value,
     ];
+    bounds.sort();
     const list = [];
     iterateDays(
         data.start_year,
@@ -111,6 +145,7 @@ function showHistogram() {
             }
         }
     );
+    document.getElementById("unit").textContent = data.unit;
     load(list, new Map());
 }
 
