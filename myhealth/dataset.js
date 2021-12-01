@@ -1,5 +1,5 @@
 const LAST_YEAR = 2021;
-const LAST_MONTH = 10;
+const LAST_MONTH = 11;
 
 function csvFileName(id, year, month) {
     return `${id}${year}${leadingZeros(2, month)}.csv`;
@@ -72,6 +72,16 @@ const dataSet = [
         unit: "degrees Celsius",
         start_year: 2021,
         start_month: 9,
+        end_year: LAST_YEAR,
+        end_month: LAST_MONTH,
+        omit: [],
+    },
+    {
+        title: "normal body temperature (evening)",
+        id: "evening",
+        unit: "degrees Celsius",
+        start_year: 2021,
+        start_month: 11,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
         omit: [],
