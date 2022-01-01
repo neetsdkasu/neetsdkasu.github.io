@@ -1,5 +1,5 @@
 const LAST_YEAR = 2021;
-const LAST_MONTH = 11;
+const LAST_MONTH = 12;
 
 function csvFileName(id, year, month) {
     return `${id}${year}${leadingZeros(2, month)}.csv`;
