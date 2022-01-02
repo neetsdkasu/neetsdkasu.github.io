@@ -63,7 +63,7 @@ function loadData(url, callback) {
 function iterateDays(sy, sm, ey, em, omit, callback) {
     let year = sy;
     let month = sm;
-    while (year < ey || month <= em) {
+    while (year < ey || (year === ey && month <= em)) {
         let ok = true;
         if (Array.isArray(omit)) {
             for (let i = 0; i < omit.length; i++) {
