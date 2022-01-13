@@ -11,9 +11,13 @@ class Game {
         this.total_mine = 40;
         this.opened_count = 0;
         this.start_time = 0;
+        this.running = false;
     }
     newGame() {
+        this.animated = false;
+        this.running = false;
         this.opened_count = 0;
+        this.start_time = 0;
         for (let y = 0; y < 16; y++) {
             this.field[y].fill(0);
             this.opened[y].fill(false);
@@ -65,6 +69,8 @@ function newGame() {
     if (!(canvas instanceof HTMLCanvasElement))
         throw "BUG";
     const ctx = canvas.getContext("2d");
+    ctx.textAlign = "center";
+    ctx.font = "12px fantasy";
     ctx.fillStyle = "#ffa";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     ctx.strokeStyle = "#992";
@@ -82,11 +88,63 @@ function newGame() {
     document.getElementById("unknown").textContent = "256";
     document.getElementById("time").textContent = "0";
 }
+const deadStatus = {
+    x: 0,
+    y: 0,
+    state: 0,
+};
+function die() {
+    const canvas = document.getElementById("canvas");
+    if (!(canvas instanceof HTMLCanvasElement))
+        throw "BUG";
+    const ctx = canvas.getContext("2d");
+    if (deadStatus.state === 0) {
+        ctx.fillStyle = "rgba(0,0,0,0.5)";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "white";
+        ctx.beginPath();
+        ctx.arc(deadStatus.x * 22 + 11, deadStatus.y * 22 + 11, 9, 0, 2 * Math.PI);
+        ctx.fill();
+    }
+    else if (deadStatus.state < 20) {
+        ctx.strokeStyle = "white";
+        ctx.beginPath();
+        let r = Math.random() * Math.PI * 0.5;
+        for (let i = 0; i < 6; i++) {
+            ctx.moveTo(deadStatus.x * 22 + 11, deadStatus.y * 22 + 11);
+            const tx = 1000 * Math.cos(r) + deadStatus.x * 22 + 11;
+            const ty = 1000 * Math.sin(r) + deadStatus.y * 22 + 11;
+            ctx.lineTo(tx, ty);
+            r += (Math.random() * 0.5 + 0.3) * Math.PI;
+        }
+        ctx.stroke();
+    }
+    else if (deadStatus.state === 20) {
+        ctx.fillStyle = "white";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    else if (23 < deadStatus.state) {
+        ctx.strokeStyle = "black";
+        ctx.font = "30px fantasy";
+        ctx.strokeText("D E A D", canvas.width / 2, canvas.height / 2);
+        const btn = document.getElementById("newgame");
+        if (!(btn instanceof HTMLButtonElement))
+            throw "BUG";
+        btn.disabled = false;
+        return;
+    }
+    deadStatus.state++;
+    window.setTimeout(die, 80);
+}
 const tiles = [];
 function openTile() {
     while (true) {
         if (tiles.length === 0) {
             game.animated = false;
+            const btn = document.getElementById("newgame");
+            if (!(btn instanceof HTMLButtonElement))
+                throw "BUG";
+            btn.disabled = false;
             return;
         }
         const index = Math.floor(Math.random() * tiles.length);
@@ -129,10 +187,16 @@ function openTile() {
             ctx.beginPath();
             ctx.arc(x * 22 + 11, y * 22 + 11, 9, 0, 2 * Math.PI);
             ctx.fill();
+            deadStatus.x = x;
+            deadStatus.y = y;
+            deadStatus.state = 0;
+            game.running = false;
+            window.setTimeout(die, 300);
+            return;
         }
         else if (game.field[y][x] > 0) {
-            ctx.strokeStyle = "white";
-            ctx.strokeText(`${game.field[y][x]}`, x * 22 + 8, y * 22 + 15);
+            ctx.fillStyle = "white";
+            ctx.fillText(`${game.field[y][x]}`, x * 22 + 11, y * 22 + 15);
         }
         else {
             for (let dy = -1; dy <= 1; dy++) {
@@ -149,15 +213,20 @@ function clickTile(x, y) {
     if (game.animated) {
         return;
     }
+    const btn = document.getElementById("newgame");
+    if (!(btn instanceof HTMLButtonElement))
+        throw "BUG";
+    btn.disabled = true;
     if (game.opened_count === 0) {
         game.start_time = Date.now();
+        game.running = true;
     }
     game.animated = true;
     tiles.push([x, y]);
     openTile();
 }
 function tick() {
-    if (game.opened_count > 0) {
+    if (game.running) {
         const t = Math.floor((Date.now() - game.start_time) / 1000);
         document.getElementById("time").textContent = `${t}`;
     }
@@ -177,4 +246,10 @@ window.addEventListener("load", () => {
     }
     newGame();
     setInterval(tick, 1000);
+    document.getElementById("newgame").addEventListener("click", () => {
+        if (game.animated && game.running) {
+            return;
+        }
+        newGame();
+    });
 });
