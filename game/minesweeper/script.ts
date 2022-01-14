@@ -144,11 +144,128 @@ function die(): void {
     window.setTimeout(die, 80);
 }
 
+const congratsStatus = {
+    state: 0,
+};
+
+function makeIt(): void {
+    const canvas = document.getElementById("canvas")!;
+    if (!(canvas instanceof HTMLCanvasElement)) throw "BUG";
+    const ctx = canvas.getContext("2d")!;
+    const target = { y: -1, x: -1 };
+    if (congratsStatus.state < 2) {
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (game.opened[y][x]) {
+                    continue;
+                }
+                if (target.y < 0) {
+                    target.y = y;
+                    target.x = x;
+                    break;
+                }
+            }
+        }
+        const tx = target.x * 22;
+        const ty = target.y * 22;
+        ctx.fillStyle = "green";
+        ctx.beginPath();
+        if (congratsStatus.state === 0) {
+            ctx.moveTo(tx + 5, ty + 10);
+            ctx.lineTo(tx + 10, ty + 15);
+            ctx.lineTo(tx + 10, ty + 20);
+            ctx.lineTo(tx + 3, ty + 12);
+            congratsStatus.state = 1;
+        } else {
+            ctx.moveTo(tx + 10, ty + 15);
+            ctx.lineTo(tx + 20, ty + 5);
+            ctx.lineTo(tx + 10, ty + 20);
+            game.opened[target.y][target.x] = true;
+            game.opened_count++;
+            congratsStatus.state = 0;
+        }
+        if (game.opened_count === 256) {
+            congratsStatus.state = 2;
+        }
+        ctx.closePath();
+        ctx.fill();
+        setTimeout(makeIt, 40);
+        return;
+    } else if (congratsStatus.state === 2) {
+        for (let y = 0; y < 16; y++) {
+            for (let x = 0; x < 16; x++) {
+                if (0 <= game.field[y][x]) {
+                    continue;
+                }
+                if (game.field[y][x] === -2) {
+                    const tx = x * 22;
+                    const ty = y * 22;
+                    game.field[y][x] = -3;
+                    ctx.fillStyle = "green";
+                    ctx.beginPath();
+                    ctx.moveTo(tx + 5, ty + 10);
+                    ctx.lineTo(tx + 10, ty + 15);
+                    ctx.lineTo(tx + 20, ty + 5);
+                    ctx.lineTo(tx + 10, ty + 20);
+                    ctx.lineTo(tx + 3, ty + 12);
+                    ctx.closePath();
+                    ctx.fill();
+                } else if (game.field[y][x] === -1 && target.y < 0) {
+                    target.y = y;
+                    target.x = x;
+                }
+            }
+        }
+        if (target.y < 0) {
+            congratsStatus.state = 3;
+        } else {
+            const tx = target.x * 22;
+            const ty = target.y * 22;
+            game.field[target.y][target.x] = -2;
+            ctx.fillStyle = "white";
+            ctx.beginPath();
+            ctx.moveTo(tx + 5, ty + 10);
+            ctx.lineTo(tx + 10, ty + 15);
+            ctx.lineTo(tx + 20, ty + 5);
+            ctx.lineTo(tx + 10, ty + 20);
+            ctx.lineTo(tx + 3, ty + 12);
+            ctx.closePath();
+            ctx.fill();
+        }
+        setTimeout(makeIt, 5);
+        return;
+    } else {
+        ctx.font = "50px fantasy";
+        ctx.fillStyle = "white";
+        ctx.fillText("G R E A T !", canvas.width / 2, canvas.height / 2);
+        if (congratsStatus.state % 2 === 0) {
+            ctx.strokeStyle = "white";
+        } else {
+            ctx.strokeStyle = "black";
+        }
+        ctx.strokeText("G R E A T !", canvas.width / 2, canvas.height / 2);
+        congratsStatus.state++;
+        if (congratsStatus.state === 6) {
+            const btn = document.getElementById("newgame")!;
+            if (!(btn instanceof HTMLButtonElement)) throw "BUG";
+            btn.disabled = false;
+        } else {
+            setTimeout(makeIt, 30);
+        }
+    }
+}
+
 const tiles: Array<[number, number]> = [];
 
 function openTile(): void {
     while (true) {
         if (tiles.length === 0) {
+            if (256 - game.opened_count === game.total_mine) {
+                game.running = false;
+                congratsStatus.state = 0;
+                setTimeout(makeIt, 300);
+                return;
+            }
             game.animated = false;
             const btn = document.getElementById("newgame")!;
             if (!(btn instanceof HTMLButtonElement)) throw "BUG";
