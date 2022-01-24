@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>SUM10</title>
+    <style>
+      .cell { display: inline-block; width: 36px; height: 36px; }
+      .selected { background-color: yellow; }
+      .deleted { background-color: black; }
+      .moved { background-color: white; border: 1px solid lightgray; }
+      .eleven { background-color: darkgray; border: unset; }
+      #top, #bottom { height: 5px; background-color: lightgray; }
+      #left, #right { width: 5px; background-color: lightgray; }
+      #top.dropside, #bottom.dropside, #left.dropside, #right.dropside {
+        background-color: darkblue;
+      }
+      div { margin-bottom: 3px; }
+    </style>
+    <script src="./mt19937ar.js" defer></script>
+    <script src="./script.js" defer></script>
+  </head>
+  <body>
+    <div>SEED: <input id="seed" name="seed" type="number" min="0" max="99999" /> <button id="start">START</button></div>
+    <div>SCORE: <output id="score"></output></div>
+    <table>
+      <tr>
+        <td></td>
+        <td id="top"></td>
+        <td></td>
+      </tr>
+      <tr>
+        <td id="left"></td>
+        <td><table id="table"></table></td>
+        <td id="right"></td>
+      </tr>
+      <tr>
+        <td></td>
+        <td id="bottom"></td>
+        <td></td>
+      </tr>
+    </table>
+  </body>
+</html>
