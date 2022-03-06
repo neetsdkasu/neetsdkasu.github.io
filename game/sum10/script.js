@@ -4,6 +4,7 @@ const SIDE_ID = ["top", "right", "bottom", "left"];
 const ROW_COUNT = 8;
 const COL_COUNT = 8;
 const SUM = 10;
+const OBSTACLE = SUM + 1;
 class Game {
     constructor() {
         this.mt = new MersenneTwister();
@@ -105,7 +106,7 @@ class Game {
                     }
                     if (this.field[0][col] < 0) {
                         count++;
-                        this.field[0][col] = SUM + 1;
+                        this.field[0][col] = OBSTACLE;
                         this.button[0][col].classList.add("moved");
                     }
                 }
@@ -123,7 +124,7 @@ class Game {
                     }
                     if (this.field[row][COL_COUNT - 1] < 0) {
                         count++;
-                        this.field[row][COL_COUNT - 1] = SUM + 1;
+                        this.field[row][COL_COUNT - 1] = OBSTACLE;
                         this.button[row][COL_COUNT - 1].classList.add("moved");
                     }
                 }
@@ -141,7 +142,7 @@ class Game {
                     }
                     if (this.field[ROW_COUNT - 1][col] < 0) {
                         count++;
-                        this.field[ROW_COUNT - 1][col] = SUM + 1;
+                        this.field[ROW_COUNT - 1][col] = OBSTACLE;
                         this.button[ROW_COUNT - 1][col].classList.add("moved");
                     }
                 }
@@ -159,7 +160,7 @@ class Game {
                     }
                     if (this.field[row][0] < 0) {
                         count++;
-                        this.field[row][0] = SUM + 1;
+                        this.field[row][0] = OBSTACLE;
                         this.button[row][0].classList.add("moved");
                     }
                 }
@@ -207,6 +208,9 @@ class Game {
                 this.selectedCount = 0;
                 this.animated = false;
                 this.eraseState = 0;
+                if (this.isGameOver()) {
+                    // TODO
+                }
                 return;
         }
         this.erase();
@@ -276,6 +280,10 @@ class Game {
                 return this.dfs(row, col);
             }
         }
+        return false;
+    }
+    isGameOver() {
+        // TODO
         return false;
     }
 }
