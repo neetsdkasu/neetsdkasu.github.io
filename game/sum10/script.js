@@ -333,7 +333,44 @@ class Game {
                 }
             }
         }
-        // TODO
+        for (let row = 0; row < ROW_COUNT; row++) {
+            for (let col = 0; col < COL_COUNT; col++) {
+                const f = this.field[row][col];
+                if (f < 1 || 5 < f) {
+                    continue;
+                }
+                if (!this.dfsIsGameOver(row, col, f)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    dfsIsGameOver(row, col, s) {
+        this.selected[row][col] = true;
+        for (const [dx, dy] of DELTA) {
+            const tRow = row + dy;
+            const tCol = col + dx;
+            if (tRow < 0 || ROW_COUNT <= tRow || tCol < 0 || COL_COUNT <= tCol) {
+                continue;
+            }
+            if (this.selected[tRow][tCol]) {
+                continue;
+            }
+            const ts = s + this.field[tRow][tCol];
+            if (ts === SUM) {
+                this.selected[row][col] = false;
+                return false;
+            }
+            else if (SUM < ts) {
+                continue;
+            }
+            if (!this.dfsIsGameOver(tRow, tCol, ts)) {
+                this.selected[row][col] = false;
+                return false;
+            }
+        }
+        this.selected[row][col] = false;
         return true;
     }
 }
