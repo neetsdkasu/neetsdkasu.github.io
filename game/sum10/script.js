@@ -5,6 +5,13 @@ const ROW_COUNT = 8;
 const COL_COUNT = 8;
 const SUM = 10;
 const OBSTACLE = SUM + 1;
+const DELETED = -1;
+function info(text) {
+    const msg = document.getElementById("msg");
+    if (msg !== null) {
+        msg.textContent = text;
+    }
+}
 class Game {
     constructor() {
         this.mt = new MersenneTwister();
@@ -75,7 +82,7 @@ class Game {
             for (let col = 0; col < COL_COUNT; col++) {
                 if (this.selected[row][col]) {
                     this.selected[row][col] = false;
-                    this.field[row][col] = -1;
+                    this.field[row][col] = DELETED;
                     const btn = this.button[row][col];
                     btn.classList.replace("selected", "deleted");
                     btn.textContent = "";
@@ -96,15 +103,15 @@ class Game {
             case 0:
                 for (let col = 0; col < COL_COUNT; col++) {
                     for (let row = ROW_COUNT - 1; 0 < row; row--) {
-                        if (0 <= this.field[row][col]) {
+                        if (this.field[row][col] !== DELETED) {
                             continue;
                         }
                         count++;
                         this.field[row][col] = this.field[row - 1][col];
-                        this.field[row - 1][col] = -1;
+                        this.field[row - 1][col] = DELETED;
                         this.button[row][col].classList.add("moved");
                     }
-                    if (this.field[0][col] < 0) {
+                    if (this.field[0][col] === DELETED) {
                         count++;
                         this.field[0][col] = OBSTACLE;
                         this.button[0][col].classList.add("moved");
@@ -114,15 +121,15 @@ class Game {
             case 1:
                 for (let row = 0; row < ROW_COUNT; row++) {
                     for (let col = 0; col < COL_COUNT - 1; col++) {
-                        if (0 <= this.field[row][col]) {
+                        if (this.field[row][col] !== DELETED) {
                             continue;
                         }
                         count++;
                         this.field[row][col] = this.field[row][col + 1];
-                        this.field[row][col + 1] = -1;
+                        this.field[row][col + 1] = DELETED;
                         this.button[row][col].classList.add("moved");
                     }
-                    if (this.field[row][COL_COUNT - 1] < 0) {
+                    if (this.field[row][COL_COUNT - 1] === DELETED) {
                         count++;
                         this.field[row][COL_COUNT - 1] = OBSTACLE;
                         this.button[row][COL_COUNT - 1].classList.add("moved");
@@ -132,15 +139,15 @@ class Game {
             case 2:
                 for (let col = 0; col < COL_COUNT; col++) {
                     for (let row = 0; row < ROW_COUNT - 1; row++) {
-                        if (0 <= this.field[row][col]) {
+                        if (this.field[row][col] !== DELETED) {
                             continue;
                         }
                         count++;
                         this.field[row][col] = this.field[row + 1][col];
-                        this.field[row + 1][col] = -1;
+                        this.field[row + 1][col] = DELETED;
                         this.button[row][col].classList.add("moved");
                     }
-                    if (this.field[ROW_COUNT - 1][col] < 0) {
+                    if (this.field[ROW_COUNT - 1][col] === DELETED) {
                         count++;
                         this.field[ROW_COUNT - 1][col] = OBSTACLE;
                         this.button[ROW_COUNT - 1][col].classList.add("moved");
@@ -150,15 +157,15 @@ class Game {
             case 3:
                 for (let row = 0; row < ROW_COUNT; row++) {
                     for (let col = COL_COUNT - 1; 0 < col; col--) {
-                        if (0 <= this.field[row][col]) {
+                        if (this.field[row][col] !== DELETED) {
                             continue;
                         }
                         count++;
                         this.field[row][col] = this.field[row][col - 1];
-                        this.field[row][col - 1] = -1;
+                        this.field[row][col - 1] = DELETED;
                         this.button[row][col].classList.add("moved");
                     }
-                    if (this.field[row][0] < 0) {
+                    if (this.field[row][0] === DELETED) {
                         count++;
                         this.field[row][0] = OBSTACLE;
                         this.button[row][0].classList.add("moved");
@@ -171,7 +178,7 @@ class Game {
                 const f = this.field[row][col];
                 const btn = this.button[row][col];
                 btn.textContent = `${f}`;
-                if (f < 0) {
+                if (f === DELETED) {
                     btn.classList.add("deleted");
                     btn.classList.remove("moved");
                 }
@@ -210,6 +217,7 @@ class Game {
                 this.eraseState = 0;
                 if (this.isGameOver()) {
                     // TODO
+                    info("GAME OVER");
                 }
                 return;
         }
@@ -283,8 +291,50 @@ class Game {
         return false;
     }
     isGameOver() {
+        for (let row = 0; row < ROW_COUNT; row++) {
+            let s = 0;
+            let c0 = 0;
+            let c1 = 0;
+            for (;;) {
+                while (s < SUM && c1 < COL_COUNT) {
+                    s += this.field[row][c1];
+                    c1++;
+                }
+                if (s < SUM) {
+                    break;
+                }
+                else if (s === SUM) {
+                    return false;
+                }
+                while (SUM <= s && c0 < c1) {
+                    s -= this.field[row][c0];
+                    c0++;
+                }
+            }
+        }
+        for (let col = 0; col < COL_COUNT; col++) {
+            let s = 0;
+            let r0 = 0;
+            let r1 = 0;
+            for (;;) {
+                while (s < SUM && r1 < ROW_COUNT) {
+                    s += this.field[r1][col];
+                    r1++;
+                }
+                if (s < SUM) {
+                    break;
+                }
+                else if (s === SUM) {
+                    return false;
+                }
+                while (SUM <= s && r0 < r1) {
+                    s -= this.field[r0][col];
+                    r0++;
+                }
+            }
+        }
         // TODO
-        return false;
+        return true;
     }
 }
 function start() {
@@ -295,6 +345,7 @@ function start() {
     if (seedInput instanceof HTMLInputElement) {
         const seed = parseInt(seedInput.value);
         game.newGame(seed);
+        info("");
     }
 }
 const game = new Game();
