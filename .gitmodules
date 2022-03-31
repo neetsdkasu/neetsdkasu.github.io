@@ -1,0 +1,3 @@
+[submodule "game/sum10/mersenne_twister_ts"]
+	path = game/sum10/mersenne_twister_ts
+	url = https://bitbucket.org/neetsdkasu/mersenne_twister_ts.git
