@@ -12,6 +12,46 @@ function info(text) {
         msg.textContent = text;
     }
 }
+class HiScore {
+    constructor() {
+        this.temp = new Map();
+    }
+    getKey(seed) {
+        return `/game/sum10#seed=${seed};hiscore`;
+    }
+    getScoreFromLS(seed) {
+        let hiscore = 0;
+        try {
+            const key = this.getKey(seed);
+            const value = window.localStorage.getItem(key);
+            if (value !== null) {
+                if (value.match(/^\d+$/)) {
+                    hiscore = parseInt(value);
+                }
+            }
+        }
+        catch { }
+        return hiscore;
+    }
+    getScore(seed) {
+        const hiscoreLS = this.getScoreFromLS(seed);
+        const hiscoreTemp = this.temp.get(seed) ?? 0;
+        return Math.max(hiscoreLS, hiscoreTemp);
+    }
+    setScore(seed, score) {
+        const oldHiscore = this.getScore(seed);
+        if (score <= oldHiscore) {
+            return false;
+        }
+        try {
+            const key = this.getKey(seed);
+            window.localStorage.setItem(key, `${score}`);
+        }
+        catch { }
+        this.temp.set(seed, score);
+        return true;
+    }
+}
 class Game {
     constructor() {
         this.mt = new MersenneTwister();
@@ -21,7 +61,10 @@ class Game {
         this.sum = 0;
         this.cycle = 0;
         this.score = 0;
+        this.hiscore = new HiScore();
+        this.seed = 0;
         this.scoreSpan = document.createElement("span");
+        this.hiscoreSpan = document.createElement("span");
         this.button = new Array(ROW_COUNT);
         this.field = new Array(ROW_COUNT);
         this.selected = new Array(ROW_COUNT);
@@ -41,6 +84,7 @@ class Game {
         }
     }
     newGame(seed) {
+        this.seed = seed;
         this.mt.init_genrand(seed);
         this.animated = false;
         this.eraseState = 0;
@@ -48,7 +92,9 @@ class Game {
         this.sum = 0;
         this.cycle = 0;
         this.score = 0;
+        const hiscore = this.hiscore.getScore(seed);
         this.scoreSpan.textContent = "0";
+        this.hiscoreSpan.textContent = `${hiscore}`;
         for (const id of SIDE_ID) {
             document.getElementById(id).classList.remove("dropside");
         }
@@ -91,6 +137,9 @@ class Game {
         }
         this.score += SUM;
         this.scoreSpan.textContent = `${this.score}`;
+        if (this.hiscore.setScore(this.seed, this.score)) {
+            this.hiscoreSpan.textContent = `${this.score}`;
+        }
     }
     drop() {
         for (let row = 0; row < ROW_COUNT; row++) {
@@ -396,6 +445,7 @@ function init() {
         }
     }
     document.getElementById("score").appendChild(game.scoreSpan);
+    document.getElementById("hiscore").appendChild(game.hiscoreSpan);
     const seed = Math.floor(Math.random() * 100000);
     const seedInput = document.getElementById("seed");
     if (seedInput instanceof HTMLInputElement) {
