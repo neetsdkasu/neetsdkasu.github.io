@@ -14,6 +14,51 @@ function info(text: string): void {
     }
 }
 
+class HiScore {
+    temp: Map<number, number>;
+
+    constructor() {
+        this.temp = new Map();
+    }
+
+    getKey(seed: number): string {
+        return `/game/sum10#seed=${seed};hiscore`;
+    }
+
+    getScoreFromLS(seed: number): number {
+        let hiscore = 0;
+        try {
+            const key = this.getKey(seed);
+            const value = window.localStorage.getItem(key);
+            if (value !== null) {
+                if (value.match(/^\d+$/)) {
+                    hiscore = parseInt(value);
+                }
+            }
+        } catch {}
+        return hiscore;
+    }
+
+    getScore(seed: number): number {
+        const hiscoreLS = this.getScoreFromLS(seed);
+        const hiscoreTemp = this.temp.get(seed) ?? 0;
+        return Math.max(hiscoreLS, hiscoreTemp);
+    }
+
+    setScore(seed: number, score: number): boolean {
+        const oldHiscore = this.getScore(seed);
+        if (score <= oldHiscore) {
+            return false;
+        }
+        try {
+            const key = this.getKey(seed);
+            window.localStorage.setItem(key, `${score}`);
+        } catch {}
+        this.temp.set(seed, score);
+        return true;
+    }
+}
+
 class Game {
     mt: MersenneTwister;
     button: Array<Array<HTMLButtonElement>>;
@@ -22,10 +67,13 @@ class Game {
     selectedCount: number;
     sum: number;
     score: number;
+    hiscore: HiScore;
     scoreSpan: HTMLSpanElement;
+    hiscoreSpan: HTMLSpanElement;
     animated: boolean;
     eraseState: number;
     cycle: number;
+    seed: number;
 
     constructor() {
         this.mt = new MersenneTwister();
@@ -35,7 +83,10 @@ class Game {
         this.sum = 0;
         this.cycle = 0;
         this.score = 0;
+        this.hiscore = new HiScore();
+        this.seed = 0;
         this.scoreSpan = document.createElement("span");
+        this.hiscoreSpan = document.createElement("span");
         this.button = new Array(ROW_COUNT);
         this.field = new Array(ROW_COUNT);
         this.selected = new Array(ROW_COUNT);
@@ -56,6 +107,7 @@ class Game {
     }
 
     newGame(seed: number): void {
+        this.seed = seed;
         this.mt.init_genrand(seed);
         this.animated = false;
         this.eraseState = 0;
@@ -63,7 +115,10 @@ class Game {
         this.sum = 0;
         this.cycle = 0;
         this.score = 0;
+        const hiscore = this.hiscore.getScore(seed);
         this.scoreSpan.textContent = "0";
+        this.hiscoreSpan.textContent = `${hiscore}`;
+        this.hiscoreSpan.classList.remove("highest");
         for (const id of SIDE_ID) {
             document.getElementById(id)!.classList.remove("dropside");
         }
@@ -107,6 +162,10 @@ class Game {
         }
         this.score += SUM;
         this.scoreSpan.textContent = `${this.score}`;
+        if (this.hiscore.setScore(this.seed, this.score)) {
+            this.hiscoreSpan.textContent = `${this.score}`;
+            this.hiscoreSpan.classList.add("highest")
+        }
     }
 
     drop(): boolean {
@@ -364,7 +423,7 @@ class Game {
         }
         return true;
     }
-    
+
     dfsIsGameOver(row: number, col: number, s: number): boolean {
         this.selected[row][col] = true;
         for (const [dx, dy] of DELTA) {
@@ -399,6 +458,9 @@ function start(): void {
     }
     const seedInput = document.getElementById("seed")!;
     if (seedInput instanceof HTMLInputElement) {
+        if (!seedInput.reportValidity()) {
+            return;
+        }
         const seed = parseInt(seedInput.value);
         game.newGame(seed);
         info("");
@@ -406,6 +468,21 @@ function start(): void {
 }
 
 const game = new Game();
+
+function getSeed(): number {
+    let seed = Math.floor(Math.random() * 100000);
+    const params = new URL(window.location.href).searchParams;
+    if (params.has("seed")) {
+        const value = params.get("seed") ?? "";
+        if (value.match(/^\d+$/)) {
+            const temp = parseInt(value);
+            if (0 <= temp && temp <= 99999) {
+                seed = temp;
+            }
+        }
+    }
+    return seed;
+}
 
 function init(): void {
     const table = document.getElementById("table")!;
@@ -417,7 +494,8 @@ function init(): void {
         }
     }
     document.getElementById("score")!.appendChild(game.scoreSpan);
-    const seed = Math.floor(Math.random() * 100000);
+    document.getElementById("hiscore")!.appendChild(game.hiscoreSpan);
+    const seed = getSeed();
     const seedInput = document.getElementById("seed")!;
     if (seedInput instanceof HTMLInputElement) {
         seedInput.value = `${seed}`;

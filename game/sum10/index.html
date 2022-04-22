@@ -9,6 +9,9 @@
       .deleted { background-color: black; }
       .moved { background-color: white; border: 1px solid lightgray; }
       .eleven { background-color: darkgray; border: unset; }
+      .hiscore { font-size: small; }
+      .highest { font-weight: bold; font-size: medium; }
+      #seed:invalid { background-color: #FFE7E7; }
       #top, #bottom { height: 5px; background-color: lightgray; }
       #left, #right { width: 5px; background-color: lightgray; }
       #top.dropside, #bottom.dropside, #left.dropside, #right.dropside {
@@ -21,7 +24,7 @@
   </head>
   <body>
     <div>SEED: <input id="seed" name="seed" type="number" min="0" max="99999" /> <button id="start">START</button></div>
-    <div>SCORE: <output id="score"></output></div>
+    <div>SCORE: <output id="score"></output> ( <span class="hiscore">HISCORE: <output id="hiscore"></output></span> )</div>
     <table>
       <tr>
         <td></td>
