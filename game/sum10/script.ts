@@ -458,6 +458,9 @@ function start(): void {
     }
     const seedInput = document.getElementById("seed")!;
     if (seedInput instanceof HTMLInputElement) {
+        if (!seedInput.reportValidity()) {
+            return;
+        }
         const seed = parseInt(seedInput.value);
         game.newGame(seed);
         info("");
@@ -465,6 +468,21 @@ function start(): void {
 }
 
 const game = new Game();
+
+function getSeed(): number {
+    let seed = Math.floor(Math.random() * 100000);
+    const params = new URL(window.location.href).searchParams;
+    if (params.has("seed")) {
+        const value = params.get("seed") ?? "";
+        if (value.match(/^\d+$/)) {
+            const temp = parseInt(value);
+            if (0 <= temp && temp <= 99999) {
+                seed = temp;
+            }
+        }
+    }
+    return seed;
+}
 
 function init(): void {
     const table = document.getElementById("table")!;
@@ -477,7 +495,7 @@ function init(): void {
     }
     document.getElementById("score")!.appendChild(game.scoreSpan);
     document.getElementById("hiscore")!.appendChild(game.hiscoreSpan);
-    const seed = Math.floor(Math.random() * 100000);
+    const seed = getSeed();
     const seedInput = document.getElementById("seed")!;
     if (seedInput instanceof HTMLInputElement) {
         seedInput.value = `${seed}`;

@@ -431,12 +431,29 @@ function start() {
     }
     const seedInput = document.getElementById("seed");
     if (seedInput instanceof HTMLInputElement) {
+        if (!seedInput.reportValidity()) {
+            return;
+        }
         const seed = parseInt(seedInput.value);
         game.newGame(seed);
         info("");
     }
 }
 const game = new Game();
+function getSeed() {
+    let seed = Math.floor(Math.random() * 100000);
+    const params = new URL(window.location.href).searchParams;
+    if (params.has("seed")) {
+        const value = params.get("seed") ?? "";
+        if (value.match(/^\d+$/)) {
+            const temp = parseInt(value);
+            if (0 <= temp && temp <= 99999) {
+                seed = temp;
+            }
+        }
+    }
+    return seed;
+}
 function init() {
     const table = document.getElementById("table");
     for (let row = 0; row < ROW_COUNT; row++) {
@@ -448,7 +465,7 @@ function init() {
     }
     document.getElementById("score").appendChild(game.scoreSpan);
     document.getElementById("hiscore").appendChild(game.hiscoreSpan);
-    const seed = Math.floor(Math.random() * 100000);
+    const seed = getSeed();
     const seedInput = document.getElementById("seed");
     if (seedInput instanceof HTMLInputElement) {
         seedInput.value = `${seed}`;
