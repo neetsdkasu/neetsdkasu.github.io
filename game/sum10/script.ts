@@ -118,6 +118,7 @@ class Game {
         const hiscore = this.hiscore.getScore(seed);
         this.scoreSpan.textContent = "0";
         this.hiscoreSpan.textContent = `${hiscore}`;
+        this.hiscoreSpan.classList.remove("highest");
         for (const id of SIDE_ID) {
             document.getElementById(id)!.classList.remove("dropside");
         }
@@ -163,6 +164,7 @@ class Game {
         this.scoreSpan.textContent = `${this.score}`;
         if (this.hiscore.setScore(this.seed, this.score)) {
             this.hiscoreSpan.textContent = `${this.score}`;
+            this.hiscoreSpan.classList.add("highest")
         }
     }
 
