@@ -13,6 +13,7 @@
     <meta property="og:description" content="puzzle: connect cells and make sum 10" />
     <title>SUM10</title>
     <style>
+      body { padding-bottom: 3rem; }
       .cell { display: inline-block; width: 36px; height: 36px; }
       .selected { background-color: yellow; }
       .deleted { background-color: black; }
@@ -27,6 +28,8 @@
         background-color: darkblue;
       }
       div { margin-bottom: 3px; }
+      section { margin-left: 1rem; }
+      .figure { border: solid 2px lightgray; width: 120px;  }
     </style>
     <script src="./mt19937ar.js" defer></script>
     <script src="./script.js" defer></script>
@@ -52,5 +55,39 @@
       </tr>
     </table>
     <div><span id="msg"></span></div>
+    <hr />
+    <details>
+      <summary>SUM10パズルの説明</summary>
+      <section>
+        <h4>ルール</h4>
+        <p>
+          クリックしセルを選択していき <br />
+          セル同士が隣り合いかつ合計が10になると <br />
+          それらのセルが消えてスコアが10加算され <br />
+          青いバー側からセルが詰められ <br />
+          青いバーの位置が変わります。 <br />
+          これを繰り返していき <br />
+          合計を10にする選択ができなくなったとき <br />
+          ゲーム終了となります。 <br />
+          ※青いバーの位置の変化は上⇒右⇒下⇒左⇒…の順番で繰り返します。
+        </p>
+        <a href="image.png" ><img class="figure" alt="figure1: select cells with connecting and making sum 10." src="image.png" /></a>
+        <a href="image2.png" ><img class="figure" alt="figure2: these cells go away and make holes." src="image2.png" /></a>
+        <a href="image3.png" ><img class="figure" alt="figure3: some cells with obstacle cells move from blue bar side to fill these holes." src="image3.png" /></a>
+        <a href="image4.png" ><img class="figure" alt="figure4: these cells moving." src="image4.png" /></a>
+        <a href="image5.png" ><img class="figure" alt="figure5: next turn." src="image5.png" /></a>
+        <a href="image6.png" ><img class="figure" alt="figure6: geme has over." src="image6.png" /></a>
+      </section>
+      <section>
+        <h4>小技</h4>
+        <p>
+          選択の順番を工夫すると数字0のセルを余分に消去することが可能となります。
+        </p>
+        <a href="image7.png" ><img class="figure" alt="figure7: select cells with connecting and making sum 9." src="image7.png" /></a>
+        <a href="image8.png" ><img class="figure" alt="figure8: select cells with connecting and making sum 10." src="image8.png" /></a>
+        <a href="image9.png" ><img class="figure" alt="figure9: these cells go away and make holes." src="image9.png" /></a>
+        <a href="image10.png" ><img class="figure" alt="figure10: next turn." src="image10.png" /></a>
+      </section>
+    </details>
   </body>
 </html>
