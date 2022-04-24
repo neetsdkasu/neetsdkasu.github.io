@@ -29,65 +29,73 @@
       }
       div { margin-bottom: 3px; }
       section { margin-left: 1rem; }
-      .figure { border: solid 2px lightgray; width: 120px;  }
+      .figure { border: solid 2px lightgray; width: 120px; }
     </style>
     <script src="./mt19937ar.js" defer></script>
     <script src="./script.js" defer></script>
   </head>
   <body>
-    <div>SEED: <input id="seed" name="seed" type="number" min="0" max="99999" /> <button id="start">START</button></div>
-    <div>SCORE: <output id="score"></output> ( <span class="hiscore">HISCORE: <output id="hiscore"></output></span> )</div>
-    <table>
-      <tr>
-        <td></td>
-        <td id="top"></td>
-        <td></td>
-      </tr>
-      <tr>
-        <td id="left"></td>
-        <td><table id="table"></table></td>
-        <td id="right"></td>
-      </tr>
-      <tr>
-        <td></td>
-        <td id="bottom"></td>
-        <td></td>
-      </tr>
-    </table>
-    <div><span id="msg"></span></div>
+    <header>
+      <h3>SUM10</h3>
+    </header>
     <hr />
-    <details>
-      <summary>SUM10パズルの説明</summary>
-      <section>
-        <h4>ルール</h4>
-        <p>
-          クリックしセルを選択していき <br />
-          セル同士が隣り合いかつ合計が10になると <br />
-          それらのセルが消えてスコアが10加算され <br />
-          青いバー側からセルが詰められ <br />
-          青いバーの位置が変わります。 <br />
-          これを繰り返していき <br />
-          合計を10にする選択ができなくなったとき <br />
-          ゲーム終了となります。 <br />
-          ※青いバーの位置の変化は上⇒右⇒下⇒左⇒…の順番で繰り返します。
-        </p>
-        <a href="image.png" ><img class="figure" alt="figure1: select cells with connecting and making sum 10." src="image.png" /></a>
-        <a href="image2.png" ><img class="figure" alt="figure2: these cells go away and make holes." src="image2.png" /></a>
-        <a href="image3.png" ><img class="figure" alt="figure3: some cells with obstacle cells move from blue bar side to fill these holes." src="image3.png" /></a>
-        <a href="image4.png" ><img class="figure" alt="figure4: these cells moving." src="image4.png" /></a>
-        <a href="image5.png" ><img class="figure" alt="figure5: next turn." src="image5.png" /></a>
-        <a href="image6.png" ><img class="figure" alt="figure6: geme has over." src="image6.png" /></a>
-      </section>
-      <section>
-        <h4>小技</h4>
-        <p>
-          選択の順番を工夫すると数字0のセルを余分に消去することが可能となります。
-        </p>
-        <a href="image7.png" ><img class="figure" alt="figure7: select cells with connecting and making sum 9." src="image7.png" /></a>
-        <a href="image8.png" ><img class="figure" alt="figure8: select cells with connecting and making sum 10." src="image8.png" /></a>
-        <a href="image9.png" ><img class="figure" alt="figure9: these cells go away and make holes." src="image9.png" /></a>
-        <a href="image10.png" ><img class="figure" alt="figure10: next turn." src="image10.png" /></a>
-      </section>
-    </details>
+    <main>
+      <div>SEED: <input id="seed" name="seed" type="number" min="0" max="99999" /> <button id="start">START</button></div>
+      <div>SCORE: <output id="score"></output> ( <span class="hiscore">HISCORE: <output id="hiscore"></output></span> )</div>
+      <table>
+        <tr>
+          <td></td>
+          <td id="top"></td>
+          <td></td>
+        </tr>
+        <tr>
+          <td id="left"></td>
+          <td><table id="table"></table></td>
+          <td id="right"></td>
+        </tr>
+        <tr>
+          <td></td>
+          <td id="bottom"></td>
+          <td></td>
+        </tr>
+      </table>
+      <div><span id="msg"></span></div>
+    </main>
+    <hr />
+    <footer>
+      <details>
+        <summary>SUM10パズルの説明</summary>
+        <section>
+          <h4>ルール</h4>
+          <p>
+            クリックしセルを選択していき <br />
+            セル同士が隣り合いかつ合計が10になると <br />
+            それらのセルが消えてスコアが10加算され <br />
+            青いバー側からセルが詰められ <br />
+            青いバーの位置が変わります。 <br />
+            これを繰り返していき <br />
+            合計を10にする選択ができなくなったとき <br />
+            ゲーム終了となります。 <br />
+            ※青いバーの位置の変化は上⇒右⇒下⇒左⇒…の順番で繰り返します。
+          </p>
+          <a href="image.png" ><img class="figure" alt="figure1: select cells with connecting and making sum 10." src="image.png" /></a>
+          <a href="image2.png" ><img class="figure" alt="figure2: these cells go away and make holes." src="image2.png" /></a>
+          <a href="image3.png" ><img class="figure" alt="figure3: some cells with obstacle cells move from blue bar side to fill these holes." src="image3.png" /></a>
+          <a href="image4.png" ><img class="figure" alt="figure4: these cells moving." src="image4.png" /></a>
+          <a href="image5.png" ><img class="figure" alt="figure5: next turn." src="image5.png" /></a>
+          <a href="image6.png" ><img class="figure" alt="figure6: geme has over." src="image6.png" /></a>
+        </section>
+        <section>
+          <h4>小技</h4>
+          <p>
+            選択の順番を工夫すると数字0のセルを余分に消去することが可能となります。
+          </p>
+          <a href="image7.png" ><img class="figure" alt="figure7: select cells with connecting and making sum 9." src="image7.png" /></a>
+          <a href="image8.png" ><img class="figure" alt="figure8: select cells with connecting and making sum 10." src="image8.png" /></a>
+          <a href="image9.png" ><img class="figure" alt="figure9: these cells go away and make holes." src="image9.png" /></a>
+          <a href="image10.png" ><img class="figure" alt="figure10: next turn." src="image10.png" /></a>
+        </section>
+      </details>
+    </footer>
   </body>
 </html>
