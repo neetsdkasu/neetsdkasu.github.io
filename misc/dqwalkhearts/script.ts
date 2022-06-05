@@ -11,11 +11,11 @@ enum Rank {
 enum Color {
     None   = 1 << 0,
     Yellow = 1 << 1,
-    Green  = 1 << 2,
-    Purple = 1 << 3,
+    Purple = 1 << 2,
+    Green  = 1 << 3,
     Red    = 1 << 4,
     Blue   = 1 << 5,
-    Rainbow = Yellow | Green | Purple | Red | Blue,
+    Rainbow = Yellow | Purple | Green | Red | Blue,
 }
 
 interface Monster {
@@ -90,12 +90,18 @@ function setPreset(job: Job) {
     for (let i = 0; i < 4; i++) {
         const color = job.colors[i];
         update(i, "yellow", color & Color.Yellow);
-        update(i, "green",  color & Color.Green);
         update(i, "purple", color & Color.Purple);
+        update(i, "green",  color & Color.Green);
         update(i, "red",    color & Color.Red);
         update(i, "blue",   color & Color.Blue);
         update(i, "omit",   color & Color.None);
     }
+}
+
+function dialogAlert(msg: string) {
+    document.getElementById("alert_message")!.textContent = msg;
+    const dialog = document.getElementById("alert_dialog")! as HTMLDialogElement;
+    dialog.showModal();
 }
 
 document.getElementById("apply_preset_heartset")!
@@ -104,10 +110,9 @@ document.getElementById("apply_preset_heartset")!
     const value = parseInt(sel.value);
     for (const job of JobPreset) {
         if (job.id === value) {
-            alert(`select is ${job.name}`)
             setPreset(job);
             return;
         }
     }
-    alert(`Unknown ID: ${value}`);
+    dialogAlert(`Unknown ID: ${value}`);
 });

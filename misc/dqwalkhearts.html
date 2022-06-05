@@ -12,10 +12,15 @@
       <h1>DQ-Walk Hearts</h1>
     </header>
 
+    <dialog id="alert_dialog">
+      <div id="alert_message">ALERT</div>
+      <form method="dialog"><button>OK</button></form>
+    </dialog>
+
     <main>
 
       <section class="outline">
-        <h5>対象</h5>
+        <h5>探索対象</h5>
         <div>
           <label>プリセット:
           <select name="preset_heartset" id="preset_heartset">
@@ -41,32 +46,32 @@
         <div>
           こころ枠1:
           <label><input type="checkbox" name="heart1_yellow" id="heart1_yellow" checked />黄(戦)</label>
-          <label><input type="checkbox" name="heart1_green"  id="heart1_green"  checked />緑(僧)</label>
           <label><input type="checkbox" name="heart1_purple" id="heart1_purple" checked />紫(魔)</label>
+          <label><input type="checkbox" name="heart1_green"  id="heart1_green"  checked />緑(僧)</label>
           <label><input type="checkbox" name="heart1_red"    id="heart1_red"    checked />赤(武)</label>
           <label><input type="checkbox" name="heart1_blue"   id="heart1_blue"   checked />青(盗)</label>
         </div>
         <div>
           こころ枠2:
           <label><input type="checkbox" name="heart2_yellow" id="heart2_yellow" checked />黄(戦)</label>
-          <label><input type="checkbox" name="heart2_green"  id="heart2_green"          />緑(僧)</label>
           <label><input type="checkbox" name="heart2_purple" id="heart2_purple"         />紫(魔)</label>
+          <label><input type="checkbox" name="heart2_green"  id="heart2_green"          />緑(僧)</label>
           <label><input type="checkbox" name="heart2_red"    id="heart2_red"            />赤(武)</label>
           <label><input type="checkbox" name="heart2_blue"   id="heart2_blue"           />青(盗)</label>
         </div>
         <div>
           こころ枠3:
           <label><input type="checkbox" name="heart3_yellow" id="heart3_yellow" checked />黄(戦)</label>
-          <label><input type="checkbox" name="heart3_green"  id="heart3_green"          />緑(僧)</label>
           <label><input type="checkbox" name="heart3_purple" id="heart3_purple"         />紫(魔)</label>
+          <label><input type="checkbox" name="heart3_green"  id="heart3_green"          />緑(僧)</label>
           <label><input type="checkbox" name="heart3_red"    id="heart3_red"            />赤(武)</label>
           <label><input type="checkbox" name="heart3_blue"   id="heart3_blue"           />青(盗)</label>
         </div>
         <div>
           こころ枠4:
           <label><input type="checkbox" name="heart4_yellow" id="heart4_yellow"         />黄(戦)</label>
-          <label><input type="checkbox" name="heart4_green"  id="heart4_green"          />緑(僧)</label>
           <label><input type="checkbox" name="heart4_purple" id="heart4_purple"         />紫(魔)</label>
+          <label><input type="checkbox" name="heart4_green"  id="heart4_green"          />緑(僧)</label>
           <label><input type="checkbox" name="heart4_red"    id="heart4_red"            />赤(武)</label>
           <label><input type="checkbox" name="heart4_blue"   id="heart4_blue"           />青(盗)</label>
           <label><input type="checkbox" name="heart4_omit"   id="heart4_omit"   checked />使用しない</label>
@@ -88,14 +93,24 @@
           <input type="radio" name="goal" id="goal_deftness"     value="goal_deftness"             /><label for="goal_deftness"    >器用</label>
         </div>
         <div>
-          <button id="start">開始</button>
+          <button id="start">探索開始</button>
         </div>
+      </section>
+      
+      <section class="outline">
+        <h5>探索結果</h5>
+        <div id="result"></div>
+      </section>
+
+      <section class="outline">
+        <h5>こころリスト</h5>
+        <div id="heartlist"></div>
       </section>
     </main>
 
     <footer>
       <nav><a href=".">misc</a></nav>
     </footer>
-
+    
   </body>
 </html>

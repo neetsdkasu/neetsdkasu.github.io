@@ -7,12 +7,12 @@ body
 {
     border: 1px solid gray;
     margin: 5px;
-
 }
 
 section.outline
 {
     padding-bottom: 5px;
+    margin-bottom: 1rem;
 }
 
 section.outline > h5 

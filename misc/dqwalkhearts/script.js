@@ -68,16 +68,21 @@ function setPreset(job) {
         update(i, "omit", color & Color.None);
     }
 }
+function dialogAlert(msg) {
+    document.getElementById("alert_message").textContent = msg;
+    const dialog = document.getElementById("alert_dialog");
+    dialog.showModal();
+}
 document.getElementById("apply_preset_heartset")
     .addEventListener("click", () => {
     const sel = document.getElementById("preset_heartset");
     const value = parseInt(sel.value);
     for (const job of JobPreset) {
         if (job.id === value) {
-            alert(`select is ${job.name}`);
+            dialogAlert(`select is ${job.name}`);
             setPreset(job);
             return;
         }
     }
-    alert(`Unknown ID: ${value}`);
+    dialogAlert(`Unknown ID: ${value}`);
 });
