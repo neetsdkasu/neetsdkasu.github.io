@@ -116,3 +116,8 @@ document.getElementById("apply_preset_heartset")!
     }
     dialogAlert(`Unknown ID: ${value}`);
 });
+
+document.querySelector("#add_heart_dialog button")!
+.addEventListener("click", () => {
+    (document.getElementById("add_heart_dialog") as HTMLDialogElement).close();
+});

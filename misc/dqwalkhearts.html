@@ -13,8 +13,83 @@
     </header>
 
     <dialog id="alert_dialog">
-      <div id="alert_message">ALERT</div>
-      <form method="dialog"><button>OK</button></form>
+      <div id="alert_message">アラート</div>
+      <form method="dialog"><button>オーケイ</button></form>
+    </dialog>
+
+    <datalist id="monster_list"></datalist>
+
+    <dialog id="add_heart_dialog" open>
+      <div>こころ追加</div>
+      <hr />
+      <form method="dialog">
+        <div><label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_list" required /></div>
+        <div><label for="add_cost">コスト:</label><input type="number" name="add_cost" id="add_cost" required /></div>
+        <div>
+          <span>色:</span>
+          <input type="radio" name="add_color" id="add_color_yellow" value="Yellow" required /><label for="add_color_yellow">黄(戦)</label>
+          <input type="radio" name="add_color" id="add_color_purple" value="Purple" required /><label for="add_color_purple">紫(魔)</label>
+          <input type="radio" name="add_color" id="add_color_green"  value="Green"  required /><label for="add_color_green" >緑(僧)</label>
+          <input type="radio" name="add_color" id="add_color_red"    value="Red"    required /><label for="add_color_red"   >赤(武)</label>
+          <input type="radio" name="add_color" id="add_color_blue"   value="Blue"   required /><label for="add_color_blue"  >青(盗)</label>
+        </div>
+        <fieldset>
+          <div>
+            <span>ランク:</span>
+            <input type="radio" name="add_rank" id="add_rank_s_plus" value="S_plus" required><label for="add_rank_s_plus">S+</label>
+            <input type="radio" name="add_rank" id="add_rank_s"      value="S"      required><label for="add_rank_s"     >S</label>
+            <input type="radio" name="add_rank" id="add_rank_a"      value="A"      required><label for="add_rank_a"     >A</label>
+            <input type="radio" name="add_rank" id="add_rank_b"      value="B"      required><label for="add_rank_b"     >B</label>
+            <input type="radio" name="add_rank" id="add_rank_c"      value="C"      required><label for="add_rank_c"     >C</label>
+            <input type="radio" name="add_rank" id="add_rank_d"      value="D"      required><label for="add_rank_d"     >D</label>
+          </div>
+          <div>
+            <label for="add_maximumhp">HP:</label>
+            <input type="number" name="add_maximumhp" id="add_maximumhp" required />
+          </div>
+          <div>
+            <label for="add_maximummp">MP:</label>
+            <input type="number" name="add_maximummp" id="add_maximummp" required />
+          </div>
+          <div>
+            <label for="add_power">力:</label>
+            <input type="number" name="add_power" id="add_power" required />
+          </div>
+          <div>
+            <label for="add_defence">守り:</label>
+            <input type="number" name="add_defence" id="add_defence" required />
+          </div>
+          <div>
+            <label for="add_attackmagic">攻魔:</label>
+            <input type="number" name="add_attackmagic" id="add_attackmagic" required />
+          </div>
+          <div>
+            <label for="add_recovermagic">回魔:</label>
+            <input type="number" name="add_recovermagic" id="add_recovermagic" required />
+          </div>
+          <div>
+            <label for="add_speed">早さ:</label>
+            <input type="number" name="add_speed" id="add_speed" required />
+          </div>
+          <div>
+            <label for="add_deftness">器用:</label>
+            <input type="number" name="add_deftness" id="add_deftness" required />
+          </div>
+          <div>
+            <label for="add_maximumcost">こころ最大コスト:</label>
+            <input type="number" name="add_maximumcost" id="add_maximumcost" />
+          </div>
+          <div>
+            <label for="add_effects">スキル・特殊効果:</label>
+            <input type="text" name="add_effects" id="add_effects" />
+          </div>
+        </fieldset>
+        <hr />
+        <menu>
+          <button type="button" value="cancel">キャンセル</button>
+          <button type="submit" value="add"   >追加する</button>
+        </menu>
+      </form>
     </dialog>
 
     <main>
@@ -22,7 +97,7 @@
       <section class="outline">
         <h5>探索対象</h5>
         <div>
-          <label>プリセット:
+          <label for="preset_heartset">プリセット:</label>
           <select name="preset_heartset" id="preset_heartset">
             <option value="101" selected>戦士</option>
             <option value="102"         >魔法使い</option>
@@ -40,11 +115,10 @@
             <option value="207"         >海賊</option>
             <option value="208"         >まものマスター</option>
           </select>
-          </label>
           <button id="apply_preset_heartset">反映</button>
         </div>
         <div>
-          こころ枠1:
+          <span>こころ枠1:</span>
           <label><input type="checkbox" name="heart1_yellow" id="heart1_yellow" checked />黄(戦)</label>
           <label><input type="checkbox" name="heart1_purple" id="heart1_purple" checked />紫(魔)</label>
           <label><input type="checkbox" name="heart1_green"  id="heart1_green"  checked />緑(僧)</label>
@@ -52,7 +126,7 @@
           <label><input type="checkbox" name="heart1_blue"   id="heart1_blue"   checked />青(盗)</label>
         </div>
         <div>
-          こころ枠2:
+          <span>こころ枠2:</span>
           <label><input type="checkbox" name="heart2_yellow" id="heart2_yellow" checked />黄(戦)</label>
           <label><input type="checkbox" name="heart2_purple" id="heart2_purple"         />紫(魔)</label>
           <label><input type="checkbox" name="heart2_green"  id="heart2_green"          />緑(僧)</label>
@@ -60,7 +134,7 @@
           <label><input type="checkbox" name="heart2_blue"   id="heart2_blue"           />青(盗)</label>
         </div>
         <div>
-          こころ枠3:
+          <span>こころ枠3:</span>
           <label><input type="checkbox" name="heart3_yellow" id="heart3_yellow" checked />黄(戦)</label>
           <label><input type="checkbox" name="heart3_purple" id="heart3_purple"         />紫(魔)</label>
           <label><input type="checkbox" name="heart3_green"  id="heart3_green"          />緑(僧)</label>
@@ -68,7 +142,7 @@
           <label><input type="checkbox" name="heart3_blue"   id="heart3_blue"           />青(盗)</label>
         </div>
         <div>
-          こころ枠4:
+          <span>こころ枠4:</span>
           <label><input type="checkbox" name="heart4_yellow" id="heart4_yellow"         />黄(戦)</label>
           <label><input type="checkbox" name="heart4_purple" id="heart4_purple"         />紫(魔)</label>
           <label><input type="checkbox" name="heart4_green"  id="heart4_green"          />緑(僧)</label>
@@ -77,26 +151,25 @@
           <label><input type="checkbox" name="heart4_omit"   id="heart4_omit"   checked />使用しない</label>
         </div>
         <div>
-          <label>こころ最大コスト:
-            <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" />
-          </label>
+          <label for="heart_maximum_cost">こころ最大コスト:</label>
+          <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" />
         </div>
         <div>
           <span>最大化対象:</span>
-          <input type="radio" name="goal" id="goal_maximumhp"    value="goal_maximumhp"    checked /><label for="goal_maximumhp"   >HP</label>
-          <input type="radio" name="goal" id="goal_maximummp"    value="goal_maximummp"            /><label for="goal_maximummp"   >MP</label>
-          <input type="radio" name="goal" id="goal_power"        value="goal_power"                /><label for="goal_power"       >力</label>
-          <input type="radio" name="goal" id="goal_defence"      value="goal_defence"              /><label for="goal_defence"     >守り</label>
-          <input type="radio" name="goal" id="goal_attackmagic"  value="goal_attackmagic"          /><label for="goal_attackmagic" >攻魔</label>
-          <input type="radio" name="goal" id="goal_recovermagic" value="goal_recovermagic"         /><label for="goal_recovermagic">回魔</label>
-          <input type="radio" name="goal" id="goal_speed"        value="goal_speed"                /><label for="goal_speed"       >早さ</label>
-          <input type="radio" name="goal" id="goal_deftness"     value="goal_deftness"             /><label for="goal_deftness"    >器用</label>
+          <input type="radio" name="goal" id="goal_maximumhp"    value="maximumhp"    checked /><label for="goal_maximumhp"   >HP</label>
+          <input type="radio" name="goal" id="goal_maximummp"    value="maximummp"            /><label for="goal_maximummp"   >MP</label>
+          <input type="radio" name="goal" id="goal_power"        value="power"                /><label for="goal_power"       >力</label>
+          <input type="radio" name="goal" id="goal_defence"      value="defence"              /><label for="goal_defence"     >守り</label>
+          <input type="radio" name="goal" id="goal_attackmagic"  value="attackmagic"          /><label for="goal_attackmagic" >攻魔</label>
+          <input type="radio" name="goal" id="goal_recovermagic" value="recovermagic"         /><label for="goal_recovermagic">回魔</label>
+          <input type="radio" name="goal" id="goal_speed"        value="speed"                /><label for="goal_speed"       >早さ</label>
+          <input type="radio" name="goal" id="goal_deftness"     value="deftness"             /><label for="goal_deftness"    >器用</label>
         </div>
         <div>
           <button id="start">探索開始</button>
         </div>
       </section>
-      
+
       <section class="outline">
         <h5>探索結果</h5>
         <div id="result"></div>
@@ -111,6 +184,6 @@
     <footer>
       <nav><a href=".">misc</a></nav>
     </footer>
-    
+
   </body>
 </html>

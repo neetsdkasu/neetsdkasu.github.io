@@ -12,8 +12,8 @@ var Color;
 (function (Color) {
     Color[Color["None"] = 1] = "None";
     Color[Color["Yellow"] = 2] = "Yellow";
-    Color[Color["Green"] = 4] = "Green";
-    Color[Color["Purple"] = 8] = "Purple";
+    Color[Color["Purple"] = 4] = "Purple";
+    Color[Color["Green"] = 8] = "Green";
     Color[Color["Red"] = 16] = "Red";
     Color[Color["Blue"] = 32] = "Blue";
     Color[Color["Rainbow"] = 62] = "Rainbow";
@@ -61,8 +61,8 @@ function setPreset(job) {
     for (let i = 0; i < 4; i++) {
         const color = job.colors[i];
         update(i, "yellow", color & Color.Yellow);
-        update(i, "green", color & Color.Green);
         update(i, "purple", color & Color.Purple);
+        update(i, "green", color & Color.Green);
         update(i, "red", color & Color.Red);
         update(i, "blue", color & Color.Blue);
         update(i, "omit", color & Color.None);
@@ -79,10 +79,13 @@ document.getElementById("apply_preset_heartset")
     const value = parseInt(sel.value);
     for (const job of JobPreset) {
         if (job.id === value) {
-            dialogAlert(`select is ${job.name}`);
             setPreset(job);
             return;
         }
     }
     dialogAlert(`Unknown ID: ${value}`);
+});
+document.querySelector("#add_heart_dialog button")
+    .addEventListener("click", () => {
+    document.getElementById("add_heart_dialog").close();
 });
