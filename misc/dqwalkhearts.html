@@ -2,6 +2,15 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@neetsdkasu" />
+    <meta name="twitter:creator" content="@neetsdkasu" />
+    <meta property="og:url" content="https://neetsdkasu.github.io/misc/dqwalkhearts/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="DQ-Walk Hearts" />
+    <meta property="og:image" content="" />
+    <meta property="og:description" content="find a good heart set for DQ-Walk" />
     <link rel="stylesheet" href="./dqwalkhearts/style.css" />
     <title>DQ-Walk Hearts</title>
     <script src="./dqwalkhearts/script.js" defer></script>
@@ -18,8 +27,15 @@
     </dialog>
 
     <datalist id="monster_list"></datalist>
+    <datalist id="maximumcost_list">
+      <option>0</option>
+      <option>1</option>
+      <option>2</option>
+      <option>3</option>
+      <option>4</option>
+    </datalist>
 
-    <dialog id="add_heart_dialog" open>
+    <dialog id="add_heart_dialog">
       <div>こころ追加</div>
       <hr />
       <form method="dialog">
@@ -77,18 +93,18 @@
           </div>
           <div>
             <label for="add_maximumcost">こころ最大コスト:</label>
-            <input type="number" name="add_maximumcost" id="add_maximumcost" />
+            <input type="number" name="add_maximumcost" id="add_maximumcost" list="maximumcost_list" />
           </div>
           <div>
             <label for="add_effects">スキル・特殊効果:</label>
-            <input type="text" name="add_effects" id="add_effects" />
+            <input type="text" name="add_effects" id="add_effects" placeholder="ギラ 毒耐性+3% メラ呪文ダメージ+5% など" />
           </div>
         </fieldset>
         <hr />
-        <menu>
+        <div>
           <button type="button" value="cancel">キャンセル</button>
           <button type="submit" value="add"   >追加する</button>
-        </menu>
+        </div>
       </form>
     </dialog>
 
@@ -115,40 +131,39 @@
             <option value="207"         >海賊</option>
             <option value="208"         >まものマスター</option>
           </select>
-          <button id="apply_preset_heartset">反映</button>
         </div>
         <div>
           <span>こころ枠1:</span>
-          <label><input type="checkbox" name="heart1_yellow" id="heart1_yellow" checked />黄(戦)</label>
-          <label><input type="checkbox" name="heart1_purple" id="heart1_purple" checked />紫(魔)</label>
-          <label><input type="checkbox" name="heart1_green"  id="heart1_green"  checked />緑(僧)</label>
-          <label><input type="checkbox" name="heart1_red"    id="heart1_red"    checked />赤(武)</label>
-          <label><input type="checkbox" name="heart1_blue"   id="heart1_blue"   checked />青(盗)</label>
+          <input type="checkbox" name="heart1_yellow" id="heart1_yellow" checked /><label for="heart1_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart1_purple" id="heart1_purple" checked /><label for="heart1_purple">紫(魔)</label>
+          <input type="checkbox" name="heart1_green"  id="heart1_green"  checked /><label for="heart1_green" >緑(僧)</label>
+          <input type="checkbox" name="heart1_red"    id="heart1_red"    checked /><label for="heart1_red"   >赤(武)</label>
+          <input type="checkbox" name="heart1_blue"   id="heart1_blue"   checked /><label for="heart1_blue"  >青(盗)</label>
         </div>
         <div>
           <span>こころ枠2:</span>
-          <label><input type="checkbox" name="heart2_yellow" id="heart2_yellow" checked />黄(戦)</label>
-          <label><input type="checkbox" name="heart2_purple" id="heart2_purple"         />紫(魔)</label>
-          <label><input type="checkbox" name="heart2_green"  id="heart2_green"          />緑(僧)</label>
-          <label><input type="checkbox" name="heart2_red"    id="heart2_red"            />赤(武)</label>
-          <label><input type="checkbox" name="heart2_blue"   id="heart2_blue"           />青(盗)</label>
+          <input type="checkbox" name="heart2_yellow" id="heart2_yellow" checked /><label for="heart2_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart2_purple" id="heart2_purple"         /><label for="heart2_purple">紫(魔)</label>
+          <input type="checkbox" name="heart2_green"  id="heart2_green"          /><label for="heart2_green" >緑(僧)</label>
+          <input type="checkbox" name="heart2_red"    id="heart2_red"            /><label for="heart2_red"   >赤(武)</label>
+          <input type="checkbox" name="heart2_blue"   id="heart2_blue"           /><label for="heart2_blue"  >青(盗)</label>
         </div>
         <div>
           <span>こころ枠3:</span>
-          <label><input type="checkbox" name="heart3_yellow" id="heart3_yellow" checked />黄(戦)</label>
-          <label><input type="checkbox" name="heart3_purple" id="heart3_purple"         />紫(魔)</label>
-          <label><input type="checkbox" name="heart3_green"  id="heart3_green"          />緑(僧)</label>
-          <label><input type="checkbox" name="heart3_red"    id="heart3_red"            />赤(武)</label>
-          <label><input type="checkbox" name="heart3_blue"   id="heart3_blue"           />青(盗)</label>
+          <input type="checkbox" name="heart3_yellow" id="heart3_yellow" checked /><label for="heart3_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart3_purple" id="heart3_purple"         /><label for="heart3_purple">紫(魔)</label>
+          <input type="checkbox" name="heart3_green"  id="heart3_green"          /><label for="heart3_green" >緑(僧)</label>
+          <input type="checkbox" name="heart3_red"    id="heart3_red"            /><label for="heart3_red"   >赤(武)</label>
+          <input type="checkbox" name="heart3_blue"   id="heart3_blue"           /><label for="heart3_blue"  >青(盗)</label>
         </div>
         <div>
           <span>こころ枠4:</span>
-          <label><input type="checkbox" name="heart4_yellow" id="heart4_yellow"         />黄(戦)</label>
-          <label><input type="checkbox" name="heart4_purple" id="heart4_purple"         />紫(魔)</label>
-          <label><input type="checkbox" name="heart4_green"  id="heart4_green"          />緑(僧)</label>
-          <label><input type="checkbox" name="heart4_red"    id="heart4_red"            />赤(武)</label>
-          <label><input type="checkbox" name="heart4_blue"   id="heart4_blue"           />青(盗)</label>
-          <label><input type="checkbox" name="heart4_omit"   id="heart4_omit"   checked />使用しない</label>
+          <input type="checkbox" name="heart4_yellow" id="heart4_yellow"         /><label for="heart4_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart4_purple" id="heart4_purple"         /><label for="heart4_purple">紫(魔)</label>
+          <input type="checkbox" name="heart4_green"  id="heart4_green"          /><label for="heart4_green" >緑(僧)</label>
+          <input type="checkbox" name="heart4_red"    id="heart4_red"            /><label for="heart4_red"   >赤(武)</label>
+          <input type="checkbox" name="heart4_blue"   id="heart4_blue"           /><label for="heart4_blue"  >青(盗)</label>
+          <input type="checkbox" name="heart4_omit"   id="heart4_omit"   checked /><label for="heart4_omit"  >使用しない</label>
         </div>
         <div>
           <label for="heart_maximum_cost">こころ最大コスト:</label>
@@ -177,6 +192,7 @@
 
       <section class="outline">
         <h5>こころリスト</h5>
+        <div><button id="add_heart">追加</button></div>
         <div id="heartlist"></div>
       </section>
     </main>
@@ -184,6 +200,37 @@
     <footer>
       <nav><a href=".">misc</a></nav>
     </footer>
+    
+    <template id="heart_list_item">
+      <fieldset>
+        <details>
+          <summary>
+            <span>
+              <span class="monster-name">すらいむ</span>
+              <span class="monster-cost">105</span>
+              <span class="monster-color">黄(戦)</span>
+              <label><input type="radio" name="monster-rank" value="S_plus">S+</label>
+              <label><input type="radio" name="monster-rank" value="S"     >S</label>
+              <label><input type="radio" name="monster-rank" value="A"     >A</label>
+              <label><input type="radio" name="monster-rank" value="B"     >B</label>
+              <label><input type="radio" name="monster-rank" value="C"     >C</label>
+              <label><input type="radio" name="monster-rank" value="D"     >D</label>
+              <label><input type="radio" name="monster-rank" value="omit"  >使用しない</label>
+            </span>
+          </summarY>
+          <div><span>HP:</span> <span class="monster-maximumhp">123</span></div>
+          <div><span>MP:</span> <span class="monster-maximummp">58</span></div>
+          <div><span>力:</span> <span class="monster-power">70</span></div>
+          <div><span>守り:</span> <span class="monster-defence">92</span></div>
+          <div><span>攻魔:</span> <span class="monster-attackmagic">11</span></div>
+          <div><span>回魔:</span> <span class="monster-recovermagic">26</span></div>
+          <div><span>早さ:</span> <span class="monster-speed">34</span></div>
+          <div><span>器用:</span> <span class="monster-deftness">45</span></div>
+          <div><span>こころ最大コスト:</span> <span class="monster-maximumcost">4</span></div>
+          <div><span>スキル・特殊効果:</span> <span class="monster-effects">混乱耐性+10%</span></div>
+        </details>
+      </fieldset>
+    </template>
 
   </body>
 </html>

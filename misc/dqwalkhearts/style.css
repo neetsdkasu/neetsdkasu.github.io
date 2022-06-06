@@ -26,3 +26,34 @@ section.outline > div
 {
     padding-left: 5px;
 }
+
+input[id$="_yellow"]:checked + label
+{
+    background-color: yellow;
+}
+
+input[id$="_purple"]:checked + label
+{
+    background-color: purple;
+}
+
+input[id$="_green"]:checked + label
+{
+    background-color: green;
+}
+
+input[id$="_red"]:checked + label
+{
+    background-color: red;
+}
+
+input[id$="_blue"]:checked + label
+{
+    background-color: blue;
+}
+
+input[id$="_omit"]:checked + label
+{
+    background-color: lightgray;
+}
+

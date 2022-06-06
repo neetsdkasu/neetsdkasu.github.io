@@ -1,4 +1,6 @@
 "use strict";
+// DQ-Walk Hearts
+// author: Leonardone @ NEETSDKASU
 var Rank;
 (function (Rank) {
     Rank[Rank["S_plus"] = 0] = "S_plus";
@@ -38,7 +40,7 @@ const JobPreset = [
     { id: 202, name: "賢者",
         colors: [Color.Green | Color.Purple, Color.Rainbow, Color.Green | Color.Purple, Color.Green | Color.Purple] },
     { id: 203, name: "レンジャー",
-        colors: [Color.Red | Color.Blue, Color.Rainbow, Color.Blue, Color.Red] },
+        colors: [Color.Red | Color.Blue, Color.Rainbow, Color.Blue, Color.Blue] },
     { id: 204, name: "魔法戦士",
         colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Yellow | Color.Purple] },
     { id: 205, name: "パラディン",
@@ -73,8 +75,8 @@ function dialogAlert(msg) {
     const dialog = document.getElementById("alert_dialog");
     dialog.showModal();
 }
-document.getElementById("apply_preset_heartset")
-    .addEventListener("click", () => {
+document.getElementById("preset_heartset")
+    .addEventListener("change", () => {
     const sel = document.getElementById("preset_heartset");
     const value = parseInt(sel.value);
     for (const job of JobPreset) {
@@ -85,7 +87,21 @@ document.getElementById("apply_preset_heartset")
     }
     dialogAlert(`Unknown ID: ${value}`);
 });
-document.querySelector("#add_heart_dialog button")
+document.querySelector('#add_heart_dialog button[value="cancel"]')
     .addEventListener("click", () => {
     document.getElementById("add_heart_dialog").close();
+});
+document.getElementById("add_heart_dialog")
+    .addEventListener("close", (event) => {
+    const dialog = document.getElementById("add_heart_dialog");
+    if (dialog.returnValue !== "add") {
+        return;
+    }
+    event.preventDefault();
+    dialogAlert("hey");
+});
+document.getElementById("add_heart")
+    .addEventListener("click", () => {
+    const dialog = document.getElementById("add_heart_dialog");
+    dialog.showModal();
 });
