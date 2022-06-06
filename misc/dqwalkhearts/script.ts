@@ -32,6 +32,7 @@ interface Status {
 }
 
 interface Monster {
+    id: number;
     name: string;
     color: Color;
     cost: number;
@@ -84,8 +85,80 @@ const JobPreset: Job[] = [
         colors: [Color.Rainbow, Color.Rainbow, Color.Blue|Color.Purple, Color.Blue|Color.Purple] },
 ];
 
+interface SingleColorInfo {
+    color: Color;
+    text: string;
+    colorName: string;
+}
+
+const SingleColorInfoMap: Map<Color, SingleColorInfo> = (() => {
+    const m = new Map();
+    m.set(Color.Yellow, { color: Color.Yellow, text: "黄(戦)", colorName: "yellow" });
+    m.set(Color.Purple, { color: Color.Purple, text: "紫(魔)", colorName: "purple" });
+    m.set(Color.Green, { color: Color.Green, text: "緑(僧)", colorName: "green" });
+    m.set(Color.Red, { color: Color.Red, text: "赤(武)", colorName: "red" });
+    m.set(Color.Blue, { color: Color.Blue, text: "青(盗)", colorName: "blue" });
+    return m;
+})();
+
 let monsterMap: Map<string, Monster> = new Map();
 let monsterList: Monster[] = [];
+
+function showNewHeart(monster: Monster) {
+    const template = document.getElementById("heart_list_item") as HTMLTemplateElement;
+    const fragment = template.content.cloneNode(true) as DocumentFragment;
+    const text = (cname: string, value: any): HTMLElement => {
+        const e = fragment.querySelector(cname) as HTMLElement;
+        e.textContent = `${value}`;
+        return e;
+    };
+    text(".monster-name", monster.name);
+    text(".monster-cost", monster.cost);
+    const csi = SingleColorInfoMap.get(monster.color)!;
+    text(".monster-color", csi.text).classList.add(csi.colorName);
+    const heart = monster.hearts.find( h => h.rank === monster.target )!;
+    const radios = fragment.querySelectorAll('input.monster-rank');
+    const monsterRankRadioName = `monster-rank-${monster.id}`;
+    for (const radio of radios) {
+        const elm = radio as HTMLInputElement;
+        elm.name = monsterRankRadioName;
+        if (elm.value === "omit") {
+            elm.addEventListener("change", () => {
+                monster.target = null;
+            });
+        } else {
+            const rank = Rank[elm.value as keyof typeof Rank];
+            elm.disabled = monster.hearts.findIndex( h => h.rank === rank ) < 0;
+            elm.checked = rank === heart.rank;
+            elm.addEventListener("change", () => {
+                monster.target = rank;
+            });
+        }
+    }
+    text(".monster-maximumhp", heart.maximumHP);
+    text(".monster-maximummp", heart.maximumMP);
+    text(".monster-power", heart.power);
+    text(".monster-defence", heart.defence);
+    text(".monster-attackmagic", heart.attackMagic);
+    text(".monster-recovermagic", heart.recoverMagic);
+    text(".monster-speed", heart.speed);
+    text(".monster-deftness", heart.deftness);
+    text(".monster-maximumcost", heart.maximumCost);
+    text(".monster-effects", heart.effects);
+    fragment.firstElementChild!.id = `monster-${monster.id}`;
+    const holder = document.getElementById("heart_list")!;
+    const index = monsterList.findIndex( m => m.id === monster.id );
+    if (index + 1 === monsterList.length) {
+        holder.appendChild(fragment);
+    } else {
+        const next = document.getElementById(`monster-${monsterList[index+1].id}`);
+        holder.insertBefore(fragment, next);
+    }
+}
+
+function showUpdatedHeart(monster: Monster) {
+
+}
 
 function addHeart(newMonster: Monster) {
     if (monsterMap.has(newMonster.name)) {
@@ -97,17 +170,21 @@ function addHeart(newMonster: Monster) {
             } else {
                 monster.hearts[index] = heart;
             }
+            monster.target = heart.rank;
         }
         monster.hearts.sort( (a, b) => a.rank - b.rank );
         monster.color = newMonster.color;
         monster.cost = newMonster.cost;
+        showUpdatedHeart(monster);
     } else {
+        newMonster.id = monsterList.length;
+        newMonster.target = newMonster.hearts[0].rank;
         newMonster.hearts.sort( (a, b) => a.rank - b.rank );
         monsterMap.set(newMonster.name, newMonster);
         monsterList.push(newMonster);
-        monsterList.sort( (a, b) => a.cost - b.cost );
+        monsterList.sort( (a, b) => b.cost - a.cost );
+        showNewHeart(newMonster);
     }
-    dialogAlert(JSON.stringify(newMonster));
 }
 
 function setPreset(job: Job) {
@@ -170,6 +247,7 @@ document.getElementById("add_heart_dialog")!
     const noNaN = (v: number) => isNaN(v) ? 0 : v;
     const num = (name: string) => noNaN(parseInt(str(name)));
     const monster: Monster = {
+        id: 0,
         name: str("add_monster_name"),
         color: Color[str("add_color") as keyof typeof Color],
         cost: num("add_cost"),

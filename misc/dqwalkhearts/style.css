@@ -27,28 +27,37 @@ section.outline > div
     padding-left: 5px;
 }
 
+.yellow,
 input[id$="_yellow"]:checked + label
 {
     background-color: yellow;
 }
 
+.purple,
 input[id$="_purple"]:checked + label
 {
+    color: lightblue;
     background-color: purple;
 }
 
+.green,
 input[id$="_green"]:checked + label
 {
+    color: yellow;
     background-color: green;
 }
 
+.red,
 input[id$="_red"]:checked + label
 {
+    color: pink;
     background-color: red;
 }
 
+.blue,
 input[id$="_blue"]:checked + label
 {
+    color: lightblue;
     background-color: blue;
 }
 
