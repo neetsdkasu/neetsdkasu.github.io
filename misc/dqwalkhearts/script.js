@@ -84,6 +84,7 @@ function showNewHeart(monster) {
         if (elm.value === "omit") {
             elm.addEventListener("change", () => {
                 monster.target = null;
+                showUpdatedHeart(monster, false);
             });
         }
         else {
@@ -92,6 +93,7 @@ function showNewHeart(monster) {
             elm.checked = rank === heart.rank;
             elm.addEventListener("change", () => {
                 monster.target = rank;
+                showUpdatedHeart(monster, false);
             });
         }
     }
@@ -116,12 +118,82 @@ function showNewHeart(monster) {
         holder.insertBefore(fragment, next);
     }
 }
-function showUpdatedHeart(monster) {
+function showUpdatedHeart(monster, reorder) {
+    const item = document.getElementById(`monster-${monster.id}`);
+    if (reorder) {
+        const holder = document.getElementById("heart_list");
+        holder.removeChild(item);
+        const index = monsterList.findIndex(m => m.id === monster.id);
+        if (index + 1 === monsterList.length) {
+            holder.appendChild(item);
+        }
+        else {
+            const next = document.getElementById(`monster-${monsterList[index + 1].id}`);
+            holder.insertBefore(item, next);
+        }
+    }
+    const text = (cname, value) => {
+        const e = item.querySelector(cname);
+        e.textContent = `${value}`;
+        return e;
+    };
+    text(".monster-name", monster.name);
+    text(".monster-cost", monster.cost);
+    const csi = SingleColorInfoMap.get(monster.color);
+    const classList = text(".monster-color", csi.text).classList;
+    SingleColorInfoMap.forEach((v) => {
+        classList.remove(v.colorName);
+    });
+    classList.add(csi.colorName);
+    const radios = item.querySelectorAll('input.monster-rank');
+    if (monster.target === null) {
+        for (const radio of radios) {
+            const elm = radio;
+            if (elm.value !== "omit") {
+                const rank = Rank[elm.value];
+                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+            }
+            else {
+                elm.checked = true;
+            }
+        }
+        text(".monster-maximumhp", "-");
+        text(".monster-maximummp", "-");
+        text(".monster-power", "-");
+        text(".monster-defence", "-");
+        text(".monster-attackmagic", "-");
+        text(".monster-recovermagic", "-");
+        text(".monster-speed", "-");
+        text(".monster-deftness", "-");
+        text(".monster-maximumcost", "-");
+        text(".monster-effects", "-");
+    }
+    else {
+        const heart = monster.hearts.find(h => h.rank === monster.target);
+        for (const radio of radios) {
+            const elm = radio;
+            if (elm.value !== "omit") {
+                const rank = Rank[elm.value];
+                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+                elm.checked = rank === heart.rank;
+            }
+        }
+        text(".monster-maximumhp", heart.maximumHP);
+        text(".monster-maximummp", heart.maximumMP);
+        text(".monster-power", heart.power);
+        text(".monster-defence", heart.defence);
+        text(".monster-attackmagic", heart.attackMagic);
+        text(".monster-recovermagic", heart.recoverMagic);
+        text(".monster-speed", heart.speed);
+        text(".monster-deftness", heart.deftness);
+        text(".monster-maximumcost", heart.maximumCost);
+        text(".monster-effects", heart.effects);
+    }
 }
 function addHeart(newMonster) {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name);
-        for (const heart of monster.hearts) {
+        for (const heart of newMonster.hearts) {
             const index = monster.hearts.findIndex(h => h.rank === heart.rank);
             if (index < 0) {
                 monster.hearts.push(heart);
@@ -133,10 +205,19 @@ function addHeart(newMonster) {
         }
         monster.hearts.sort((a, b) => a.rank - b.rank);
         monster.color = newMonster.color;
-        monster.cost = newMonster.cost;
-        showUpdatedHeart(monster);
+        if (monster.cost === newMonster.cost) {
+            showUpdatedHeart(monster, false);
+        }
+        else {
+            monster.cost = newMonster.cost;
+            monsterList.sort((a, b) => b.cost - a.cost);
+            showUpdatedHeart(monster, true);
+        }
     }
     else {
+        document.getElementById("monster_name_list")
+            .appendChild(document.createElement("option"))
+            .textContent = newMonster.name;
         newMonster.id = monsterList.length;
         newMonster.target = newMonster.hearts[0].rank;
         newMonster.hearts.sort((a, b) => a.rank - b.rank);
@@ -184,7 +265,19 @@ document.getElementById("preset_heartset")
 document.getElementById("add_heart")
     .addEventListener("click", () => {
     const dialog = document.getElementById("add_heart_dialog");
+    dialog.querySelector("form").reset();
     dialog.showModal();
+});
+document.getElementById("add_monster_name")
+    .addEventListener("change", () => {
+    const name = document.getElementById("add_monster_name").value;
+    if (monsterMap.has(name)) {
+        const monster = monsterMap.get(name);
+        const dialog = document.getElementById("add_heart_dialog");
+        const elements = dialog.querySelector("form").elements;
+        elements.namedItem("add_cost").value = `${monster.cost}`;
+        elements.namedItem("add_color").value = `${Color[monster.color]}`;
+    }
 });
 document.querySelector('#add_heart_dialog button[value="cancel"]')
     .addEventListener("click", () => {
