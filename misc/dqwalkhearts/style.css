@@ -61,6 +61,7 @@ input[id$="_blue"]:checked + label
     background-color: blue;
 }
 
+.omit,
 input[id$="_omit"]:checked + label
 {
     background-color: lightgray;

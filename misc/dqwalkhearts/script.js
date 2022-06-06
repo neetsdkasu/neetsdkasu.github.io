@@ -147,6 +147,7 @@ function showUpdatedHeart(monster, reorder) {
     classList.add(csi.colorName);
     const radios = item.querySelectorAll('input.monster-rank');
     if (monster.target === null) {
+        item.classList.add("omit");
         for (const radio of radios) {
             const elm = radio;
             if (elm.value !== "omit") {
@@ -169,6 +170,7 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-effects", "-");
     }
     else {
+        item.classList.remove("omit");
         const heart = monster.hearts.find(h => h.rank === monster.target);
         for (const radio of radios) {
             const elm = radio;
