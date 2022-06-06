@@ -66,3 +66,20 @@ input[id$="_omit"]:checked + label
     background-color: lightgray;
 }
 
+fieldset > details > summary > span
+{
+    display: block;
+}
+
+fieldset > details > summary
+{
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.monster-name:hover
+{
+    cursor: pointer;
+}
+
