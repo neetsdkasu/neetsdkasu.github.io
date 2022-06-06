@@ -24,7 +24,7 @@ interface Status {
     maximumHP: number;
     maximumMP: number;
     power: number;
-    deffence: number;
+    defence: number;
     attackMagic: number;
     recoverMagic: number;
     speed: number;
@@ -84,6 +84,32 @@ const JobPreset: Job[] = [
         colors: [Color.Rainbow, Color.Rainbow, Color.Blue|Color.Purple, Color.Blue|Color.Purple] },
 ];
 
+let monsterMap: Map<string, Monster> = new Map();
+let monsterList: Monster[] = [];
+
+function addHeart(newMonster: Monster) {
+    if (monsterMap.has(newMonster.name)) {
+        const monster = monsterMap.get(newMonster.name)!;
+        for (const heart of monster.hearts) {
+            const index = monster.hearts.findIndex( h => h.rank === heart.rank );
+            if (index < 0) {
+                monster.hearts.push(heart);
+            } else {
+                monster.hearts[index] = heart;
+            }
+        }
+        monster.hearts.sort( (a, b) => a.rank - b.rank );
+        monster.color = newMonster.color;
+        monster.cost = newMonster.cost;
+    } else {
+        newMonster.hearts.sort( (a, b) => a.rank - b.rank );
+        monsterMap.set(newMonster.name, newMonster);
+        monsterList.push(newMonster);
+        monsterList.sort( (a, b) => a.cost - b.cost );
+    }
+    dialogAlert(JSON.stringify(newMonster));
+}
+
 function setPreset(job: Job) {
     function update(n: number, c: string, v: number): void {
         const id = `heart${n+1}_${c}`;
@@ -112,7 +138,7 @@ function dialogAlert(msg: string) {
 document.getElementById("preset_heartset")!
 .addEventListener("change", () => {
     const sel = document.getElementById("preset_heartset") as HTMLSelectElement;
-    const value = parseInt(sel.value);
+    const value = parseInt(sel.value ?? "0");
     for (const job of JobPreset) {
         if (job.id === value) {
             setPreset(job);
@@ -139,5 +165,28 @@ document.getElementById("add_heart_dialog")!
     if (dialog.returnValue !== "add") {
         return;
     }
-    // TODO
+    const elements = (dialog.querySelector("form") as HTMLFormElement).elements;
+    const str = (name: string) => (elements.namedItem(name) as HTMLInputElement).value;
+    const noNaN = (v: number) => isNaN(v) ? 0 : v;
+    const num = (name: string) => noNaN(parseInt(str(name)));
+    const monster: Monster = {
+        name: str("add_monster_name"),
+        color: Color[str("add_color") as keyof typeof Color],
+        cost: num("add_cost"),
+        hearts: [{
+            maximumHP: num("add_maximumhp"),
+            maximumMP: num("add_maximummp"),
+            power: num("add_power"),
+            defence: num("add_defence"),
+            attackMagic: num("add_attackmagic"),
+            recoverMagic: num("add_recovermagic"),
+            speed: num("add_speed"),
+            deftness: num("add_deftness"),
+            rank: Rank[str("add_rank") as keyof typeof Rank],
+            maximumCost: num("add_maximumcost"),
+            effects: str("add_effects"),
+        }],
+        target: null,
+    };
+    addHeart(monster);
 });
