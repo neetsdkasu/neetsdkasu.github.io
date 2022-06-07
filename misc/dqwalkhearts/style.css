@@ -84,3 +84,12 @@ fieldset > details > summary
     cursor: pointer;
 }
 
+.buttons > *
+{
+    margin-right: 1rem;
+}
+
+#file_load_dialog input
+{
+    margin: 2rem;
+}

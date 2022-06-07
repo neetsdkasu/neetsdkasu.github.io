@@ -26,6 +26,19 @@
       <form method="dialog"><button>オーケイ</button></form>
     </dialog>
 
+    <dialog id="file_load_dialog">
+      <div>こころリストをファイルから読み込む</div>
+      <hr />
+      <form method="dialog">
+        <input type="file" accept=".json,application/json" required />
+        <hr />
+        <div>
+          <button type="button" value="cancel">キャンセル</button>
+          <button type="submit" value="load"  >読み込む</button>
+        </div>
+      </form>
+    </dialog>
+
     <datalist id="monster_name_list"></datalist>
 
     <datalist id="maximumcost_list">
@@ -193,7 +206,17 @@
 
       <section class="outline">
         <h5>こころリスト</h5>
-        <div><button id="add_heart">追加</button></div>
+        <div class="buttons">
+          <button id="add_heart">こころ追加</button>
+          <button id="load_file">ファイル読込</button>
+          <span>
+            <button id="download">ダウンロード</button>
+            <span id="downloadlink" hidden>
+              <a href="" download="dqwalkhearts.json" type="application/json">dqwalkhearts.json</a>
+              <span></span>
+            </span>
+          </span>
+        </div>
         <hr />
         <div id="heart_list"></div>
       </section>

@@ -359,3 +359,37 @@ document.getElementById("add_heart_dialog")!
     };
     addHeart(monster);
 });
+
+document.getElementById("download")!
+.addEventListener("click", () => {
+    if (monsterList.length === 0) {
+        dialogAlert("Empty");
+        return;
+    }
+    const link = document.getElementById("downloadlink")!;
+    link.hidden = true;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+        (link.querySelector("a") as HTMLAnchorElement)
+            .href = reader.result as string;
+        link.querySelector("span")!.textContent = `(${new Date()})`;
+        link.hidden = false;
+    });
+    const json = JSON.stringify(monsterList);
+    reader.readAsDataURL(new Blob([json]));
+});
+
+document.querySelector('#file_load_dialog button[value="cancel"]')!
+.addEventListener("click", () => {
+    (document.getElementById("file_load_dialog") as HTMLDialogElement).close();
+});
+
+document.getElementById("load_file")!
+.addEventListener("click", () => {
+    const dialog = document.getElementById("file_load_dialog") as HTMLDialogElement;
+    (dialog.querySelector("form") as HTMLFormElement).reset();
+    dialog.showModal();
+});
+
+
+dialogAlert("[DEBUG] OK");
