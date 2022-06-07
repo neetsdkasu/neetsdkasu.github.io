@@ -23,14 +23,24 @@
 
     <dialog id="alert_dialog">
       <div id="alert_message">アラート</div>
-      <form method="dialog"><button>オーケイ</button></form>
+      <hr />
+      <form method="dialog">
+        <div>
+          <button>オーケイ</button>
+        </div>
+      </form>
     </dialog>
 
     <dialog id="file_load_dialog">
       <div>こころリストをファイルから読み込む</div>
       <hr />
       <form method="dialog">
-        <input type="file" accept=".json,application/json" required />
+        <div><input type="file" name="file" accept=".json,application/json" required /></div>
+        <fieldset>
+          <div><label><input type="radio" name="file_load_option" value="truncate"      checked>現在のリストを全て破棄してファイルのリストを読込む</label></div>
+          <div><label><input type="radio" name="file_load_option" value="file_as_newer"        >ファイルのリストを最新として現在のリストへ追加する</label></div>
+          <div><label><input type="radio" name="file_load_option" value="file_as_older"        >現在のリストを最新としてファイルのリストを追加する</label></div>
+        </fieldset>
         <hr />
         <div>
           <button type="button" value="cancel">キャンセル</button>
@@ -41,12 +51,13 @@
 
     <datalist id="monster_name_list"></datalist>
 
+    <!-- これ要らんかも(邪魔だし) -->
     <datalist id="maximumcost_list">
-      <option>0</option>
-      <option>1</option>
-      <option>2</option>
-      <option>3</option>
-      <option>4</option>
+      <option value="0"></option>
+      <option value="1"></option>
+      <option value="2"></option>
+      <option value="3"></option>
+      <option value="4"></option>
     </datalist>
 
     <dialog id="add_heart_dialog">
@@ -236,13 +247,13 @@
             </span>
             <span class="monster-name"></span>
             <span>
-              <label><input type="radio" class="monster-rank" value="S_plus">S+</label>
-              <label><input type="radio" class="monster-rank" value="S"     >S</label>
-              <label><input type="radio" class="monster-rank" value="A"     >A</label>
-              <label><input type="radio" class="monster-rank" value="B"     >B</label>
-              <label><input type="radio" class="monster-rank" value="C"     >C</label>
-              <label><input type="radio" class="monster-rank" value="D"     >D</label>
-              <label><input type="radio" class="monster-rank" value="omit"  >－</label>
+              <label><input type="radio" class="monster-rank" value="S_plus"><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"     ><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"     ><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"     ><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"     ><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"     ><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"  ><span>－</span></label>
             </span>
           </summarY>
           <div><span>HP:</span> <span class="monster-maximumhp"></span></div>

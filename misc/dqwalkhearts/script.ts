@@ -1,5 +1,36 @@
+//
 // DQ-Walk Hearts
+//
 // author: Leonardone @ NEETSDKASU
+//
+
+function dialogAlert(msg: string) {
+    document.getElementById("alert_message")!.textContent = msg;
+    const dialog = document.getElementById("alert_dialog")! as HTMLDialogElement;
+    dialog.showModal();
+}
+
+function binarySearch<T>(arr: Array<T>, value: T, less: (value: T, than: T) => boolean): number {
+    // バイナリサーチほしいか否か？
+    // 多くて数百個程度のデータからfindIndexするわけだが
+    // 一回の処理実行で何度findIndexを呼び出すかが、問題だが
+    // （おそらく）ネイティブコード(?)実行で高速かもしれない線形探索のfindIndexと
+    // JITあるか分からないJavaScriptコードのバイナリサーチ（二分探索）と
+    // どっちが速いんだろうか・・・？
+    // そもバイナリサーチというやつが難しすぎて実装できないが
+    throw "not implemented";
+}
+
+function insert<T>(arr: Array<T>, value: T, less: (value: T, than: T) => boolean): number {
+    const index = arr.findIndex( e => less(value, e) );
+    if (index < 0) {
+        arr.push(value);
+        return arr.length - 1;
+    } else {
+        arr.splice(index, 0, value);
+        return index;
+    }
+}
 
 enum Rank {
     S_plus = 0,
@@ -103,6 +134,7 @@ const SingleColorInfoMap: Map<Color, SingleColorInfo> = (() => {
 
 let monsterMap: Map<string, Monster> = new Map();
 let monsterList: Monster[] = [];
+let monsterNameList: string[] = [];
 
 function showNewHeart(monster: Monster) {
     const template = document.getElementById("heart_list_item") as HTMLTemplateElement;
@@ -118,7 +150,7 @@ function showNewHeart(monster: Monster) {
     text(".monster-color", csi.text).classList.add(csi.colorName);
     const heart = monster.hearts.find( h => h.rank === monster.target )!;
     const radios = fragment.querySelectorAll('input.monster-rank');
-    const monsterRankRadioName = `monster-rank-${monster.id}`;
+    const monsterRankRadioName = `monster_${monster.id}_rank`;
     for (const radio of radios) {
         const elm = radio as HTMLInputElement;
         elm.name = monsterRankRadioName;
@@ -230,6 +262,19 @@ function showUpdatedHeart(monster: Monster, reorder: boolean) {
     }
 }
 
+function addMonsterNameList(newName: string) {
+    const item = document.createElement("option");
+    item.value = newName;
+    const list = document.getElementById("monster_name_list")!;
+    const index = insert(monsterNameList, newName, (n, e) => n < e );
+    if (index + 1 === monsterNameList.length) {
+        list.appendChild(item);
+    } else {
+        const before = list.children[index];
+        list.insertBefore(item, before);
+    }
+}
+
 function addHeart(newMonster: Monster) {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name)!;
@@ -242,7 +287,6 @@ function addHeart(newMonster: Monster) {
             }
             monster.target = heart.rank;
         }
-        monster.hearts.sort( (a, b) => a.rank - b.rank );
         monster.color = newMonster.color;
         if (monster.cost === newMonster.cost) {
             showUpdatedHeart(monster, false);
@@ -252,15 +296,11 @@ function addHeart(newMonster: Monster) {
             showUpdatedHeart(monster, true);
         }
     } else {
-        document.getElementById("monster_name_list")!
-            .appendChild(document.createElement("option"))
-            .textContent = newMonster.name;
+        addMonsterNameList(newMonster.name);
         newMonster.id = monsterList.length;
         newMonster.target = newMonster.hearts[0].rank;
-        newMonster.hearts.sort( (a, b) => a.rank - b.rank );
         monsterMap.set(newMonster.name, newMonster);
-        monsterList.push(newMonster);
-        monsterList.sort( (a, b) => b.cost - a.cost );
+        insert(monsterList, newMonster, (n, e) => n.cost > e.cost );
         showNewHeart(newMonster);
     }
 }
@@ -284,10 +324,95 @@ function setPreset(job: Job) {
     }
 }
 
-function dialogAlert(msg: string) {
-    document.getElementById("alert_message")!.textContent = msg;
-    const dialog = document.getElementById("alert_dialog")! as HTMLDialogElement;
-    dialog.showModal();
+function checkMonsterFormat(obj: any): boolean {
+    if (typeof obj !== "object" || obj === null) {
+        return false;
+    }
+    const monster1: Monster = {
+        id: 0,
+        name: "str",
+        color: Color.Red,
+        cost: 1,
+        hearts: [{
+            maximumHP: 1,
+            maximumMP: 1,
+            power: 1,
+            defence: 1,
+            attackMagic: 1,
+            recoverMagic: 1,
+            speed: 1,
+            deftness: 1,
+            rank: Rank.S_plus,
+            maximumCost: 1,
+            effects: "str",
+        }],
+        target: Rank.S_plus,
+    };
+    const monster2: Monster = {
+        id: 0,
+        name: "str",
+        color: Color.Red,
+        cost: 1,
+        hearts: [],
+        target: null,
+    };
+    for (const param in monster1) {
+        if (param in obj === false) {
+            return false;
+        }
+        const x = typeof monster1[param as keyof Monster];
+        const y = monster2[param as keyof Monster];
+        const value = obj[param];
+        if (x !== typeof value && y !== value) {
+            return false;
+        }
+    }
+    const m = obj as Monster;
+    if (m.color in Color === false) {
+        return false;
+    }
+    if (m.target !== null && m.target in Rank === false) {
+        return false;
+    }
+    if (!Array.isArray(m.hearts)) {
+        return false;
+    }
+    const heart = monster1.hearts[0];
+    for (const h of m.hearts) {
+        if (typeof h !== "object" || h === null) {
+            return false;
+        }
+        for (const param in heart) {
+            if (param in h === false) {
+                return false;
+            }
+            const x = typeof heart[param as keyof Heart];
+            const y = typeof h[param as keyof Heart];
+            if (x !== y) {
+                return false;
+            }
+        }
+        if (h.rank in Rank === false) {
+            return false;
+        }
+    }
+    if (m.target !== null) {
+        if (m.hearts.findIndex( h => h.rank === m.target ) < 0) {
+            return false
+        }
+    }
+    return true;
+}
+
+function replaceMonsterList(newMonsterList: Monster[]) {
+    monsterMap = new Map();
+    monsterList = [];
+    monsterNameList = [];
+    document.getElementById("monster_name_list")!.innerHTML = "";
+    document.getElementById("heart_list")!.innerHTML = "";
+    for (const monster of newMonsterList) {
+        addHeart(monster);
+    }
 }
 
 document.getElementById("preset_heartset")!
@@ -363,7 +488,7 @@ document.getElementById("add_heart_dialog")!
 document.getElementById("download")!
 .addEventListener("click", () => {
     if (monsterList.length === 0) {
-        dialogAlert("Empty");
+        dialogAlert("リストが空だよ");
         return;
     }
     const link = document.getElementById("downloadlink")!;
@@ -391,5 +516,37 @@ document.getElementById("load_file")!
     dialog.showModal();
 });
 
+document.getElementById("file_load_dialog")!
+.addEventListener("close", () => {
+    const dialog = document.getElementById("file_load_dialog") as HTMLDialogElement;
+    if (dialog.returnValue !== "load") {
+        return;
+    }
+    const elements = (dialog.querySelector("form") as HTMLFormElement).elements;
+    const file = (elements.namedItem("file") as HTMLInputElement).files![0];
+    const option = (elements.namedItem("file_load_option") as HTMLInputElement).value;
+    file.text().then( text => {
+        const list: Monster[] = JSON.parse(text);
+        if (!Array.isArray(list)) {
+            throw "ファイルフォーマットが不正です！";
+        }
+        for (const monster of list) {
+            if (!checkMonsterFormat(monster)) {
+                throw "ファイルフォーマットが不正です！";
+            }
+        }
+        switch (option) {
+            case "file_as_newer":
+                break;
+            case "file_as_older":
+                break;
+            default:
+                replaceMonsterList(list);
+                break;
+        }
+    }).catch ( err => {
+        dialogAlert(`${err}`);
+    });
+});
 
 dialogAlert("[DEBUG] OK");

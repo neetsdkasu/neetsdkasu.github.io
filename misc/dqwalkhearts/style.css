@@ -36,7 +36,7 @@ input[id$="_yellow"]:checked + label
 .purple,
 input[id$="_purple"]:checked + label
 {
-    color: lightblue;
+    color: pink;
     background-color: purple;
 }
 
@@ -89,7 +89,24 @@ fieldset > details > summary
     margin-right: 1rem;
 }
 
-#file_load_dialog input
+#alert_dialog > div
 {
     margin: 2rem;
+}
+
+#file_load_dialog fieldset
+{
+    font-size: small;
+    margin: 1rem;
+}
+
+.monster-rank:checked + span,
+input[name$="_rank"]:checked + label
+{
+    font-weight: bold;
+}
+
+.monster-rank:disabled + span
+{
+    color: lightgray;
 }
