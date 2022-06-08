@@ -37,9 +37,9 @@
       <form method="dialog">
         <div><input type="file" name="file" accept=".json,application/json" required /></div>
         <fieldset>
-          <div><label><input type="radio" name="file_load_option" value="truncate"      checked>現在のリストを全て破棄してファイルのリストを読込む</label></div>
+          <div><label><input type="radio" name="file_load_option" value="truncate"             >現在のリストを全て破棄してファイルのリストを読込む</label></div>
           <div><label><input type="radio" name="file_load_option" value="file_as_newer"        >ファイルのリストを最新として現在のリストへ追加する</label></div>
-          <div><label><input type="radio" name="file_load_option" value="file_as_older"        >現在のリストを最新としてファイルのリストを追加する</label></div>
+          <div><label><input type="radio" name="file_load_option" value="file_as_older" checked>現在のリストを最新としてファイルのリストを追加する</label></div>
         </fieldset>
         <hr />
         <div>
@@ -183,12 +183,12 @@
         </div>
         <div>
           <span>こころ枠4:</span>
-          <input type="checkbox" name="heart4_yellow" id="heart4_yellow"         /><label for="heart4_yellow">黄(戦)</label>
-          <input type="checkbox" name="heart4_purple" id="heart4_purple"         /><label for="heart4_purple">紫(魔)</label>
-          <input type="checkbox" name="heart4_green"  id="heart4_green"          /><label for="heart4_green" >緑(僧)</label>
-          <input type="checkbox" name="heart4_red"    id="heart4_red"            /><label for="heart4_red"   >赤(武)</label>
-          <input type="checkbox" name="heart4_blue"   id="heart4_blue"           /><label for="heart4_blue"  >青(盗)</label>
-          <input type="checkbox" name="heart4_omit"   id="heart4_omit"   checked /><label for="heart4_omit"  >使用しない</label>
+          <input type="checkbox" name="heart4_yellow" id="heart4_yellow" disabled /><label for="heart4_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart4_purple" id="heart4_purple" disabled /><label for="heart4_purple">紫(魔)</label>
+          <input type="checkbox" name="heart4_green"  id="heart4_green"  disabled /><label for="heart4_green" >緑(僧)</label>
+          <input type="checkbox" name="heart4_red"    id="heart4_red"    disabled /><label for="heart4_red"   >赤(武)</label>
+          <input type="checkbox" name="heart4_blue"   id="heart4_blue"   disabled /><label for="heart4_blue"  >青(盗)</label>
+          <input type="checkbox" name="heart4_omit"   id="heart4_omit"   checked  /><label for="heart4_omit"  >使用しない</label>
         </div>
         <div>
           <label for="heart_maximum_cost">こころ最大コスト:</label>

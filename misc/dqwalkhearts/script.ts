@@ -374,10 +374,28 @@ function setPreset(job: Job): void {
         update(i, "blue",   color & Color.Blue);
         update(i, "omit",   color & Color.None);
     }
+    {
+        const omit = (document.getElementById("heart4_omit") as HTMLInputElement).checked;
+        const elem = (id: string) => {
+            const e = document.getElementById(id) as HTMLInputElement;
+            if (omit) {
+                e.checked = false;
+            }
+            e.disabled = omit;
+        };
+        // querySelectorAll('[id^="heart4_"]:not([id$="_omit"])') でも取れる？
+        elem("heart4_yellow");
+        elem("heart4_purple");
+        elem("heart4_green");
+        elem("heart4_red");
+        elem("heart4_blue");
+    }
 }
 
 function checkMonsterFormat(obj: any): boolean {
     if (typeof obj !== "object" || obj === null) {
+        console.log("オブジェクト型じゃない");
+        console.log(obj);
         return false;
     }
     const monster1: Monster = {
@@ -410,41 +428,65 @@ function checkMonsterFormat(obj: any): boolean {
     };
     for (const param in monster1) {
         if (param in obj === false) {
+            console.log(`パラメータが無い ${param}`);
+            console.log(obj);
             return false;
         }
         const x = typeof monster1[param as keyof Monster];
         const y = monster2[param as keyof Monster];
         const value = obj[param];
         if (x !== typeof value && y !== value) {
+            console.log(`パラメータの型が一致しない ${param} ${x} ${y}`);
+            console.log(value);
+            console.log(obj);
             return false;
         }
     }
     const m = obj as Monster;
     if (m.color in Color === false) {
+        console.log("Colorに存在しない値が設定されている")
+        console.log(obj);
         return false;
     }
     if (m.target !== null && m.target in Rank === false) {
+        console.log("Rankに存在しない値が設定されている")
+        console.log(obj);
         return false;
     }
     if (!Array.isArray(m.hearts)) {
+        console.log("こころの配列がない")
+        console.log(obj);
         return false;
     }
     const heart = monster1.hearts[0];
     for (const h of m.hearts) {
         if (typeof h !== "object" || h === null) {
+            console.log("オブジェクト型じゃない");
+            console.log(h);
+            console.log(obj);
             return false;
         }
         for (const param in heart) {
             if (param in h === false) {
+                console.log(`パラメータが存在しない ${param}`);
+                console.log(h);
+                console.log(obj);
                 return false;
             }
             const x = typeof heart[param as keyof Heart];
             const y = typeof h[param as keyof Heart];
             if (x !== y) {
+                console.log(`パラメータの型が一致しない ${param} ${x}`);
+                console.log(y);
+                console.log(h);
+                console.log(obj);
                 return false;
             }
         }
         if (h.rank in Rank === false) {
+            console.log("Rankに存在しない値が設定されている")
+            console.log(h);
+            console.log(obj);
             return false;
         }
     }
@@ -456,11 +498,15 @@ function checkMonsterFormat(obj: any): boolean {
             }
         }
         if (c > 1) {
+            console.log(`同じRankのこころが複数設定されている ${Rank[r]}`);
+            console.log(obj);
             return false;
         }
     }
     if (m.target !== null) {
         if (m.hearts.findIndex(h => h.rank === m.target) < 0) {
+            console.log("存在しないRankのこころが選択されている");
+            console.log(obj);
             return false
         }
     }
@@ -511,6 +557,24 @@ document.getElementById("preset_heartset")!
         }
     }
     dialogAlert(`Unknown ID: ${value}`);
+});
+
+document.getElementById("heart4_omit")!
+.addEventListener("change", () => {
+    const omit = (document.getElementById("heart4_omit") as HTMLInputElement).checked;
+    const elem = (id: string) => {
+        const e = document.getElementById(id) as HTMLInputElement;
+        if (omit) {
+            e.checked = false;
+        }
+        e.disabled = omit;
+    };
+    // querySelectorAll('[id^="heart4_"]:not([id$="_omit"])') でも取れる？
+    elem("heart4_yellow");
+    elem("heart4_purple");
+    elem("heart4_green");
+    elem("heart4_red");
+    elem("heart4_blue");
 });
 
 document.getElementById("add_heart")!

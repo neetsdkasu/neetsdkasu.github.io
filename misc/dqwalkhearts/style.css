@@ -43,7 +43,7 @@ input[id$="_purple"]:checked + label
 .green,
 input[id$="_green"]:checked + label
 {
-    color: yellow;
+    color: lime;
     background-color: green;
 }
 
@@ -106,7 +106,13 @@ input[name$="_rank"]:checked + label
     font-weight: bold;
 }
 
+input[type="checkbox"]:disabled + label,
 .monster-rank:disabled + span
 {
     color: lightgray;
+}
+
+#downloadlink > span
+{
+    font-size: x-small;
 }
