@@ -4,7 +4,7 @@
 // author: Leonardone @ NEETSDKASU
 //
 
-function dialogAlert(msg: string) {
+function dialogAlert(msg: string): void {
     document.getElementById("alert_message")!.textContent = msg;
     const dialog = document.getElementById("alert_dialog")! as HTMLDialogElement;
     dialog.showModal();
@@ -22,7 +22,7 @@ function binarySearch<T>(arr: Array<T>, value: T, less: (value: T, than: T) => b
 }
 
 function insert<T>(arr: Array<T>, value: T, less: (value: T, than: T) => boolean): number {
-    const index = arr.findIndex( e => less(value, e) );
+    const index = arr.findIndex(e => less(value, e));
     if (index < 0) {
         arr.push(value);
         return arr.length - 1;
@@ -136,7 +136,7 @@ let monsterMap: Map<string, Monster> = new Map();
 let monsterList: Monster[] = [];
 let monsterNameList: string[] = [];
 
-function showNewHeart(monster: Monster) {
+function showNewHeart(monster: Monster): void {
     const template = document.getElementById("heart_list_item") as HTMLTemplateElement;
     const fragment = template.content.cloneNode(true) as DocumentFragment;
     const text = (cname: string, value: any): HTMLElement => {
@@ -148,7 +148,6 @@ function showNewHeart(monster: Monster) {
     text(".monster-cost", monster.cost);
     const csi = SingleColorInfoMap.get(monster.color)!;
     text(".monster-color", csi.text).classList.add(csi.colorName);
-    const heart = monster.hearts.find( h => h.rank === monster.target )!;
     const radios = fragment.querySelectorAll('input.monster-rank');
     const monsterRankRadioName = `monster_${monster.id}_rank`;
     for (const radio of radios) {
@@ -161,27 +160,81 @@ function showNewHeart(monster: Monster) {
             });
         } else {
             const rank = Rank[elm.value as keyof typeof Rank];
-            elm.disabled = monster.hearts.findIndex( h => h.rank === rank ) < 0;
-            elm.checked = rank === heart.rank;
+            elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
             elm.addEventListener("change", () => {
                 monster.target = rank;
                 showUpdatedHeart(monster, false);
             });
         }
     }
-    text(".monster-maximumhp", heart.maximumHP);
-    text(".monster-maximummp", heart.maximumMP);
-    text(".monster-power", heart.power);
-    text(".monster-defence", heart.defence);
-    text(".monster-attackmagic", heart.attackMagic);
-    text(".monster-recovermagic", heart.recoverMagic);
-    text(".monster-speed", heart.speed);
-    text(".monster-deftness", heart.deftness);
-    text(".monster-maximumcost", heart.maximumCost);
-    text(".monster-effects", heart.effects);
+    if (monster.target === null) {
+        fragment.firstElementChild!.classList.add("omit");
+        for (const radio of radios) {
+            const elm = radio as HTMLInputElement;
+            if (elm.value === "omit") {
+                elm.checked = true;
+            }
+        }
+        text(".monster-maximumhp", "-");
+        text(".monster-maximummp", "-");
+        text(".monster-power", "-");
+        text(".monster-defence", "-");
+        text(".monster-attackmagic", "-");
+        text(".monster-recovermagic", "-");
+        text(".monster-speed", "-");
+        text(".monster-deftness", "-");
+        text(".monster-maximumcost", "-");
+        text(".monster-effects", "-");
+    } else {
+        const heart = monster.hearts.find(h => h.rank === monster.target)!;
+        for (const radio of radios) {
+            const elm = radio as HTMLInputElement;
+            if (elm.value !== "omit") {
+                const rank = Rank[elm.value as keyof typeof Rank];
+                elm.checked = rank === heart.rank;
+            }
+        }
+        text(".monster-maximumhp", heart.maximumHP);
+        text(".monster-maximummp", heart.maximumMP);
+        text(".monster-power", heart.power);
+        text(".monster-defence", heart.defence);
+        text(".monster-attackmagic", heart.attackMagic);
+        text(".monster-recovermagic", heart.recoverMagic);
+        text(".monster-speed", heart.speed);
+        text(".monster-deftness", heart.deftness);
+        text(".monster-maximumcost", heart.maximumCost);
+        text(".monster-effects", heart.effects);
+    }
+    fragment.querySelector("button")!.addEventListener("click", () => {
+        const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
+        const form = dialog.querySelector("form") as HTMLFormElement;
+        form.reset();
+        const elements = form.elements;
+        const elem = (name: string, value: string) => {
+            (elements.namedItem(name) as HTMLInputElement).value = value;
+        };
+        elem("add_monster_name", monster.name);
+        elem("add_cost", `${monster.cost}`);
+        elem("add_color", `${Color[monster.color]}`);
+        if (monster.target !== null) {
+            elem("add_rank", `${Rank[monster.target]}`);
+            const h = monster.hearts.find(h => h.rank === monster.target)!;
+            elem("add_maximumhp", `${h.maximumHP}`);
+            elem("add_maximummp", `${h.maximumMP}`);
+            elem("add_power", `${h.power}`);
+            elem("add_defence", `${h.defence}`);
+            elem("add_attackmagic", `${h.attackMagic}`);
+            elem("add_recovermagic", `${h.recoverMagic}`);
+            elem("add_speed", `${h.speed}`);
+            elem("add_deftness", `${h.deftness}`);
+            elem("add_maximumcost", `${h.maximumCost}`);
+            elem("add_effects", `${h.effects}`);
+        }
+        dialog.showModal();
+    });
     fragment.firstElementChild!.id = `monster-${monster.id}`;
     const holder = document.getElementById("heart_list")!;
-    const index = monsterList.findIndex( m => m.id === monster.id );
+    const index = monsterList.findIndex(m => m.id === monster.id);
     if (index + 1 === monsterList.length) {
         holder.appendChild(fragment);
     } else {
@@ -190,12 +243,12 @@ function showNewHeart(monster: Monster) {
     }
 }
 
-function showUpdatedHeart(monster: Monster, reorder: boolean) {
+function showUpdatedHeart(monster: Monster, reorder: boolean): void {
     const item = document.getElementById(`monster-${monster.id}`)!;
     if (reorder) {
         const holder = document.getElementById("heart_list")!;
         holder.removeChild(item);
-        const index = monsterList.findIndex( m => m.id === monster.id );
+        const index = monsterList.findIndex(m => m.id === monster.id);
         if (index + 1 === monsterList.length) {
             holder.appendChild(item);
         } else {
@@ -223,7 +276,7 @@ function showUpdatedHeart(monster: Monster, reorder: boolean) {
             const elm = radio as HTMLInputElement;
             if (elm.value !== "omit") {
                 const rank = Rank[elm.value as keyof typeof Rank];
-                elm.disabled = monster.hearts.findIndex( h => h.rank === rank ) < 0;
+                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
             } else {
                 elm.checked = true;
             }
@@ -240,12 +293,12 @@ function showUpdatedHeart(monster: Monster, reorder: boolean) {
         text(".monster-effects", "-");
     } else {
         item.classList.remove("omit");
-        const heart = monster.hearts.find( h => h.rank === monster.target )!;
+        const heart = monster.hearts.find(h => h.rank === monster.target)!;
         for (const radio of radios) {
             const elm = radio as HTMLInputElement;
             if (elm.value !== "omit") {
                 const rank = Rank[elm.value as keyof typeof Rank];
-                elm.disabled = monster.hearts.findIndex( h => h.rank === rank ) < 0;
+                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
                 elm.checked = rank === heart.rank;
             }
         }
@@ -262,11 +315,11 @@ function showUpdatedHeart(monster: Monster, reorder: boolean) {
     }
 }
 
-function addMonsterNameList(newName: string) {
+function addMonsterNameList(newName: string): void {
     const item = document.createElement("option");
     item.value = newName;
     const list = document.getElementById("monster_name_list")!;
-    const index = insert(monsterNameList, newName, (n, e) => n < e );
+    const index = insert(monsterNameList, newName, (n, e) => n < e);
     if (index + 1 === monsterNameList.length) {
         list.appendChild(item);
     } else {
@@ -275,37 +328,36 @@ function addMonsterNameList(newName: string) {
     }
 }
 
-function addHeart(newMonster: Monster) {
+function addHeart(newMonster: Monster): void {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name)!;
         for (const heart of newMonster.hearts) {
-            const index = monster.hearts.findIndex( h => h.rank === heart.rank );
+            const index = monster.hearts.findIndex(h => h.rank === heart.rank);
             if (index < 0) {
                 monster.hearts.push(heart);
             } else {
                 monster.hearts[index] = heart;
             }
-            monster.target = heart.rank;
         }
+        monster.target = newMonster.target;
         monster.color = newMonster.color;
         if (monster.cost === newMonster.cost) {
             showUpdatedHeart(monster, false);
         } else {
             monster.cost = newMonster.cost;
-            monsterList.sort( (a, b) => b.cost - a.cost );
+            monsterList.sort((a, b) => b.cost - a.cost);
             showUpdatedHeart(monster, true);
         }
     } else {
         addMonsterNameList(newMonster.name);
         newMonster.id = monsterList.length;
-        newMonster.target = newMonster.hearts[0].rank;
         monsterMap.set(newMonster.name, newMonster);
-        insert(monsterList, newMonster, (n, e) => n.cost > e.cost );
+        insert(monsterList, newMonster, (n, e) => n.cost > e.cost);
         showNewHeart(newMonster);
     }
 }
 
-function setPreset(job: Job) {
+function setPreset(job: Job): void {
     function update(n: number, c: string, v: number): void {
         const id = `heart${n+1}_${c}`;
         const elem = document.getElementById(id);
@@ -396,21 +448,54 @@ function checkMonsterFormat(obj: any): boolean {
             return false;
         }
     }
+    for (let r = Rank.S_plus; r <= Rank.D; r++) {
+        let c = 0;
+        for (const h of m.hearts) {
+            if (h.rank === r) {
+                c++;
+            }
+        }
+        if (c > 1) {
+            return false;
+        }
+    }
     if (m.target !== null) {
-        if (m.hearts.findIndex( h => h.rank === m.target ) < 0) {
+        if (m.hearts.findIndex(h => h.rank === m.target) < 0) {
             return false
         }
     }
     return true;
 }
 
-function replaceMonsterList(newMonsterList: Monster[]) {
+function replaceMonsterList(newMonsterList: Monster[]): void {
     monsterMap = new Map();
     monsterList = [];
     monsterNameList = [];
     document.getElementById("monster_name_list")!.innerHTML = "";
     document.getElementById("heart_list")!.innerHTML = "";
     for (const monster of newMonsterList) {
+        addHeart(monster);
+    }
+}
+
+function addAllMonsterList(list: Monster[]): void {
+    for (const monster of list) {
+        addHeart(monster);
+    }
+}
+
+function mergeMonsterList(list: Monster[]): void {
+    for (const monster of list) {
+        if (monsterMap.has(monster.name)) {
+            const orig = monsterMap.get(monster.name)!;
+            monster.hearts = monster.hearts.filter(h => orig.hearts.findIndex(oh => oh.rank === h.rank) < 0);
+            if (monster.hearts.length === 0) {
+                continue;
+            }
+            monster.color = orig.color;
+            monster.cost = orig.cost;
+            monster.target = orig.target;
+        }
         addHeart(monster);
     }
 }
@@ -462,6 +547,7 @@ document.getElementById("add_heart_dialog")!
     const str = (name: string) => (elements.namedItem(name) as HTMLInputElement).value;
     const noNaN = (v: number) => isNaN(v) ? 0 : v;
     const num = (name: string) => noNaN(parseInt(str(name)));
+    const rank = Rank[str("add_rank") as keyof typeof Rank];
     const monster: Monster = {
         id: 0,
         name: str("add_monster_name"),
@@ -476,11 +562,11 @@ document.getElementById("add_heart_dialog")!
             recoverMagic: num("add_recovermagic"),
             speed: num("add_speed"),
             deftness: num("add_deftness"),
-            rank: Rank[str("add_rank") as keyof typeof Rank],
+            rank: rank,
             maximumCost: num("add_maximumcost"),
             effects: str("add_effects"),
         }],
-        target: null,
+        target: rank,
     };
     addHeart(monster);
 });
@@ -537,14 +623,16 @@ document.getElementById("file_load_dialog")!
         }
         switch (option) {
             case "file_as_newer":
+                addAllMonsterList(list);
                 break;
             case "file_as_older":
+                mergeMonsterList(list);
                 break;
             default:
                 replaceMonsterList(list);
                 break;
         }
-    }).catch ( err => {
+    }).catch( err => {
         dialogAlert(`${err}`);
     });
 });

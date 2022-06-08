@@ -105,7 +105,6 @@ function showNewHeart(monster) {
     text(".monster-cost", monster.cost);
     const csi = SingleColorInfoMap.get(monster.color);
     text(".monster-color", csi.text).classList.add(csi.colorName);
-    const heart = monster.hearts.find(h => h.rank === monster.target);
     const radios = fragment.querySelectorAll('input.monster-rank');
     const monsterRankRadioName = `monster_${monster.id}_rank`;
     for (const radio of radios) {
@@ -120,23 +119,78 @@ function showNewHeart(monster) {
         else {
             const rank = Rank[elm.value];
             elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
-            elm.checked = rank === heart.rank;
             elm.addEventListener("change", () => {
                 monster.target = rank;
                 showUpdatedHeart(monster, false);
             });
         }
     }
-    text(".monster-maximumhp", heart.maximumHP);
-    text(".monster-maximummp", heart.maximumMP);
-    text(".monster-power", heart.power);
-    text(".monster-defence", heart.defence);
-    text(".monster-attackmagic", heart.attackMagic);
-    text(".monster-recovermagic", heart.recoverMagic);
-    text(".monster-speed", heart.speed);
-    text(".monster-deftness", heart.deftness);
-    text(".monster-maximumcost", heart.maximumCost);
-    text(".monster-effects", heart.effects);
+    if (monster.target === null) {
+        fragment.firstElementChild.classList.add("omit");
+        for (const radio of radios) {
+            const elm = radio;
+            if (elm.value === "omit") {
+                elm.checked = true;
+            }
+        }
+        text(".monster-maximumhp", "-");
+        text(".monster-maximummp", "-");
+        text(".monster-power", "-");
+        text(".monster-defence", "-");
+        text(".monster-attackmagic", "-");
+        text(".monster-recovermagic", "-");
+        text(".monster-speed", "-");
+        text(".monster-deftness", "-");
+        text(".monster-maximumcost", "-");
+        text(".monster-effects", "-");
+    }
+    else {
+        const heart = monster.hearts.find(h => h.rank === monster.target);
+        for (const radio of radios) {
+            const elm = radio;
+            if (elm.value !== "omit") {
+                const rank = Rank[elm.value];
+                elm.checked = rank === heart.rank;
+            }
+        }
+        text(".monster-maximumhp", heart.maximumHP);
+        text(".monster-maximummp", heart.maximumMP);
+        text(".monster-power", heart.power);
+        text(".monster-defence", heart.defence);
+        text(".monster-attackmagic", heart.attackMagic);
+        text(".monster-recovermagic", heart.recoverMagic);
+        text(".monster-speed", heart.speed);
+        text(".monster-deftness", heart.deftness);
+        text(".monster-maximumcost", heart.maximumCost);
+        text(".monster-effects", heart.effects);
+    }
+    fragment.querySelector("button").addEventListener("click", () => {
+        const dialog = document.getElementById("add_heart_dialog");
+        const form = dialog.querySelector("form");
+        form.reset();
+        const elements = form.elements;
+        const elem = (name, value) => {
+            elements.namedItem(name).value = value;
+        };
+        elem("add_monster_name", monster.name);
+        elem("add_cost", `${monster.cost}`);
+        elem("add_color", `${Color[monster.color]}`);
+        if (monster.target !== null) {
+            elem("add_rank", `${Rank[monster.target]}`);
+            const h = monster.hearts.find(h => h.rank === monster.target);
+            elem("add_maximumhp", `${h.maximumHP}`);
+            elem("add_maximummp", `${h.maximumMP}`);
+            elem("add_power", `${h.power}`);
+            elem("add_defence", `${h.defence}`);
+            elem("add_attackmagic", `${h.attackMagic}`);
+            elem("add_recovermagic", `${h.recoverMagic}`);
+            elem("add_speed", `${h.speed}`);
+            elem("add_deftness", `${h.deftness}`);
+            elem("add_maximumcost", `${h.maximumCost}`);
+            elem("add_effects", `${h.effects}`);
+        }
+        dialog.showModal();
+    });
     fragment.firstElementChild.id = `monster-${monster.id}`;
     const holder = document.getElementById("heart_list");
     const index = monsterList.findIndex(m => m.id === monster.id);
@@ -246,8 +300,8 @@ function addHeart(newMonster) {
             else {
                 monster.hearts[index] = heart;
             }
-            monster.target = heart.rank;
         }
+        monster.target = newMonster.target;
         monster.color = newMonster.color;
         if (monster.cost === newMonster.cost) {
             showUpdatedHeart(monster, false);
@@ -261,7 +315,6 @@ function addHeart(newMonster) {
     else {
         addMonsterNameList(newMonster.name);
         newMonster.id = monsterList.length;
-        newMonster.target = newMonster.hearts[0].rank;
         monsterMap.set(newMonster.name, newMonster);
         insert(monsterList, newMonster, (n, e) => n.cost > e.cost);
         showNewHeart(newMonster);
@@ -357,6 +410,17 @@ function checkMonsterFormat(obj) {
             return false;
         }
     }
+    for (let r = Rank.S_plus; r <= Rank.D; r++) {
+        let c = 0;
+        for (const h of m.hearts) {
+            if (h.rank === r) {
+                c++;
+            }
+        }
+        if (c > 1) {
+            return false;
+        }
+    }
     if (m.target !== null) {
         if (m.hearts.findIndex(h => h.rank === m.target) < 0) {
             return false;
@@ -371,6 +435,26 @@ function replaceMonsterList(newMonsterList) {
     document.getElementById("monster_name_list").innerHTML = "";
     document.getElementById("heart_list").innerHTML = "";
     for (const monster of newMonsterList) {
+        addHeart(monster);
+    }
+}
+function addAllMonsterList(list) {
+    for (const monster of list) {
+        addHeart(monster);
+    }
+}
+function mergeMonsterList(list) {
+    for (const monster of list) {
+        if (monsterMap.has(monster.name)) {
+            const orig = monsterMap.get(monster.name);
+            monster.hearts = monster.hearts.filter(h => orig.hearts.findIndex(oh => oh.rank === h.rank) < 0);
+            if (monster.hearts.length === 0) {
+                continue;
+            }
+            monster.color = orig.color;
+            monster.cost = orig.cost;
+            monster.target = orig.target;
+        }
         addHeart(monster);
     }
 }
@@ -417,6 +501,7 @@ document.getElementById("add_heart_dialog")
     const str = (name) => elements.namedItem(name).value;
     const noNaN = (v) => isNaN(v) ? 0 : v;
     const num = (name) => noNaN(parseInt(str(name)));
+    const rank = Rank[str("add_rank")];
     const monster = {
         id: 0,
         name: str("add_monster_name"),
@@ -431,11 +516,11 @@ document.getElementById("add_heart_dialog")
                 recoverMagic: num("add_recovermagic"),
                 speed: num("add_speed"),
                 deftness: num("add_deftness"),
-                rank: Rank[str("add_rank")],
+                rank: rank,
                 maximumCost: num("add_maximumcost"),
                 effects: str("add_effects"),
             }],
-        target: null,
+        target: rank,
     };
     addHeart(monster);
 });
@@ -488,8 +573,10 @@ document.getElementById("file_load_dialog")
         }
         switch (option) {
             case "file_as_newer":
+                addAllMonsterList(list);
                 break;
             case "file_as_older":
+                mergeMonsterList(list);
                 break;
             default:
                 replaceMonsterList(list);
