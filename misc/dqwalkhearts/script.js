@@ -4,6 +4,7 @@
 //
 // author: Leonardone @ NEETSDKASU
 //
+const DEBUG = true;
 const LocalStoragePath = "dqwalkhearts";
 function dialogAlert(msg) {
     document.getElementById("alert_message").textContent = msg;
@@ -104,8 +105,8 @@ function saveMonsterList() {
         window.localStorage.setItem(LocalStoragePath, json);
     }
     catch (err) {
-        // DISCARD
-        // console.log(err);
+        noStorage = true;
+        console.log(err);
     }
 }
 function loadMonsterList() {
@@ -122,8 +123,8 @@ function loadMonsterList() {
         }
     }
     catch (err) {
-        // DISCARD
-        // console.log(err);
+        noStorage = true;
+        console.log(err);
     }
 }
 function showNewHeart(monster) {
@@ -697,6 +698,7 @@ document.getElementById("file_load_dialog")
 (function () {
     const params = new URLSearchParams(window.location.search);
     if (params.has("demo")) {
+        noStorage = true;
         fetch("./dqwalkhearts/dqwalkhearts.json")
             .then(r => r.json())
             .then(json => {
@@ -706,8 +708,8 @@ document.getElementById("file_load_dialog")
         })
             .catch(err => {
             dialogAlert(`${err}`);
+            console.log(err);
         });
-        noStorage = true;
     }
     else if (params.has("nostorage")) {
         noStorage = true;
@@ -716,4 +718,6 @@ document.getElementById("file_load_dialog")
         loadMonsterList();
     }
 })();
-dialogAlert("[DEBUG] OK");
+if (DEBUG) {
+    dialogAlert("[DEBUG] OK");
+}
