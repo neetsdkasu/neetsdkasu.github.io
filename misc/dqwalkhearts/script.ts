@@ -4,6 +4,8 @@
 // author: Leonardone @ NEETSDKASU
 //
 
+const LocalStoragePath = "dqwalkhearts";
+
 function dialogAlert(msg: string): void {
     document.getElementById("alert_message")!.textContent = msg;
     const dialog = document.getElementById("alert_dialog")! as HTMLDialogElement;
@@ -135,6 +137,39 @@ const SingleColorInfoMap: Map<Color, SingleColorInfo> = (() => {
 let monsterMap: Map<string, Monster> = new Map();
 let monsterList: Monster[] = [];
 let monsterNameList: string[] = [];
+
+let noStorage: boolean = false;
+
+function saveMonsterList(): void {
+    if (noStorage) {
+        return;
+    }
+    try {
+        const json = JSON.stringify(monsterList);
+        window.localStorage.setItem(LocalStoragePath, json);
+    } catch (err) {
+        // DISCARD
+        // console.log(err);
+    }
+}
+
+function loadMonsterList(): void {
+    if (noStorage) {
+        return;
+    }
+    try {
+        const json = window.localStorage.getItem(LocalStoragePath);
+        if (json !== null) {
+            const list: unknown = JSON.parse(json);
+            if (isMonsterList(list)) {
+                addAllMonsterList(list);
+            }
+        }
+    } catch (err) {
+        // DISCARD
+        // console.log(err);
+    }
+}
 
 function showNewHeart(monster: Monster): void {
     const template = document.getElementById("heart_list_item") as HTMLTemplateElement;
@@ -392,12 +427,28 @@ function setPreset(job: Job): void {
     }
 }
 
-function checkMonsterFormat(obj: any): boolean {
-    if (typeof obj !== "object" || obj === null) {
-        console.log("オブジェクト型じゃない");
+function isMonsterList(obj: Monster[] | unknown): obj is Monster[] {
+    if (!Array.isArray(obj)) {
+        console.log("こころリストじゃないJSONファイル");
         console.log(obj);
         return false;
     }
+    const list = obj as (Monster | unknown)[];
+    for (const monster of list) {
+        if (!isMonster(monster)) {
+            return false;
+        }
+    }
+    return true
+}
+
+function isMonster(anyobj: Monster | unknown): anyobj is Monster {
+    if (typeof anyobj !== "object" || anyobj === null) {
+        console.log("オブジェクト型じゃない");
+        console.log(anyobj);
+        return false;
+    }
+    const obj: {[index: string]: any} = anyobj;
     const monster1: Monster = {
         id: 0,
         name: "str",
@@ -633,6 +684,7 @@ document.getElementById("add_heart_dialog")!
         target: rank,
     };
     addHeart(monster);
+    saveMonsterList();
 });
 
 document.getElementById("download")!
@@ -676,14 +728,9 @@ document.getElementById("file_load_dialog")!
     const file = (elements.namedItem("file") as HTMLInputElement).files![0];
     const option = (elements.namedItem("file_load_option") as HTMLInputElement).value;
     file.text().then( text => {
-        const list: Monster[] = JSON.parse(text);
-        if (!Array.isArray(list)) {
+        const list: unknown = JSON.parse(text);
+        if (!isMonsterList(list)) {
             throw "ファイルフォーマットが不正です！";
-        }
-        for (const monster of list) {
-            if (!checkMonsterFormat(monster)) {
-                throw "ファイルフォーマットが不正です！";
-            }
         }
         switch (option) {
             case "file_as_newer":
@@ -696,9 +743,31 @@ document.getElementById("file_load_dialog")!
                 replaceMonsterList(list);
                 break;
         }
+        saveMonsterList();
     }).catch( err => {
         dialogAlert(`${err}`);
     });
 });
+
+(function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("demo")) {
+        fetch("./dqwalkhearts/dqwalkhearts.json")
+        .then(r => r.json())
+        .then( json => {
+            if (isMonsterList(json)) {
+                addAllMonsterList(json);
+            }
+        })
+        .catch(err => {
+            dialogAlert(`${err}`);
+        });
+        noStorage = true;
+    } else if (params.has("nostorage")) {
+        noStorage = true;
+    } else {
+        loadMonsterList();
+    }
+})();
 
 dialogAlert("[DEBUG] OK");

@@ -4,6 +4,7 @@
 //
 // author: Leonardone @ NEETSDKASU
 //
+const LocalStoragePath = "dqwalkhearts";
 function dialogAlert(msg) {
     document.getElementById("alert_message").textContent = msg;
     const dialog = document.getElementById("alert_dialog");
@@ -93,6 +94,38 @@ const SingleColorInfoMap = (() => {
 let monsterMap = new Map();
 let monsterList = [];
 let monsterNameList = [];
+let noStorage = false;
+function saveMonsterList() {
+    if (noStorage) {
+        return;
+    }
+    try {
+        const json = JSON.stringify(monsterList);
+        window.localStorage.setItem(LocalStoragePath, json);
+    }
+    catch (err) {
+        // DISCARD
+        // console.log(err);
+    }
+}
+function loadMonsterList() {
+    if (noStorage) {
+        return;
+    }
+    try {
+        const json = window.localStorage.getItem(LocalStoragePath);
+        if (json !== null) {
+            const list = JSON.parse(json);
+            if (isMonsterList(list)) {
+                addAllMonsterList(list);
+            }
+        }
+    }
+    catch (err) {
+        // DISCARD
+        // console.log(err);
+    }
+}
 function showNewHeart(monster) {
     const template = document.getElementById("heart_list_item");
     const fragment = template.content.cloneNode(true);
@@ -354,12 +387,27 @@ function setPreset(job) {
         elem("heart4_blue");
     }
 }
-function checkMonsterFormat(obj) {
-    if (typeof obj !== "object" || obj === null) {
-        console.log("オブジェクト型じゃない");
+function isMonsterList(obj) {
+    if (!Array.isArray(obj)) {
+        console.log("こころリストじゃないJSONファイル");
         console.log(obj);
         return false;
     }
+    const list = obj;
+    for (const monster of list) {
+        if (!isMonster(monster)) {
+            return false;
+        }
+    }
+    return true;
+}
+function isMonster(anyobj) {
+    if (typeof anyobj !== "object" || anyobj === null) {
+        console.log("オブジェクト型じゃない");
+        console.log(anyobj);
+        return false;
+    }
+    const obj = anyobj;
     const monster1 = {
         id: 0,
         name: "str",
@@ -586,6 +634,7 @@ document.getElementById("add_heart_dialog")
         target: rank,
     };
     addHeart(monster);
+    saveMonsterList();
 });
 document.getElementById("download")
     .addEventListener("click", () => {
@@ -626,13 +675,8 @@ document.getElementById("file_load_dialog")
     const option = elements.namedItem("file_load_option").value;
     file.text().then(text => {
         const list = JSON.parse(text);
-        if (!Array.isArray(list)) {
+        if (!isMonsterList(list)) {
             throw "ファイルフォーマットが不正です！";
-        }
-        for (const monster of list) {
-            if (!checkMonsterFormat(monster)) {
-                throw "ファイルフォーマットが不正です！";
-            }
         }
         switch (option) {
             case "file_as_newer":
@@ -645,8 +689,31 @@ document.getElementById("file_load_dialog")
                 replaceMonsterList(list);
                 break;
         }
+        saveMonsterList();
     }).catch(err => {
         dialogAlert(`${err}`);
     });
 });
+(function () {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has("demo")) {
+        fetch("./dqwalkhearts/dqwalkhearts.json")
+            .then(r => r.json())
+            .then(json => {
+            if (isMonsterList(json)) {
+                addAllMonsterList(json);
+            }
+        })
+            .catch(err => {
+            dialogAlert(`${err}`);
+        });
+        noStorage = true;
+    }
+    else if (params.has("nostorage")) {
+        noStorage = true;
+    }
+    else {
+        loadMonsterList();
+    }
+})();
 dialogAlert("[DEBUG] OK");
