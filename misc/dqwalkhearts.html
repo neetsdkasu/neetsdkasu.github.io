@@ -133,10 +133,10 @@
       </form>
     </dialog>
 
-    <main>
-
-      <section class="outline">
-        <h5>探索対象</h5>
+    <dialog id="search_heart_dialog">
+      <div>探索対象</div>
+      <hr />
+      <form method="dialog">
         <div>
           <label for="preset_heartset">プリセット:</label>
           <select name="preset_heartset" id="preset_heartset">
@@ -192,10 +192,10 @@
         </div>
         <div>
           <label for="heart_maximum_cost">こころ最大コスト:</label>
-          <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" />
+          <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" min="0" max="1000" required />
         </div>
         <div>
-          <span>最大化対象:</span>
+          <span>最大化:</span>
           <input type="radio" name="goal" id="goal_maximumhp"    value="maximumhp"    checked /><label for="goal_maximumhp"   >HP</label>
           <input type="radio" name="goal" id="goal_maximummp"    value="maximummp"            /><label for="goal_maximummp"   >MP</label>
           <input type="radio" name="goal" id="goal_power"        value="power"                /><label for="goal_power"       >力</label>
@@ -204,14 +204,28 @@
           <input type="radio" name="goal" id="goal_recovermagic" value="recovermagic"         /><label for="goal_recovermagic">回魔</label>
           <input type="radio" name="goal" id="goal_speed"        value="speed"                /><label for="goal_speed"       >早さ</label>
           <input type="radio" name="goal" id="goal_deftness"     value="deftness"             /><label for="goal_deftness"    >器用</label>
+          <input type="radio" name="goal" id="goal_expression"   value="expression"           /><label for="goal_expression"  >式</label>
+          <div>
+            <fieldset>
+              <div><label for="expression">式：</label><input type="text" name="expression" id="expression" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DFT" maxLength="300" size="60" /></div>
+            </fieldset>
+          </div>
         </div>
         <div>
-          <button id="start">探索開始</button>
+          <button type="button" value="cancel">キャンセル</button>
+          <button type="submit" value="start">探索開始</button>
         </div>
-      </section>
+      </form>
+    </dialog>
+
+    <main>
 
       <section class="outline">
-        <h5>探索結果</h5>
+        <h5>こころセット</h5>
+        <div class="buttons">
+          <button id="search_heart">探索</button>
+        </div>
+        <hr />
         <div id="result"></div>
       </section>
 
@@ -231,6 +245,7 @@
         <hr />
         <div id="heart_list"></div>
       </section>
+
     </main>
 
     <footer>

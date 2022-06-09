@@ -43,7 +43,8 @@ var Rank;
 })(Rank || (Rank = {}));
 var Color;
 (function (Color) {
-    Color[Color["None"] = 1] = "None";
+    Color[Color["Unset"] = 0] = "Unset";
+    Color[Color["Omit"] = 1] = "Omit";
     Color[Color["Yellow"] = 2] = "Yellow";
     Color[Color["Purple"] = 4] = "Purple";
     Color[Color["Green"] = 8] = "Green";
@@ -53,19 +54,19 @@ var Color;
 })(Color || (Color = {}));
 const JobPreset = [
     { id: 101, name: "戦士",
-        colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.None] },
+        colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.Omit] },
     { id: 102, name: "魔法使い",
-        colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.None] },
+        colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.Omit] },
     { id: 103, name: "僧侶",
-        colors: [Color.Rainbow, Color.Green, Color.Green, Color.None] },
+        colors: [Color.Rainbow, Color.Green, Color.Green, Color.Omit] },
     { id: 104, name: "武闘家",
-        colors: [Color.Rainbow, Color.Red, Color.Red, Color.None] },
+        colors: [Color.Rainbow, Color.Red, Color.Red, Color.Omit] },
     { id: 105, name: "盗賊",
-        colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.None] },
+        colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.Omit] },
     { id: 106, name: "踊り子",
-        colors: [Color.Rainbow, Color.Blue, Color.Green, Color.None] },
+        colors: [Color.Rainbow, Color.Blue, Color.Green, Color.Omit] },
     { id: 107, name: "遊び人",
-        colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.None] },
+        colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.Omit] },
     { id: 201, name: "バトルマスター",
         colors: [Color.Yellow | Color.Red, Color.Rainbow, Color.Red, Color.Red] },
     { id: 202, name: "賢者",
@@ -203,14 +204,17 @@ function showNewHeart(monster) {
         const form = dialog.querySelector("form");
         form.reset();
         const elements = form.elements;
+        const rad = (name, value) => {
+            elements.namedItem(name).value = value;
+        };
         const elem = (name, value) => {
             elements.namedItem(name).value = value;
         };
         elem("add_monster_name", monster.name);
         elem("add_cost", `${monster.cost}`);
-        elem("add_color", `${Color[monster.color]}`);
+        rad("add_color", `${Color[monster.color]}`);
         if (monster.target !== null) {
-            elem("add_rank", `${Rank[monster.target]}`);
+            rad("add_rank", `${Rank[monster.target]}`);
             const h = monster.hearts.find(h => h.rank === monster.target);
             elem("add_maximumhp", `${h.maximumHP}`);
             elem("add_maximummp", `${h.maximumMP}`);
@@ -369,7 +373,7 @@ function setPreset(job) {
         update(i, "green", color & Color.Green);
         update(i, "red", color & Color.Red);
         update(i, "blue", color & Color.Blue);
-        update(i, "omit", color & Color.None);
+        update(i, "omit", color & Color.Omit);
     }
     {
         const omit = document.getElementById("heart4_omit").checked;
@@ -408,7 +412,7 @@ function isMonster(anyobj) {
         console.log(anyobj);
         return false;
     }
-    const obj = anyobj;
+    const obj = anyobj; // ここキャストできる理由わからない
     const monster1 = {
         id: 0,
         name: "str",
@@ -453,7 +457,7 @@ function isMonster(anyobj) {
             return false;
         }
     }
-    const m = obj;
+    const m = obj; // ここキャストできる理由わからない
     if (m.color in Color === false) {
         console.log("Colorに存在しない値が設定されている");
         console.log(obj);
@@ -501,24 +505,32 @@ function isMonster(anyobj) {
             return false;
         }
     }
-    for (let r = Rank.S_plus; r <= Rank.D; r++) {
-        let c = 0;
-        for (const h of m.hearts) {
-            if (h.rank === r) {
-                c++;
+    // ここ以下はたぶん普通はバリデータの役割。型検査の役割じゃないと思う。
+    {
+        if (m.color === Color.Unset || m.color === Color.Omit || m.color === Color.Rainbow) {
+            console.log("こころの色の指定として不正 ${Color[m.color]}");
+            console.log(m);
+            return false;
+        }
+        for (let r = Rank.S_plus; r <= Rank.D; r++) {
+            let c = 0;
+            for (const h of m.hearts) {
+                if (h.rank === r) {
+                    c++;
+                }
+            }
+            if (c > 1) {
+                console.log(`同じRankのこころが複数設定されている ${Rank[r]}`);
+                console.log(obj);
+                return false;
             }
         }
-        if (c > 1) {
-            console.log(`同じRankのこころが複数設定されている ${Rank[r]}`);
-            console.log(obj);
-            return false;
-        }
-    }
-    if (m.target !== null) {
-        if (m.hearts.findIndex(h => h.rank === m.target) < 0) {
-            console.log("存在しないRankのこころが選択されている");
-            console.log(obj);
-            return false;
+        if (m.target !== null) {
+            if (m.hearts.findIndex(h => h.rank === m.target) < 0) {
+                console.log("存在しないRankのこころが選択されている");
+                console.log(obj);
+                return false;
+            }
         }
     }
     return true;
@@ -552,6 +564,116 @@ function mergeMonsterList(list) {
         }
         addHeart(monster);
     }
+}
+function makeSimpleScorer(param) {
+    return {
+        calc: (color, monster) => {
+            if (monster.target === null) {
+                return 0;
+            }
+            const heart = monster.hearts.find(h => h.rank === monster.target);
+            if ((color & monster.color) !== 0) {
+                return Math.ceil(1.2 * heart[param]);
+            }
+            else {
+                return heart[param];
+            }
+        },
+    };
+}
+const MaximumHPScorer = makeSimpleScorer("maximumHP");
+const MaximumMPScorer = makeSimpleScorer("maximumMP");
+const PowerScorer = makeSimpleScorer("power");
+const DefenceScorer = makeSimpleScorer("defence");
+const AttackMagicScorer = makeSimpleScorer("attackMagic");
+const RecoverMagicScorer = makeSimpleScorer("recoverMagic");
+const SpeedScorer = makeSimpleScorer("speed");
+const DeftnessScorer = makeSimpleScorer("deftness");
+function parseExpression(exp) {
+    // TODO
+    throw "Expression is not implemented yet";
+}
+function inferSetName(colors) {
+    if (colors.length < 3 || colors.length > 4) {
+        return "カスタム";
+    }
+    colors = colors.slice();
+    if (colors.length === 3) {
+        colors.push(Color.Omit);
+    }
+    colors.sort((a, b) => a - b);
+    for (const job of JobPreset) {
+        const jc = job.colors.slice().sort((a, b) => a - b);
+        if (colors.every((v, i) => jc[i] === v)) {
+            return job.name;
+        }
+    }
+    return "カスタム";
+}
+function parseTarget(elements) {
+    const elem = (name) => elements.namedItem(name);
+    const target = {
+        setname: "",
+        colors: [],
+        maximumCost: 0,
+        scorer: MaximumHPScorer,
+    };
+    for (let i = 1; i <= 4; i++) {
+        let color = (elem(`heart${i}_yellow`).checked ? Color.Yellow : Color.Unset) |
+            (elem(`heart${i}_purple`).checked ? Color.Purple : Color.Unset) |
+            (elem(`heart${i}_green`).checked ? Color.Green : Color.Unset) |
+            (elem(`heart${i}_red`).checked ? Color.Red : Color.Unset) |
+            (elem(`heart${i}_blue`).checked ? Color.Blue : Color.Unset);
+        const omit = elem(`heart${i}_omit`);
+        if (omit) {
+            if (omit.checked) {
+                continue;
+            }
+        }
+        target.colors.push(color);
+    }
+    target.setname = inferSetName(target.colors);
+    target.maximumCost = parseInt(elem("heart_maximum_cost").value);
+    // TODO
+    switch (elem("goal").value) {
+        case "maximumhp":
+            target.scorer = MaximumHPScorer;
+            break;
+        case "maximummp":
+            target.scorer = MaximumMPScorer;
+            break;
+        case "power":
+            target.scorer = PowerScorer;
+            break;
+        case "defence":
+            target.scorer = DefenceScorer;
+            break;
+        case "attackmagic":
+            target.scorer = AttackMagicScorer;
+            break;
+        case "recovermagic":
+            target.scorer = RecoverMagicScorer;
+            break;
+        case "speed":
+            target.scorer = SpeedScorer;
+            break;
+        case "deftness":
+            target.scorer = DeftnessScorer;
+            break;
+        case "expression":
+            const exp = elem("expression").value;
+            target.scorer = parseExpression(exp);
+            break;
+        default:
+            throw `Unknown Maximize Target (${elem("goal").value})`;
+    }
+    return target;
+}
+function searchHeartSet(target) {
+    // TODO
+    const result = document.getElementById("result");
+    result.innerHTML = "";
+    result.textContent = JSON.stringify(target);
 }
 document.getElementById("preset_heartset")
     .addEventListener("change", () => {
@@ -610,14 +732,15 @@ document.getElementById("add_heart_dialog")
         return;
     }
     const elements = dialog.querySelector("form").elements;
+    const rad = (name) => elements.namedItem(name).value;
     const str = (name) => elements.namedItem(name).value;
     const noNaN = (v) => isNaN(v) ? 0 : v;
     const num = (name) => noNaN(parseInt(str(name)));
-    const rank = Rank[str("add_rank")];
+    const rank = Rank[rad("add_rank")];
     const monster = {
         id: 0,
         name: str("add_monster_name"),
-        color: Color[str("add_color")],
+        color: Color[rad("add_color")],
         cost: num("add_cost"),
         hearts: [{
                 maximumHP: num("add_maximumhp"),
@@ -694,6 +817,43 @@ document.getElementById("file_load_dialog")
     }).catch(err => {
         dialogAlert(`${err}`);
     });
+});
+(function () {
+    const e = document.getElementById("expression");
+    const ge = document.getElementById("goal_expression");
+    const f = () => {
+        e.required = ge.checked;
+    };
+    const goals = document.querySelectorAll('#search_heart_dialog input[name="goal"]');
+    for (const goal of goals) {
+        goal.addEventListener("change", f);
+    }
+})();
+document.querySelector('#search_heart_dialog button[value="cancel"]')
+    .addEventListener("click", () => {
+    const dialog = document.getElementById("search_heart_dialog");
+    dialog.close();
+});
+document.getElementById("search_heart_dialog")
+    .addEventListener("close", () => {
+    const dialog = document.getElementById("search_heart_dialog");
+    if (dialog.returnValue !== "start") {
+        return;
+    }
+    const elements = dialog.querySelector("form").elements;
+    try {
+        const target = parseTarget(elements);
+        searchHeartSet(target);
+    }
+    catch (err) {
+        dialogAlert(err);
+        console.log(err);
+    }
+});
+document.getElementById("search_heart")
+    .addEventListener("click", () => {
+    const dialog = document.getElementById("search_heart_dialog");
+    dialog.showModal();
 });
 (function () {
     const params = new URLSearchParams(window.location.search);

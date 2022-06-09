@@ -116,3 +116,19 @@ input[type="checkbox"]:disabled + label,
 {
     font-size: x-small;
 }
+
+#goal_expression + label + div legend
+{
+    font-size: small;
+}
+
+#goal_expression + label + div
+{
+    display: none;
+}
+
+#goal_expression:checked + label + div
+{
+    display: block;
+    margin: 5px;
+}

@@ -46,7 +46,8 @@ enum Rank {
 }
 
 enum Color {
-    None   = 1 << 0,
+    Unset  = 0,
+    Omit   = 1 << 0,
     Yellow = 1 << 1,
     Purple = 1 << 2,
     Green  = 1 << 3,
@@ -89,19 +90,19 @@ interface Job {
 
 const JobPreset: Job[] = [
     { id: 101, name: "戦士",
-        colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.None] },
+        colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.Omit] },
     { id: 102, name: "魔法使い",
-        colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.None] },
+        colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.Omit] },
     { id: 103, name: "僧侶",
-        colors: [Color.Rainbow, Color.Green, Color.Green, Color.None] },
+        colors: [Color.Rainbow, Color.Green, Color.Green, Color.Omit] },
     { id: 104, name: "武闘家",
-        colors: [Color.Rainbow, Color.Red, Color.Red, Color.None] },
+        colors: [Color.Rainbow, Color.Red, Color.Red, Color.Omit] },
     { id: 105, name: "盗賊",
-        colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.None] },
+        colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.Omit] },
     { id: 106, name: "踊り子",
-        colors: [Color.Rainbow, Color.Blue, Color.Green, Color.None] },
+        colors: [Color.Rainbow, Color.Blue, Color.Green, Color.Omit] },
     { id: 107, name: "遊び人",
-        colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.None] },
+        colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.Omit] },
     { id: 201, name: "バトルマスター",
         colors: [Color.Yellow|Color.Red, Color.Rainbow, Color.Red, Color.Red] },
     { id: 202, name: "賢者",
@@ -124,6 +125,17 @@ interface SingleColorInfo {
     color: Color;
     text: string;
     colorName: string;
+}
+
+interface Scorer {
+    calc: (color: Color, monster: Monster) => number;
+}
+
+interface Target {
+    setname: string;
+    colors: Color[];
+    maximumCost: number;
+    scorer: Scorer;
 }
 
 const SingleColorInfoMap: Map<Color, SingleColorInfo> = (() => {
@@ -247,14 +259,17 @@ function showNewHeart(monster: Monster): void {
         const form = dialog.querySelector("form") as HTMLFormElement;
         form.reset();
         const elements = form.elements;
+        const rad = (name: string, value: string) => {
+            (elements.namedItem(name) as RadioNodeList).value = value;
+        };
         const elem = (name: string, value: string) => {
             (elements.namedItem(name) as HTMLInputElement).value = value;
         };
         elem("add_monster_name", monster.name);
         elem("add_cost", `${monster.cost}`);
-        elem("add_color", `${Color[monster.color]}`);
+        rad("add_color", `${Color[monster.color]}`);
         if (monster.target !== null) {
-            elem("add_rank", `${Rank[monster.target]}`);
+            rad("add_rank", `${Rank[monster.target]}`);
             const h = monster.hearts.find(h => h.rank === monster.target)!;
             elem("add_maximumhp", `${h.maximumHP}`);
             elem("add_maximummp", `${h.maximumMP}`);
@@ -409,7 +424,7 @@ function setPreset(job: Job): void {
         update(i, "green",  color & Color.Green);
         update(i, "red",    color & Color.Red);
         update(i, "blue",   color & Color.Blue);
-        update(i, "omit",   color & Color.None);
+        update(i, "omit",   color & Color.Omit);
     }
     {
         const omit = (document.getElementById("heart4_omit") as HTMLInputElement).checked;
@@ -435,7 +450,7 @@ function isMonsterList(obj: Monster[] | unknown): obj is Monster[] {
         console.log(obj);
         return false;
     }
-    const list = obj as (Monster | unknown)[];
+    const list = obj as unknown[];
     for (const monster of list) {
         if (!isMonster(monster)) {
             return false;
@@ -450,7 +465,7 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         console.log(anyobj);
         return false;
     }
-    const obj: {[index: string]: any} = anyobj;
+    const obj: {[key: string]: any} = anyobj; // ここキャストできる理由わからない
     const monster1: Monster = {
         id: 0,
         name: "str",
@@ -495,7 +510,7 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
             return false;
         }
     }
-    const m = obj as Monster;
+    const m = obj as Monster; // ここキャストできる理由わからない
     if (m.color in Color === false) {
         console.log("Colorに存在しない値が設定されている")
         console.log(obj);
@@ -543,24 +558,32 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
             return false;
         }
     }
-    for (let r = Rank.S_plus; r <= Rank.D; r++) {
-        let c = 0;
-        for (const h of m.hearts) {
-            if (h.rank === r) {
-                c++;
-            }
-        }
-        if (c > 1) {
-            console.log(`同じRankのこころが複数設定されている ${Rank[r]}`);
-            console.log(obj);
+    // ここ以下はたぶん普通はバリデータの役割。型検査の役割じゃないと思う。
+    {
+        if (m.color === Color.Unset || m.color === Color.Omit || m.color === Color.Rainbow) {
+            console.log("こころの色の指定として不正 ${Color[m.color]}");
+            console.log(m);
             return false;
         }
-    }
-    if (m.target !== null) {
-        if (m.hearts.findIndex(h => h.rank === m.target) < 0) {
-            console.log("存在しないRankのこころが選択されている");
-            console.log(obj);
-            return false
+        for (let r = Rank.S_plus; r <= Rank.D; r++) {
+            let c = 0;
+            for (const h of m.hearts) {
+                if (h.rank === r) {
+                    c++;
+                }
+            }
+            if (c > 1) {
+                console.log(`同じRankのこころが複数設定されている ${Rank[r]}`);
+                console.log(obj);
+                return false;
+            }
+        }
+        if (m.target !== null) {
+            if (m.hearts.findIndex(h => h.rank === m.target) < 0) {
+                console.log("存在しないRankのこころが選択されている");
+                console.log(obj);
+                return false
+            }
         }
     }
     return true;
@@ -597,6 +620,121 @@ function mergeMonsterList(list: Monster[]): void {
         }
         addHeart(monster);
     }
+}
+
+function makeSimpleScorer(param: keyof Status): Scorer {
+    return {
+        calc: (color: Color, monster: Monster) => {
+            if (monster.target === null) {
+                return 0;
+            }
+            const heart = monster.hearts.find(h => h.rank === monster.target)!;
+            if ((color & monster.color) !== 0) {
+                return Math.ceil(1.2 * heart[param]);
+            } else {
+                return heart[param];
+            }
+        },
+    };
+}
+
+const MaximumHPScorer:    Scorer = makeSimpleScorer("maximumHP");
+const MaximumMPScorer:    Scorer = makeSimpleScorer("maximumMP");
+const PowerScorer:        Scorer = makeSimpleScorer("power");
+const DefenceScorer:      Scorer = makeSimpleScorer("defence");
+const AttackMagicScorer:  Scorer = makeSimpleScorer("attackMagic");
+const RecoverMagicScorer: Scorer = makeSimpleScorer("recoverMagic");
+const SpeedScorer:        Scorer = makeSimpleScorer("speed");
+const DeftnessScorer:     Scorer = makeSimpleScorer("deftness");
+
+function parseExpression(exp: string): Scorer {
+    // TODO
+    throw "Expression is not implemented yet";
+}
+
+function inferSetName(colors: Color[]): string {
+    if (colors.length < 3 || colors.length > 4) {
+        return "カスタム";
+    }
+    colors = colors.slice();
+    if (colors.length === 3) {
+        colors.push(Color.Omit);
+    }
+    colors.sort((a, b) => a - b);
+    for (const job of JobPreset) {
+        const jc = job.colors.slice().sort((a, b) => a - b);
+        if (colors.every((v, i) => jc[i] === v)) {
+            return job.name;
+        }
+    }
+    return "カスタム";
+}
+
+function parseTarget(elements: HTMLFormControlsCollection): Target {
+    const elem = (name: string) => elements.namedItem(name) as (HTMLInputElement | null);
+    const target: Target = {
+        setname: "",
+        colors: [],
+        maximumCost: 0,
+        scorer: MaximumHPScorer,
+    };
+    for (let i = 1; i <= 4; i++) {
+        let color: Color =
+            (elem(`heart${i}_yellow`)!.checked ? Color.Yellow : Color.Unset) |
+            (elem(`heart${i}_purple`)!.checked ? Color.Purple : Color.Unset) |
+            (elem(`heart${i}_green` )!.checked ? Color.Green  : Color.Unset) |
+            (elem(`heart${i}_red`   )!.checked ? Color.Red    : Color.Unset) |
+            (elem(`heart${i}_blue`  )!.checked ? Color.Blue   : Color.Unset);
+        const omit = elem(`heart${i}_omit`);
+        if (omit) {
+            if (omit.checked) {
+                continue;
+            }
+        }
+        target.colors.push(color);
+    }
+    target.setname = inferSetName(target.colors);
+    target.maximumCost = parseInt(elem("heart_maximum_cost")!.value);
+    switch (elem("goal")!.value) {
+    case "maximumhp":
+        target.scorer = MaximumHPScorer;
+        break;
+    case "maximummp":
+        target.scorer = MaximumMPScorer;
+        break;
+    case "power":
+        target.scorer = PowerScorer;
+        break;
+    case "defence":
+        target.scorer = DefenceScorer;
+        break;
+    case "attackmagic":
+        target.scorer = AttackMagicScorer;
+        break;
+    case "recovermagic":
+        target.scorer = RecoverMagicScorer;
+        break;
+    case "speed":
+        target.scorer = SpeedScorer;
+        break;
+    case "deftness":
+        target.scorer = DeftnessScorer;
+        break;
+    case "expression":
+        const exp = elem("expression")!.value;
+        target.scorer = parseExpression(exp);
+        break;
+    default:
+        throw `Unknown Maximize Target (${elem("goal")!.value})`;
+    }
+    return target;
+}
+
+function searchHeartSet(target: Target): void {
+    // TODO
+    const result = document.getElementById("result")!;
+    result.innerHTML = "";
+    result.textContent = JSON.stringify(target);
 }
 
 document.getElementById("preset_heartset")!
@@ -645,7 +783,7 @@ document.getElementById("add_monster_name")!
         const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
         const elements = (dialog.querySelector("form") as HTMLFormElement).elements;
         (elements.namedItem("add_cost") as HTMLInputElement).value = `${monster.cost}`;
-        (elements.namedItem("add_color") as HTMLInputElement).value = `${Color[monster.color]}`;
+        (elements.namedItem("add_color") as RadioNodeList).value = `${Color[monster.color]}`;
     }
 });
 
@@ -661,14 +799,15 @@ document.getElementById("add_heart_dialog")!
         return;
     }
     const elements = (dialog.querySelector("form") as HTMLFormElement).elements;
+    const rad = (name: string) => (elements.namedItem(name) as RadioNodeList).value;
     const str = (name: string) => (elements.namedItem(name) as HTMLInputElement).value;
     const noNaN = (v: number) => isNaN(v) ? 0 : v;
     const num = (name: string) => noNaN(parseInt(str(name)));
-    const rank = Rank[str("add_rank") as keyof typeof Rank];
+    const rank = Rank[rad("add_rank") as keyof typeof Rank];
     const monster: Monster = {
         id: 0,
         name: str("add_monster_name"),
-        color: Color[str("add_color") as keyof typeof Color],
+        color: Color[rad("add_color") as keyof typeof Color],
         cost: num("add_cost"),
         hearts: [{
             maximumHP: num("add_maximumhp"),
@@ -749,6 +888,46 @@ document.getElementById("file_load_dialog")!
     }).catch( err => {
         dialogAlert(`${err}`);
     });
+});
+
+(function () {
+    const e = document.getElementById("expression") as HTMLInputElement;
+    const ge = document.getElementById("goal_expression") as HTMLInputElement;
+    const f = () => {
+        e.required = ge.checked;
+    };
+    const goals = document.querySelectorAll('#search_heart_dialog input[name="goal"]');
+    for (const goal of goals) {
+        goal.addEventListener("change", f);
+    }
+})();
+
+document.querySelector('#search_heart_dialog button[value="cancel"]')!
+.addEventListener("click", () => {
+    const dialog = document.getElementById("search_heart_dialog") as HTMLDialogElement;
+    dialog.close();
+});
+
+document.getElementById("search_heart_dialog")!
+.addEventListener("close", () => {
+    const dialog = document.getElementById("search_heart_dialog") as HTMLDialogElement;
+    if (dialog.returnValue !== "start") {
+        return;
+    }
+    const elements = (dialog.querySelector("form") as HTMLFormElement).elements;
+    try {
+        const target = parseTarget(elements);
+        searchHeartSet(target);
+    } catch (err) {
+        dialogAlert(err);
+        console.log(err);
+    }
+});
+
+document.getElementById("search_heart")!
+.addEventListener("click", () => {
+    const dialog = document.getElementById("search_heart_dialog") as HTMLDialogElement;
+    dialog.showModal();
 });
 
 (function () {
