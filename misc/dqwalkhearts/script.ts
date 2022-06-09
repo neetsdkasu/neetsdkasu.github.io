@@ -730,11 +730,97 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
     return target;
 }
 
+interface HeartSet {
+    pos: number;
+    monster: Monster;
+    subsets: HeartSet[];
+}
+
+interface State {
+    score: number;
+    sets: HeartSet[];
+}
+
 function searchHeartSet(target: Target): void {
+    const OFFSET = 10;
+    const COUNT = target.colors.length;
+    const SET_LEN = 1 << COUNT;
+    const COST_LEN = target.maximumCost + 1 + OFFSET;
+    let dp1: (State | null)[][] = new Array(SET_LEN);
+    let dp2: (State | null)[][] = new Array(SET_LEN);
+    for (let i = 0; i < SET_LEN; i++) {
+        dp1[i] = new Array(COST_LEN).fill(null);
+        dp2[i] = new Array(COST_LEN).fill(null);
+    }
+    dp1[0][OFFSET] = { score: 0, sets: [] };
+    for (const monster of monsterList) {
+        if (monster.target === null) {
+            continue;
+        }
+        const cost = monster.cost - monster.hearts.find(h => h.rank === monster.target)!.maximumCost;
+        const scores = target.colors.map(c => target.scorer.calc(c, monster));
+        for (let s = 0; s < SET_LEN; s++) {
+            for (let c = 0; c < COST_LEN; c++) {
+                const state1 = dp1[s][c];
+                if (state1 === null) {
+                    continue;
+                }
+                const state2 = dp2[s][c];
+                if (state2 === null || state1.score > state2.score) {
+                    dp2[s][c] = state1;
+                } else if (state1.score === state2.score) {
+                    state2.sets = state2.sets.concat(state1.sets);
+                }
+                const c3 = c + cost;
+                if (c3 >= COST_LEN) {
+                    continue;
+                }
+                for (let p = 0; p < COUNT; p++) {
+                    const s3 = s | (1 << p);
+                    if (s === s3) {
+                        continue;
+                    }
+                    const score3 = state1.score + scores[p];
+                    const state4 = dp2[s3][c3];
+                    if (state4 === null || score3 > state4.score) {
+                        dp2[s3][c3] = {
+                            score: score3,
+                            sets: [{
+                                pos: p,
+                                monster: monster,
+                                subsets: state1.sets,
+                            }],
+                        };
+                    } else if (score3 === state4.score) {
+                        state4.sets.push({
+                            pos: p,
+                            monster: monster,
+                            subsets: state1.sets,
+                        });
+                    }
+                }
+            }
+        }
+        const dp3 = dp1;
+        dp1 = dp2;
+        dp2 = dp3;
+        dp2.forEach(a => a.fill(null));
+    }
     // TODO
+    let best: State | null = null;
+    for (const line of dp1) {
+        for (const state of line) {
+            if (state === null) {
+                continue;
+            }
+            if (best === null || state.score > best.score) {
+                best = state;
+            }
+        }
+    }
     const result = document.getElementById("result")!;
     result.innerHTML = "";
-    result.textContent = JSON.stringify(target);
+    result.textContent = `${JSON.stringify(target)} ${JSON.stringify(best)}`;
 }
 
 document.getElementById("preset_heartset")!
