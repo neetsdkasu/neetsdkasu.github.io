@@ -1,6 +1,11 @@
 body
 {
-    padding: 1rem 2rem;
+    padding: 1rem 2rem 2rem 2rem;
+}
+
+footer
+{
+    margin: 2rem 0px;
 }
 
 .outline
@@ -139,4 +144,10 @@ input[type="checkbox"]:disabled + label,
 #result_heart4 > span
 {
     margin-right: 3px;
+}
+
+#heart_list
+{
+    height: 20rem;
+    overflow-y: scroll;
 }

@@ -1029,6 +1029,7 @@ document.getElementById("add_heart_dialog")!
         target: rank,
     };
     addHeart(monster);
+    dialogAlert(`${monster.name} ${Rank[monster.hearts[0].rank]} を追加しました`);
     saveMonsterList();
 });
 
