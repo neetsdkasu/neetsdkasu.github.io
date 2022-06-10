@@ -25,6 +25,7 @@ section.outline > h5
     margin-top: 0px;
     margin-bottom: 5px;
     background-color: lightgray;
+    padding-left: 5px;
 }
 
 section.outline > div
@@ -141,13 +142,36 @@ input[type="checkbox"]:disabled + label,
 #result_heart1 > span,
 #result_heart2 > span,
 #result_heart3 > span,
-#result_heart4 > span
+#result_heart4 > span,
+.result-item-heart1 > span,
+.result-item-heart2 > span,
+.result-item-heart3 > span,
+.result-item-heart4 > span
 {
     margin-right: 3px;
+}
+
+#result
+{
+    /* overflow-y: scroll; */
 }
 
 #heart_list
 {
     height: 20rem;
     overflow-y: scroll;
+}
+
+#result > div:first-child
+{
+    font-size: small;
+    border-bottom: 1px solid gray;
+    margin-bottom: 3px;
+}
+
+#result > div.outline > div:first-child
+{
+    font-size: small;
+    background-color: lightgray;
+    padding-left: 5px;
 }

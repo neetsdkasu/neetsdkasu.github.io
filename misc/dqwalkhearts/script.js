@@ -778,6 +778,18 @@ function calcNumOfBestHeartSet(target) {
     }
     return bestCount;
 }
+function extractHeartSet(stack, tmp, heartSet) {
+    tmp[heartSet.pos] = heartSet.monster;
+    if (heartSet.subsets.length === 0) {
+        stack.push(tmp.slice());
+    }
+    else {
+        for (const subset of heartSet.subsets) {
+            extractHeartSet(stack, tmp, subset);
+        }
+    }
+    tmp[heartSet.pos] = null;
+}
 function searchHeartSet(target) {
     const OFFSET = 10;
     const COUNT = target.colors.length;
@@ -862,7 +874,91 @@ function searchHeartSet(target) {
     }
     const result = document.getElementById("result");
     result.innerHTML = "";
-    result.textContent = `${JSON.stringify(target)} ${JSON.stringify(best)}`;
+    if (best === null || best.sets.length === 0) {
+        result.textContent = "見つかりませんでした";
+        return;
+    }
+    const heartSets = [];
+    const monsters = new Array(COUNT).fill(null);
+    for (const heartSet of best.sets) {
+        extractHeartSet(heartSets, monsters, heartSet);
+    }
+    const template = document.getElementById("result_item");
+    const omitDuplicate = new Map();
+    for (const heartSet of heartSets) {
+        const st = {
+            score: 0,
+            maximumHP: 0,
+            maximumMP: 0,
+            power: 0,
+            defence: 0,
+            attackMagic: 0,
+            recoverMagic: 0,
+            speed: 0,
+            deftness: 0,
+            cost: 0,
+            maximumCost: 0,
+        };
+        for (let p = 0; p < COUNT; p++) {
+            const c = target.colors[p];
+            const m = heartSet[p];
+            if (m === null) {
+                continue;
+            }
+            st.score += target.scorer.calc(c, m);
+            st.maximumHP += MaximumHPScorer.calc(c, m);
+            st.maximumMP += MaximumMPScorer.calc(c, m);
+            st.power += PowerScorer.calc(c, m);
+            st.defence += DefenceScorer.calc(c, m);
+            st.attackMagic += AttackMagicScorer.calc(c, m);
+            st.recoverMagic += RecoverMagicScorer.calc(c, m);
+            st.speed += SpeedScorer.calc(c, m);
+            st.deftness += DeftnessScorer.calc(c, m);
+            st.cost += m.cost;
+            st.maximumCost += m.hearts.find(h => h.rank === m.target).maximumCost;
+        }
+        const key = JSON.stringify({ status: st, hearts: heartSet.map(h => h?.id ?? -1).sort() });
+        if (omitDuplicate.has(key)) {
+            continue;
+        }
+        omitDuplicate.set(key, true);
+        const fragment = template.content.cloneNode(true);
+        const text = (cname, value) => {
+            const e = fragment.querySelector(cname);
+            e.textContent = `${value}`;
+            return e;
+        };
+        text(".result-item-number", `${omitDuplicate.size}`);
+        text(".result-item-score", `${st.score}`);
+        text(".result-item-cost", `${st.cost} / ${target.maximumCost} + ${st.maximumCost}`);
+        text(".result-item-maximumhp", `${st.maximumHP}`);
+        text(".result-item-maximummp", `${st.maximumMP}`);
+        text(".result-item-power", `${st.power}`);
+        text(".result-item-defence", `${st.defence}`);
+        text(".result-item-attackmagic", `${st.attackMagic}`);
+        text(".result-item-recovermagic", `${st.recoverMagic}`);
+        text(".result-item-speed", `${st.speed}`);
+        text(".result-item-deftness", `${st.deftness}`);
+        for (let p = 0; p < COUNT; p++) {
+            const m = heartSet[p];
+            if (m === null) {
+                continue;
+            }
+            const h = fragment.querySelector(`.result-item-heart${p + 1}`);
+            const info = SingleColorInfoMap.get(m.color);
+            const colorSpan = h.appendChild(document.createElement("span"));
+            colorSpan.classList.add(info.colorName);
+            colorSpan.textContent = info.text;
+            h.appendChild(document.createElement("span")).textContent = `${m.cost}`;
+            h.appendChild(document.createElement("span")).textContent = m.name;
+            h.appendChild(document.createElement("span")).textContent = Rank[m.target];
+            fragment.querySelector(`.result-item-effects${p + 1}`)
+                .textContent = m.hearts.find(h => h.rank === m.target).effects;
+        }
+        result.appendChild(fragment);
+    }
+    result.insertBefore(document.createElement("div"), result.firstElementChild)
+        .textContent = `件数: ${omitDuplicate.size}`;
 }
 document.getElementById("preset_heartset")
     .addEventListener("change", () => {
@@ -1041,7 +1137,10 @@ document.getElementById("search_heart_dialog")
     try {
         const target = parseTarget(elements);
         const num = calcNumOfBestHeartSet(target);
-        dialogAlert(`num is ${num}`);
+        if (num > 100) {
+            dialogAlert(`該当する件数が多すぎる ${num}`);
+            return;
+        }
         searchHeartSet(target);
     }
     catch (err) {
