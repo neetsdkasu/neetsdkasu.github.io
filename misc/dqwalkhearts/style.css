@@ -132,3 +132,11 @@ input[type="checkbox"]:disabled + label,
     display: block;
     margin: 5px;
 }
+
+#result_heart1 > span,
+#result_heart2 > span,
+#result_heart3 > span,
+#result_heart4 > span
+{
+    margin-right: 3px;
+}

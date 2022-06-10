@@ -127,17 +127,6 @@ interface SingleColorInfo {
     colorName: string;
 }
 
-interface Scorer {
-    calc: (color: Color, monster: Monster) => number;
-}
-
-interface Target {
-    setname: string;
-    colors: Color[];
-    maximumCost: number;
-    scorer: Scorer;
-}
-
 const SingleColorInfoMap: Map<Color, SingleColorInfo> = (() => {
     const m = new Map();
     m.set(Color.Yellow, { color: Color.Yellow, text: "黄(戦)", colorName: "yellow" });
@@ -638,6 +627,18 @@ function makeSimpleScorer(param: keyof Status): Scorer {
     };
 }
 
+interface Scorer {
+    calc: (color: Color, monster: Monster) => number;
+}
+
+interface Target {
+    setname: string;
+    colors: Color[];
+    maximumCost: number;
+    scorer: Scorer;
+    expr: string;
+}
+
 const MaximumHPScorer:    Scorer = makeSimpleScorer("maximumHP");
 const MaximumMPScorer:    Scorer = makeSimpleScorer("maximumMP");
 const PowerScorer:        Scorer = makeSimpleScorer("power");
@@ -647,7 +648,7 @@ const RecoverMagicScorer: Scorer = makeSimpleScorer("recoverMagic");
 const SpeedScorer:        Scorer = makeSimpleScorer("speed");
 const DeftnessScorer:     Scorer = makeSimpleScorer("deftness");
 
-function parseExpression(exp: string): Scorer {
+function parseExpression(expr: string): Scorer {
     // TODO
     throw "Expression is not implemented yet";
 }
@@ -677,6 +678,7 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         colors: [],
         maximumCost: 0,
         scorer: MaximumHPScorer,
+        expr: "",
     };
     for (let i = 1; i <= 4; i++) {
         let color: Color =
@@ -698,35 +700,66 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
     switch (elem("goal")!.value) {
     case "maximumhp":
         target.scorer = MaximumHPScorer;
+        target.expr = "HP";
         break;
     case "maximummp":
         target.scorer = MaximumMPScorer;
+        target.expr = "MP";
         break;
     case "power":
         target.scorer = PowerScorer;
+        target.expr = "力";
         break;
     case "defence":
         target.scorer = DefenceScorer;
+        target.expr = "守り";
         break;
     case "attackmagic":
         target.scorer = AttackMagicScorer;
+        target.expr = "攻魔";
         break;
     case "recovermagic":
         target.scorer = RecoverMagicScorer;
+        target.expr = "回魔";
         break;
     case "speed":
         target.scorer = SpeedScorer;
+        target.expr = "早さ";
         break;
     case "deftness":
         target.scorer = DeftnessScorer;
+        target.expr = "器用";
         break;
     case "expression":
-        const exp = elem("expression")!.value;
-        target.scorer = parseExpression(exp);
+        const expr = elem("expression")!.value;
+        target.scorer = parseExpression(expr);
+        target.expr = expr;
         break;
     default:
         throw `Unknown Maximize Target (${elem("goal")!.value})`;
     }
+    document.getElementById("result_setname")!.textContent = target.setname;
+    const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
+    for (let i = 0; i < 4; i++) {
+        const e = document.getElementById(`result_heart${i+1}`)!;
+        e.innerHTML = "";
+        if (i < target.colors.length) {
+            const color = target.colors[i];
+            for (const c of COLORS) {
+                if ((c & color) === 0) {
+                    continue;
+                }
+                const info = SingleColorInfoMap.get(c)!;
+                const span = e.appendChild(document.createElement("span"));
+                span.classList.add(info.colorName);
+                span.textContent = info.text;
+            }
+        } else {
+            e.textContent = "－";
+        }
+    }
+    document.getElementById("result_maximumcost")!.textContent = `${target.maximumCost}`;
+    document.getElementById("result_goal")!.textContent = target.expr;
     return target;
 }
 
@@ -739,6 +772,86 @@ interface HeartSet {
 interface State {
     score: number;
     sets: HeartSet[];
+}
+
+interface NumState {
+    score: number;
+    count: number;
+}
+
+function calcNumOfBestHeartSet(target: Target): number {
+    const OFFSET = 10;
+    const COUNT = target.colors.length;
+    const SET_LEN = 1 << COUNT;
+    const COST_LEN = target.maximumCost + 1 + OFFSET;
+    let dp1: (NumState | null)[][] = new Array(SET_LEN);
+    let dp2: (NumState | null)[][] = new Array(SET_LEN);
+    for (let i = 0; i < SET_LEN; i++) {
+        dp1[i] = new Array(COST_LEN).fill(null);
+        dp2[i] = new Array(COST_LEN).fill(null);
+    }
+    dp1[0][OFFSET] = { score: 0, count: 1 };
+    for (const monster of monsterList) {
+        if (monster.target === null) {
+            continue;
+        }
+        const cost = monster.cost - monster.hearts.find(h => h.rank === monster.target)!.maximumCost;
+        const scores = target.colors.map(c => target.scorer.calc(c, monster));
+        for (let s = 0; s < SET_LEN; s++) {
+            for (let c = 0; c < COST_LEN; c++) {
+                const state1 = dp1[s][c];
+                if (state1 === null) {
+                    continue;
+                }
+                const state2 = dp2[s][c];
+                if (state2 === null || state1.score > state2.score) {
+                    dp2[s][c] = state1;
+                } else if (state1.score === state2.score) {
+                    state2.count += state1.count;
+                }
+                const c3 = c + cost;
+                if (c3 >= COST_LEN) {
+                    continue;
+                }
+                for (let p = 0; p < COUNT; p++) {
+                    const s3 = s | (1 << p);
+                    if (s === s3) {
+                        continue;
+                    }
+                    const score3 = state1.score + scores[p];
+                    const state4 = dp2[s3][c3];
+                    if (state4 === null || score3 > state4.score) {
+                        dp2[s3][c3] = {
+                            score: score3,
+                            count: state1.count,
+                        };
+                    } else if (score3 === state4.score) {
+                        state4.count += state1.count;
+                    }
+                }
+            }
+        }
+        const dp3 = dp1;
+        dp1 = dp2;
+        dp2 = dp3;
+        dp2.forEach(a => a.fill(null));
+    }
+    let bestScore = 0;
+    let bestCount = 0;
+    for (const line of dp1) {
+        for (const state of line) {
+            if (state === null) {
+                continue;
+            }
+            if (state.score > bestScore) {
+                bestScore = state.score;
+                bestCount = state.count;
+            } else if (state.score === bestScore) {
+                bestCount += state.count;
+            }
+        }
+    }
+    return bestCount;
 }
 
 function searchHeartSet(target: Target): void {
@@ -788,14 +901,14 @@ function searchHeartSet(target: Target): void {
                             sets: [{
                                 pos: p,
                                 monster: monster,
-                                subsets: state1.sets,
+                                subsets: state1.sets.slice(),
                             }],
                         };
                     } else if (score3 === state4.score) {
                         state4.sets.push({
                             pos: p,
                             monster: monster,
-                            subsets: state1.sets,
+                            subsets: state1.sets.slice(),
                         });
                     }
                 }
@@ -815,6 +928,8 @@ function searchHeartSet(target: Target): void {
             }
             if (best === null || state.score > best.score) {
                 best = state;
+            } else if (state.score === best.score) {
+                best.sets = best.sets.concat(state.sets);
             }
         }
     }
@@ -858,6 +973,7 @@ document.getElementById("add_heart")!
 .addEventListener("click", () => {
     const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
     (dialog.querySelector("form") as HTMLFormElement).reset();
+    dialog.returnValue = "";
     dialog.showModal();
 });
 
@@ -875,7 +991,9 @@ document.getElementById("add_monster_name")!
 
 document.querySelector('#add_heart_dialog button[value="cancel"]')!
 .addEventListener("click", () => {
-    (document.getElementById("add_heart_dialog") as HTMLDialogElement).close();
+    const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
+    dialog.returnValue = "cancel";
+    dialog.close();
 });
 
 document.getElementById("add_heart_dialog")!
@@ -935,13 +1053,16 @@ document.getElementById("download")!
 
 document.querySelector('#file_load_dialog button[value="cancel"]')!
 .addEventListener("click", () => {
-    (document.getElementById("file_load_dialog") as HTMLDialogElement).close();
+    const dialog = document.getElementById("file_load_dialog") as HTMLDialogElement;
+    dialog.returnValue = "cancel";
+    dialog.close();
 });
 
 document.getElementById("load_file")!
 .addEventListener("click", () => {
     const dialog = document.getElementById("file_load_dialog") as HTMLDialogElement;
     (dialog.querySelector("form") as HTMLFormElement).reset();
+    dialog.returnValue = "";
     dialog.showModal();
 });
 
@@ -991,6 +1112,7 @@ document.getElementById("file_load_dialog")!
 document.querySelector('#search_heart_dialog button[value="cancel"]')!
 .addEventListener("click", () => {
     const dialog = document.getElementById("search_heart_dialog") as HTMLDialogElement;
+    dialog.returnValue = "cancel";
     dialog.close();
 });
 
@@ -1003,6 +1125,8 @@ document.getElementById("search_heart_dialog")!
     const elements = (dialog.querySelector("form") as HTMLFormElement).elements;
     try {
         const target = parseTarget(elements);
+        const num = calcNumOfBestHeartSet(target);
+        dialogAlert(`num is ${num}`);
         searchHeartSet(target);
     } catch (err) {
         dialogAlert(err);
