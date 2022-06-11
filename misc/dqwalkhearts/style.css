@@ -172,7 +172,7 @@ input[type="checkbox"]:disabled + label,
 
 #heart_list
 {
-    height: 20rem;
+    height: 26rem;
     overflow-y: scroll;
 }
 
@@ -188,4 +188,28 @@ input[type="checkbox"]:disabled + label,
     font-size: small;
     background-color: lightgray;
     padding-left: 5px;
+}
+
+.description-expression > div:first-child
+{
+    font-size: small;
+}
+
+.description-expression tr > td
+{
+    font-size: small;
+}
+
+code.outline
+{
+    display: block;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.error-expression
+{
+    border: 1px solid red;
+    background-color: #ffeeee;
 }

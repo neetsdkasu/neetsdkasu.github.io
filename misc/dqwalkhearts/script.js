@@ -589,10 +589,20 @@ const AttackMagicScorer = makeSimpleScorer("attackMagic");
 const RecoverMagicScorer = makeSimpleScorer("recoverMagic");
 const SpeedScorer = makeSimpleScorer("speed");
 const DeftnessScorer = makeSimpleScorer("deftness");
+class ExprSyntaxError {
+    constructor(p, ss) {
+        this.pos = p;
+        this.strs = ss;
+    }
+    getMessage() {
+        return `おそらく${this.pos}文字目付近に式の誤りがあります。 ${this.strs[0]} @@@ ${this.strs[1]} @@@ ${this.strs[2]}`;
+    }
+}
 class ExprParser {
     constructor(expr) {
         this.pos = 0;
         this.chars = [...expr];
+        this.worderr = null;
     }
     skipWhitespaces() {
         while (this.pos < this.chars.length) {
@@ -637,7 +647,109 @@ class ExprParser {
             throw "BUG";
         }
     }
+    minScorer() {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const list = [];
+        for (;;) {
+            const sc = this.parse();
+            if (sc === null) {
+                return null;
+            }
+            list.push(sc);
+            if (DEBUG) {
+                console.log(`min values count ${list.length}`);
+            }
+            const ch = this.next();
+            if (ch === ")") {
+                if (DEBUG) {
+                    console.log(`min finally values count ${list.length}`);
+                }
+                return {
+                    calc: (c, m) => {
+                        let v = list[0].calc(c, m);
+                        for (let i = 1; i < list.length; i++) {
+                            v = Math.min(v, list[i].calc(c, m));
+                        }
+                        return v;
+                    }
+                };
+            }
+            else if (ch === ",") {
+                continue;
+            }
+            else {
+                return null;
+            }
+        }
+    }
+    maxScorer() {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const list = [];
+        for (;;) {
+            const sc = this.parse();
+            if (sc === null) {
+                return null;
+            }
+            list.push(sc);
+            if (DEBUG) {
+                console.log(`max values count ${list.length}`);
+            }
+            const ch = this.next();
+            if (ch === ")") {
+                if (DEBUG) {
+                    console.log(`max finally values count ${list.length}`);
+                }
+                return {
+                    calc: (c, m) => {
+                        let v = list[0].calc(c, m);
+                        for (let i = 1; i < list.length; i++) {
+                            v = Math.max(v, list[i].calc(c, m));
+                        }
+                        return v;
+                    }
+                };
+            }
+            else if (ch === ",") {
+                continue;
+            }
+            else {
+                return null;
+            }
+        }
+    }
+    nameScorer() {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const pos0 = this.pos;
+        const ch = this.next();
+        if (ch === null) {
+            return null;
+        }
+        const wd = this.parseWord(ch);
+        if (wd === null) {
+            return null;
+        }
+        const pos1 = this.pos;
+        if (this.next() !== ")") {
+            return null;
+        }
+        if (monsterMap.has(wd)) {
+            return {
+                calc: (c, m) => m.name === wd ? 1 : 0
+            };
+        }
+        else {
+            this.worderr = [pos0, pos1];
+            return null;
+        }
+    }
     getScorer(ch1) {
+        const pos0 = this.pos - 1;
         const sci = this.parseInteger(ch1);
         if (sci !== null) {
             return sci;
@@ -669,10 +781,17 @@ class ExprParser {
                 return SpeedScorer;
             case "DFT":
                 return DeftnessScorer;
+            case "MAX":
+                return this.maxScorer();
+            case "MIN":
+                return this.minScorer();
+            case "NAME":
+                return this.nameScorer();
             default:
                 if (DEBUG) {
                     console.log(`name ${name} is undefined`);
                 }
+                this.worderr = [pos0, this.pos];
                 return null;
         }
     }
@@ -715,6 +834,9 @@ class ExprParser {
         }
         if (ch1 === "(") {
             const sc1 = this.parse();
+            if (sc1 === null) {
+                return null;
+            }
             if (this.next() !== ")") {
                 return null;
             }
@@ -723,6 +845,22 @@ class ExprParser {
         else {
             return this.getScorer(ch1);
         }
+    }
+    err() {
+        let pos1;
+        let pos2;
+        if (this.worderr !== null) {
+            pos1 = this.worderr[0];
+            pos2 = this.worderr[1];
+        }
+        else {
+            pos1 = Math.max(0, Math.min(this.pos - 1, this.chars.length));
+            pos2 = Math.max(0, Math.min(this.pos + 1, this.chars.length));
+        }
+        const str1 = this.chars.slice(0, pos1).join("");
+        const str2 = this.chars.slice(pos1, pos2).join("");
+        const str3 = this.chars.slice(pos2).join("");
+        return new ExprSyntaxError(this.pos, [str1, str2, str3]);
     }
     parse() {
         const vStack = [];
@@ -751,7 +889,7 @@ class ExprParser {
             }
             this.skipWhitespaces();
             const ch2 = this.next();
-            if (ch2 === null || ch2 === ")") {
+            if (ch2 === null || ch2 === ")" || ch2 === ",") {
                 this.back();
                 while (opStack.length > 0) {
                     const op = opStack.pop();
@@ -800,7 +938,7 @@ function parseExpression(expr) {
     const parser = new ExprParser(expr);
     const sc = parser.parse();
     if (sc === null) {
-        throw "Expression is not implemented yet";
+        throw parser.err();
     }
     else {
         return sc;
@@ -1167,7 +1305,7 @@ function searchHeartSet(target) {
             colorSpan.textContent = info.text;
             h.appendChild(document.createElement("span")).textContent = `${m.cost}`;
             h.appendChild(document.createElement("span")).textContent = m.name;
-            h.appendChild(document.createElement("span")).textContent = Rank[m.target];
+            h.appendChild(document.createElement("span")).textContent = Rank[m.target].replace("_plus", "+");
             const hsc = h.appendChild(document.createElement("span"));
             hsc.classList.add("result-item-heart-score");
             hsc.textContent = `( スコア: ${target.scorer.calc(c, m)} )`;
@@ -1363,13 +1501,72 @@ document.getElementById("search_heart_dialog")
         searchHeartSet(target);
     }
     catch (err) {
-        dialogAlert(err);
-        console.log(err);
+        if (err instanceof ExprSyntaxError) {
+            dialogAlert(err.getMessage());
+        }
+        else {
+            dialogAlert(`${err}`);
+            console.log(err);
+        }
     }
 });
 document.getElementById("search_heart")
     .addEventListener("click", () => {
     const dialog = document.getElementById("search_heart_dialog");
+    dialog.showModal();
+});
+document.getElementById("check_expression")
+    .addEventListener("click", () => {
+    const dialog = document.getElementById("score_list_dialog");
+    const exprSrc = document.getElementById("expression").value;
+    const msg = dialog.querySelector(".message");
+    const tbody = dialog.querySelector("tbody");
+    msg.innerHTML = "";
+    tbody.innerHTML = "";
+    if (exprSrc.trim().length === 0) {
+        msg.textContent = "式がありません";
+    }
+    else {
+        try {
+            const expr = parseExpression(exprSrc);
+            if (expr === null) {
+                throw "おそらく式に誤りがあります";
+            }
+            for (const m of monsterList) {
+                if (m.target === null) {
+                    continue;
+                }
+                const info = SingleColorInfoMap.get(m.color);
+                const tr = tbody.appendChild(document.createElement("tr"));
+                const c = tr.appendChild(document.createElement("td"));
+                c.classList.add(info.colorName);
+                c.textContent = info.text;
+                tr.appendChild(document.createElement("td")).textContent = `${m.cost}`;
+                tr.appendChild(document.createElement("td")).textContent = m.name;
+                tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
+                tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
+                tr.appendChild(document.createElement("td")).textContent = `${expr.calc(m.color, m)}`;
+            }
+        }
+        catch (err) {
+            if (err instanceof ExprSyntaxError) {
+                msg.appendChild(document.createElement("span")).textContent = msg.textContent = `おそらく${err.pos + 1}文字目付近に式の誤りがあります。 `;
+                ;
+                msg.appendChild(document.createElement("br"));
+                const code = msg.appendChild(document.createElement("code"));
+                code.classList.add("outline");
+                code.appendChild(document.createElement("span")).textContent = err.strs[0];
+                const span2 = code.appendChild(document.createElement("span"));
+                span2.classList.add("error-expression");
+                span2.textContent = err.strs[1];
+                code.appendChild(document.createElement("span")).textContent = err.strs[2];
+            }
+            else {
+                msg.textContent = `${err}`;
+                console.log(err);
+            }
+        }
+    }
     dialog.showModal();
 });
 (function () {

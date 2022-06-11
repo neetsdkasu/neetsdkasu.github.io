@@ -10,7 +10,7 @@
     <meta property="og:locale" content="ja_JP" />
     <meta property="og:title" content="DQ-Walk Hearts" />
     <meta property="og:image" content="" />
-    <meta property="og:description" content="find a good heart set for DQ-Walk" />
+    <meta property="og:description" content="find best score of heart set for DQ-Walk" />
     <link rel="stylesheet" href="./dqwalkhearts/style.css" />
     <title>DQ-Walk Hearts</title>
     <script src="./dqwalkhearts/script.js" defer></script>
@@ -133,6 +133,28 @@
       </form>
     </dialog>
 
+    <dialog id="score_list_dialog">
+      <div class="message"></div>
+      <form method="dialog">
+        <div><button type="submit" value="ok">オーケイ</button></div>
+      </form>
+      <hr />
+      <table>
+        <thead>
+          <tr>
+            <th>色</th>
+            <th>コスト</th>
+            <th>名前</th>
+            <th>ランク</th>
+            <th>スコア</th>
+            <th>効果UP時</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </dialog>
+
     <dialog id="search_heart_dialog">
       <div>探索対象</div>
       <hr />
@@ -210,9 +232,116 @@
               <div class="small">各『こころ』ごとにこの計算式でスコアを計算し、スコアの合計を最大化するセットを探す</div>
               <div><label for="expression">式：</label><input type="text" name="expression" id="expression" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DFT" maxLength="300" size="60" /></div>
               <div>
-                <details class="small">
-                  <summary>説明</summary>
-                  <div>説明</div>
+                <details class="small description-expression">
+                  <summary>説明を見る</summary>
+                  <div>英数字記号は全て半角、英字は大文字で。</div>
+                  <div>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>式での表記</th>
+                          <th>例</th>
+                          <th>備考</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>HP</td>
+                          <td><code>HP</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>MP</td>
+                          <td><code>MP</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>力</td>
+                          <td><code>PWR</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>守り</td>
+                          <td><code>DEF</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>攻魔</td>
+                          <td><code>AMG</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>回魔</td>
+                          <td><code>RMG</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>早さ</td>
+                          <td><code>SPD</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>器用</td>
+                          <td><code>DFT</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>足し算</td>
+                          <td><code>+</code></td>
+                          <td><code>HP+MP</code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>掛け算</td>
+                          <td><code>*</code></td>
+                          <td><code>MP*AMG</code></td>
+                          <td>計算順序は足し算より優先される</td>
+                        </tr>
+                        <tr>
+                          <td>最小</td>
+                          <td><code>MIN( , )</code></td>
+                          <td><code>MIN(HP,MP)</code></td>
+                          <td>カンマ区切りで指定した式のうち最小になる値を選ぶ</td>
+                        </tr>
+                        <tr>
+                          <td>最大</td>
+                          <td><code>MAX( , )</code></td>
+                          <td><code>MAX(PWR,AMG)</code></td>
+                          <td>カンマ区切りで指定した式のうち最大になる値を選ぶ</td>
+                        </tr>
+                        <tr>
+                          <td>整数</td>
+                          <td><code></code></td>
+                          <td><code>HP*7+PWR*10</code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>順序</td>
+                          <td><code>( )</code></td>
+                          <td><code>(HP+MP)*(PWR+SPD)</code></td>
+                          <td>計算順序で掛け算より足し算を優先したいときに使う</td>
+                        </tr>
+                        <tr>
+                          <td>名前</td>
+                          <td><code>NAME( )</code></td>
+                          <td><code>HP+NAME(キメラ)*1000</code></td>
+                          <td>指定の名前のこころのとき<code>NAME</code>の値は<code>1</code>になる<br />
+                              それ以外のこころのとき<code>NAME</code>の値は<code>0</code>になる</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>足し算
+
                 </details>
               </div>
               <hr />
