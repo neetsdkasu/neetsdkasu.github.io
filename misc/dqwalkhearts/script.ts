@@ -648,9 +648,225 @@ const RecoverMagicScorer: Scorer = makeSimpleScorer("recoverMagic");
 const SpeedScorer:        Scorer = makeSimpleScorer("speed");
 const DeftnessScorer:     Scorer = makeSimpleScorer("deftness");
 
+class ExprParser {
+    pos: number;
+    chars: string[];
+
+    constructor(expr: string) {
+        this.pos = 0;
+        this.chars = [...expr];
+    }
+
+    skipWhitespaces(): void {
+        while (this.pos < this.chars.length) {
+            if (this.chars[this.pos].match(/^\s+$/)) {
+                this.pos++;
+            } else {
+                return;
+            }
+        }
+    }
+
+    next(): string | null {
+        if (this.pos < this.chars.length) {
+            const ch = this.chars[this.pos];
+            if (DEBUG) {
+                console.log(`next: pos ${this.pos}, ch ${ch}`);
+            }
+            this.pos++;
+            return ch;
+        } else {
+            if (DEBUG) {
+                console.log(`next: pos ${this.pos}, EOF`);
+            }
+            this.pos++;
+            return null;
+        }
+    }
+
+    back(): void {
+        if (this.pos > 0) {
+            if (DEBUG) {
+                if (this.pos-1 < this.chars.length) {
+                    console.log(`back: pos ${this.pos} -> ${this.pos-1}, ch ${this.chars[this.pos-1]}`);
+                } else {
+                    console.log(`back: pos ${this.pos} -> ${this.pos-1}, EOF`);
+                }
+            }
+            this.pos--;
+        } else {
+            throw "BUG";
+        }
+    }
+
+    getScorer(ch1: string): Scorer | null {
+        const sci = this.parseInteger(ch1);
+        if (sci !== null) {
+            return sci;
+        }
+        const name = this.parseWord(ch1);
+        if (name === null) {
+            if (DEBUG) {
+                console.log(`unknown token ${ch1}`);
+            }
+            return null;
+        }
+        if (DEBUG) {
+            console.log(`name ${name}`);
+        }
+        switch (name) {
+            case "HP":
+                return MaximumHPScorer;
+            case "MP":
+                return MaximumMPScorer;
+            case "PWR":
+                return PowerScorer;
+            case "DEF":
+                return DefenceScorer;
+            case "AMG":
+                return AttackMagicScorer;
+            case "RMG":
+                return RecoverMagicScorer;
+            case "SPD":
+                return SpeedScorer;
+            case "DFT":
+                return DeftnessScorer;
+            default:
+                if (DEBUG) {
+                    console.log(`name ${name} is undefined`);
+                }
+                return null;
+        }
+    }
+
+    parseInteger(ch1: string): Scorer | null {
+        if (ch1.match(/^\D+$/)) {
+            return null;
+        }
+        let v = parseInt(ch1);
+        for (;;) {
+            const ch = this.next();
+            if (ch === null || ch.match(/^\D+$/)) {
+                this.back();
+                if (DEBUG) {
+                    console.log(`integer ${v}`);
+                }
+                return { calc: (c: Color, m: Monster) => v };
+            }
+            v = v * 10 + parseInt(ch);
+        }
+    }
+
+    parseWord(ch1: string): string | null {
+        if (ch1.match(/^[\d\s\(\)\+\*,]+$/)) {
+            return null;
+        }
+        let w = ch1;
+        for (;;) {
+            const ch = this.next();
+            if (ch === null || ch.match(/^[\s\(\)\+\*,]+$/)) {
+                this.back();
+                return w;
+            }
+            w += ch;
+        }
+    }
+
+    parseValue(): Scorer | null {
+        this.skipWhitespaces();
+        const ch1 = this.next();
+        if (ch1 === null) {
+            return null;
+        }
+        if (ch1 === "(") {
+            const sc1 = this.parse();
+            if (this.next() !== ")") {
+                return null;
+            }
+            return sc1;
+        } else {
+            return this.getScorer(ch1);
+        }
+    }
+
+    parse(): Scorer | null {
+        const vStack: Scorer[] = [];
+        const opStack: string[] = [];
+        for (;;) {
+            const sc1 = this.parseValue();
+            if (sc1 === null) {
+                return null;
+            }
+            vStack.push(sc1);
+            // 古いTypeScriptではopStack.at(-1)が使えない…？
+            while (opStack.length > 0 && opStack[opStack.length-1] === "*") {
+                if (DEBUG) {
+                    console.log("apply *");
+                }
+                opStack.pop();
+                const t2 = vStack.pop()!;
+                const t1 = vStack.pop()!;
+                vStack.push({
+                    calc: (c: Color, m: Monster) => {
+                        const v1 = t1.calc(c, m);
+                        const v2 = t2.calc(c, m);
+                        return v1 * v2;
+                    }
+                });
+            }
+            this.skipWhitespaces();
+            const ch2 = this.next();
+            if (ch2 === null || ch2 === ")") {
+                this.back();
+                while (opStack.length > 0) {
+                    const op = opStack.pop()!;
+                    if (DEBUG) {
+                        console.log(`apply ${op}`);
+                    }
+                    const t2 = vStack.pop()!;
+                    const t1 = vStack.pop()!;
+                    if (op === "+") {
+                        vStack.push({
+                            calc: (c: Color, m: Monster) => {
+                                const v1 = t1.calc(c, m);
+                                const v2 = t2.calc(c, m);
+                                return v1 + v2;
+                            }
+                        });
+                    } else if (op === "*") {
+                        vStack.push({
+                            calc: (c: Color, m: Monster) => {
+                                const v1 = t1.calc(c, m);
+                                const v2 = t2.calc(c, m);
+                                return v1 * v2;
+                            }
+                        });
+                    }
+                }
+                return vStack.pop()!;
+            } else if (ch2 === "+" || ch2 === "*") {
+                if (DEBUG) {
+                    console.log(`operator ${ch2}`);
+                }
+                opStack.push(ch2);
+            } else {
+                if (DEBUG) {
+                    console.log(`unknown token ${ch2}`);
+                }
+                return null;
+            }
+        }
+    }
+}
+
 function parseExpression(expr: string): Scorer {
-    // TODO
-    throw "Expression is not implemented yet";
+    const parser = new ExprParser(expr);
+    const sc = parser.parse();
+    if (sc === null) {
+        throw "Expression is not implemented yet";
+    } else {
+        return sc;
+    }
 }
 
 function inferSetName(colors: Color[]): string {
@@ -892,7 +1108,10 @@ function searchHeartSet(target: Target): void {
                 }
                 const state2 = dp2[s][c];
                 if (state2 === null || state1.score > state2.score) {
-                    dp2[s][c] = state1;
+                    dp2[s][c] = {
+                        score: state1.score,
+                        sets: state1.sets.slice(),
+                    };
                 } else if (state1.score === state2.score) {
                     state2.sets = state2.sets.concat(state1.sets);
                 }
@@ -931,7 +1150,6 @@ function searchHeartSet(target: Target): void {
         dp2 = dp3;
         dp2.forEach(a => a.fill(null));
     }
-    // TODO
     let best: State | null = null;
     for (const line of dp1) {
         for (const state of line) {
