@@ -748,6 +748,65 @@ class ExprParser {
             return null;
         }
     }
+    skillNameScorer() {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const pos0 = this.pos;
+        const ch = this.next();
+        if (ch === null) {
+            return null;
+        }
+        const wd = this.parseEffectName(ch);
+        if (wd === null) {
+            return null;
+        }
+        const pos1 = this.pos;
+        if (this.next() !== ")") {
+            return null;
+        }
+        return {
+            calc: (c, m) => {
+                if (m.target === null) {
+                    return 0;
+                }
+                return m.hearts
+                    .find(h => h.rank === m.target)
+                    .effects
+                    .split(/,|\s+/)
+                    .includes(wd) ? 1 : 0;
+            }
+        };
+    }
+    partOfSkillNameScorer() {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const pos0 = this.pos;
+        const ch = this.next();
+        if (ch === null) {
+            return null;
+        }
+        const wd = this.parseEffectName(ch);
+        if (wd === null) {
+            return null;
+        }
+        const pos1 = this.pos;
+        if (this.next() !== ")") {
+            return null;
+        }
+        return {
+            calc: (c, m) => {
+                if (m.target === null) {
+                    return 0;
+                }
+                return m.hearts
+                    .find(h => h.rank === m.target)
+                    .effects
+                    .includes(wd) ? 1 : 0;
+            }
+        };
+    }
     getScorer(ch1) {
         const pos0 = this.pos - 1;
         const sci = this.parseInteger(ch1);
@@ -787,6 +846,10 @@ class ExprParser {
                 return this.minScorer();
             case "NAME":
                 return this.nameScorer();
+            case "SKL":
+                return this.skillNameScorer();
+            case "FIND":
+                return this.partOfSkillNameScorer();
             default:
                 if (DEBUG) {
                     console.log(`name ${name} is undefined`);
@@ -810,6 +873,20 @@ class ExprParser {
                 return { calc: (c, m) => v };
             }
             v = v * 10 + parseInt(ch);
+        }
+    }
+    parseEffectName(ch1) {
+        if (ch1.match(/^[\d\s\(\)\+\*,]+$/)) {
+            return null;
+        }
+        let w = ch1;
+        for (;;) {
+            const ch = this.next();
+            if (ch === null || ch.match(/^[\s\(\),]+$/)) {
+                this.back();
+                return w;
+            }
+            w += ch;
         }
     }
     parseWord(ch1) {
