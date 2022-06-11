@@ -142,13 +142,27 @@ input[type="checkbox"]:disabled + label,
 #result_heart1 > span,
 #result_heart2 > span,
 #result_heart3 > span,
-#result_heart4 > span,
+#result_heart4 > span
+{
+    margin-right: 3px;
+}
+
 .result-item-heart1 > span,
 .result-item-heart2 > span,
 .result-item-heart3 > span,
 .result-item-heart4 > span
 {
-    margin-right: 3px;
+    margin-right: 6px;
+}
+
+.result-item-heart-score
+{
+    font-size: small;
+}
+
+.small
+{
+    font-size: small;
 }
 
 #result

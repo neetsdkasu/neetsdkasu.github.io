@@ -207,7 +207,16 @@
           <input type="radio" name="goal" id="goal_expression"   value="expression"           /><label for="goal_expression"  >式</label>
           <div>
             <fieldset>
+              <div class="small">各『こころ』ごとにこの計算式でスコアを計算し、スコアの合計を最大化するセットを探す</div>
               <div><label for="expression">式：</label><input type="text" name="expression" id="expression" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DFT" maxLength="300" size="60" /></div>
+              <div>
+                <details class="small">
+                  <summary>説明</summary>
+                  <div>説明</div>
+                </details>
+              </div>
+              <hr />
+              <div><button type="button" value="check" id="check_expression">式の確認</button></div>
             </fieldset>
           </div>
         </div>
@@ -280,7 +289,7 @@
               <label><input type="radio" class="monster-rank" value="D"     ><span>D</span></label>
               <label><input type="radio" class="monster-rank" value="omit"  ><span>－</span></label>
             </span>
-          </summarY>
+          </summary>
           <div><span>HP:</span> <span class="monster-maximumhp"></span></div>
           <div><span>MP:</span> <span class="monster-maximummp"></span></div>
           <div><span>力:</span> <span class="monster-power"></span></div>

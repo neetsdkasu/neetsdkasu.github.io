@@ -1155,6 +1155,7 @@ function searchHeartSet(target) {
         text(".result-item-speed", `${st.speed}`);
         text(".result-item-deftness", `${st.deftness}`);
         for (let p = 0; p < COUNT; p++) {
+            const c = target.colors[p];
             const m = heartSet[p];
             if (m === null) {
                 continue;
@@ -1167,6 +1168,9 @@ function searchHeartSet(target) {
             h.appendChild(document.createElement("span")).textContent = `${m.cost}`;
             h.appendChild(document.createElement("span")).textContent = m.name;
             h.appendChild(document.createElement("span")).textContent = Rank[m.target];
+            const hsc = h.appendChild(document.createElement("span"));
+            hsc.classList.add("result-item-heart-score");
+            hsc.textContent = `( スコア: ${target.scorer.calc(c, m)} )`;
             fragment.querySelector(`.result-item-effects${p + 1}`)
                 .textContent = m.hearts.find(h => h.rank === m.target).effects;
         }
