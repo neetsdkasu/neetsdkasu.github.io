@@ -208,6 +208,16 @@ code.outline
     margin-bottom: 5px;
 }
 
+td > code
+{
+    word-break: break-all;
+}
+
+td
+{
+    border-bottom: 1px solid lightgray;
+}
+
 .error-expression
 {
     border: 1px solid red;

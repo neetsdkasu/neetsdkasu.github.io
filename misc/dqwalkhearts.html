@@ -340,8 +340,65 @@
                       </tbody>
                     </table>
                   </div>
-                  <div>足し算
-
+                  <div>
+                    <details>
+                      <summary class="small">その他</summary>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th></th>
+                            <th>式での表記</th>
+                            <th>例</th>
+                            <th>備考</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>色</td>
+                            <td><code>COLOR( )</code></td>
+                            <td><code>PWR+COLOR(黄)*5</code></td>
+                            <td>こころが指定の色のとき<code>COLOR</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>COLOR</code>の値は<code>0</code>になる<br />
+                                <code>COLOR</code>に指定できる色は<code>黄</code>,<code>紫</code>,<code>緑</code>,<code>赤</code>,<code>青</code>のいずれか</td>
+                          </tr>
+                          <tr>
+                            <td>コスト</td>
+                            <td><code>COST</code></td>
+                            <td><code>HP+COST</code></td>
+                            <td>こころのコストを計算式に使用できる</td>
+                          </tr>
+                          <tr>
+                            <td>スキル</td>
+                            <td><code>SKILL( )</code></td>
+                            <td><code>MP+SKILL(メラ)*8</code></td>
+                            <td>指定した文字列と完全一致するスキル・特殊効果があるとき<code>SKILL</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>SKILL</code>の値は<code>0</code>になる</td>
+                          </tr>
+                          <tr>
+                            <td>一部</td>
+                            <td><code>FIND( )</code></td>
+                            <td><code>PWR+FIND(体技)*5</code></td>
+                            <td>指定した文字列が含まれるスキル・特殊効果が1つでもあるとき<code>FIND</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>FIND</code>の値は<code>0</code>になる</td>
+                          </tr>
+                          <tr>
+                            <td>個数</td>
+                            <td><code>COUNT( )</code></td>
+                            <td><code>10*COUNT(耐性)+HP</code></td>
+                            <td><code>COUNT</code>の値は指定した文字列を含むスキル・特殊効果の個数になる</td>
+                          </tr>
+                          <tr>
+                            <td>数値</td>
+                            <td><code>NUM( # )</code></td>
+                            <td><code>NUM(毒耐性+#%)+DEF</code></td>
+                            <td>スキル・特殊効果で<code>#</code>の位置に数値があるとき<code>NUM</code>の値はその数値になる<br />
+                                それ以外のとき<code>NUM</code>の値は<code>0</code>になる<br />
+                                指定の文字列の数値(<code>#</code>)以外の部分はスキル・特殊効果と完全一致する必要がある</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </details>
+                  </div>
                 </details>
               </div>
               <hr />

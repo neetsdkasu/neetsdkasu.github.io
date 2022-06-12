@@ -794,15 +794,15 @@ class ExprParser {
         if (ch === null) {
             return null;
         }
-        const wd = this.parseWord(ch);
+        const wd = this.parseName(ch);
         if (wd === null) {
             return null;
         }
         const pos1 = this.pos;
-        if (this.next() !== ")") {
-            return null;
-        }
         if (monsterMap.has(wd)) {
+            if (this.next() !== ")") {
+                return null;
+            }
             return {
                 calc: (c: Color, m: Monster) => m.name === wd ? 1 : 0
             };
@@ -810,6 +810,39 @@ class ExprParser {
             this.worderr = [pos0, pos1];
             return null;
         }
+    }
+
+    colorScorer(): Scorer | null {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const pos0 = this.pos;
+        const ch = this.next();
+        if (ch === null) {
+            return null;
+        }
+        const wd = this.parseName(ch);
+        if (wd === null) {
+            return null;
+        }
+        const pos1 = this.pos;
+        let color: Color | null = null;
+        for (const info of SingleColorInfoMap.values()) {
+            if (info.text.startsWith(wd)) {
+                color = info.color;
+                break;
+            }
+        }
+        if (color === null) {
+            this.worderr = [pos0, pos1];
+            return null;
+        }
+        if (this.next() !== ")") {
+            return null;
+        }
+        return {
+            calc: (c: Color, m: Monster) => m.color === color ? 1 : 0
+        };
     }
 
     skillNameScorer(): Scorer | null {
@@ -821,7 +854,7 @@ class ExprParser {
         if (ch === null) {
             return null;
         }
-        const wd = this.parseEffectName(ch);
+        const wd = this.parseName(ch);
         if (wd === null) {
             return null;
         }
@@ -852,7 +885,7 @@ class ExprParser {
         if (ch === null) {
             return null;
         }
-        const wd = this.parseEffectName(ch);
+        const wd = this.parseName(ch);
         if (wd === null) {
             return null;
         }
@@ -869,6 +902,87 @@ class ExprParser {
                     .find(h => h.rank === m.target)!
                     .effects
                     .includes(wd) ? 1 : 0;
+            }
+        };
+    }
+
+    countOfPartOfSkillNameScorer(): Scorer | null {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const pos0 = this.pos;
+        const ch = this.next();
+        if (ch === null) {
+            return null;
+        }
+        const wd = this.parseName(ch);
+        if (wd === null) {
+            return null;
+        }
+        const pos1 = this.pos;
+        if (this.next() !== ")") {
+            return null;
+        }
+        return {
+            calc: (c: Color, m: Monster) => {
+                if (m.target === null) {
+                    return 0;
+                }
+                return m.hearts
+                    .find(h => h.rank === m.target)!
+                    .effects
+                    .split(/,|\s+/)
+                    .reduce((a, s) => a + (s.includes(wd) ? 1 : 0), 0)
+            }
+        };
+    }
+
+    pickNumberFromSkillScorer(): Scorer | null {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const pos0 = this.pos;
+        const ch = this.next();
+        if (ch === null) {
+            return null;
+        }
+        const wd = this.parseName(ch);
+        if (wd === null) {
+            return null;
+        }
+        const pos1 = this.pos;
+        if (this.next() !== ")") {
+            return null;
+        }
+        const wds = wd.split("#");
+        if (wds.length !== 2) {
+            this.worderr = [pos0, pos1];
+            return null;
+        }
+        if (DEBUG) {
+            console.log(`pick "${wds[0]}", "${wds[1]}"`);
+        }
+        return {
+            calc: (c: Color, m: Monster) => {
+                if (m.target === null) {
+                    return 0;
+                }
+                const skill = m.hearts
+                    .find(h => h.rank === m.target)!
+                    .effects
+                    .split(/,|\s+/)
+                    .find(s => s.startsWith(wds[0]) && s.endsWith(wds[1]));
+                if (skill) {
+                    const e = skill.lastIndexOf(wds[1]);
+                    const n = skill.slice(0, e).replace(wds[0], "");
+                    if (DEBUG) {
+                        console.log(`pick "${skill}", "${e}", "${n}"`);
+                    }
+                    if (n.match(/^\d+$/)) {
+                        return parseInt(n);
+                    }
+                }
+                return 0;
             }
         };
     }
@@ -912,10 +1026,18 @@ class ExprParser {
                 return this.minScorer();
             case "NAME":
                 return this.nameScorer();
-            case "SKL":
+            case "SKILL":
                 return this.skillNameScorer();
             case "FIND":
                 return this.partOfSkillNameScorer();
+            case "COUNT":
+                return this.countOfPartOfSkillNameScorer();
+            case "NUM":
+                return this.pickNumberFromSkillScorer();
+            case "COST":
+                return { calc: (c: Color, m: Monster) => m.cost };
+            case "COLOR":
+                return this.colorScorer();
             default:
                 if (DEBUG) {
                     console.log(`name ${name} is undefined`);
@@ -943,8 +1065,8 @@ class ExprParser {
         }
     }
 
-    parseEffectName(ch1: string): string | null {
-        if (ch1.match(/^[\d\s\(\)\+\*,]+$/)) {
+    parseName(ch1: string): string | null {
+        if (ch1.match(/^[\s\(\),]+$/)) {
             return null;
         }
         let w = ch1;
@@ -1548,7 +1670,7 @@ document.getElementById("add_heart_dialog")!
     const rank = Rank[rad("add_rank") as keyof typeof Rank];
     const monster: Monster = {
         id: 0,
-        name: str("add_monster_name"),
+        name: str("add_monster_name").trim(),
         color: Color[rad("add_color") as keyof typeof Color],
         cost: num("add_cost"),
         hearts: [{
@@ -1562,7 +1684,7 @@ document.getElementById("add_heart_dialog")!
             deftness: num("add_deftness"),
             rank: rank,
             maximumCost: num("add_maximumcost"),
-            effects: str("add_effects"),
+            effects: str("add_effects").trim(),
         }],
         target: rank,
     };
