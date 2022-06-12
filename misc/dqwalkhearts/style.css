@@ -1,0 +1,225 @@
+body
+{
+    padding: 1rem 2rem 2rem 2rem;
+}
+
+footer
+{
+    margin: 2rem 0px;
+}
+
+.outline
+{
+    border: 1px solid gray;
+    margin: 5px;
+}
+
+section.outline
+{
+    padding-bottom: 5px;
+    margin-bottom: 1rem;
+}
+
+section.outline > h5
+{
+    margin-top: 0px;
+    margin-bottom: 5px;
+    background-color: lightgray;
+    padding-left: 5px;
+}
+
+section.outline > div
+{
+    padding-left: 5px;
+}
+
+.yellow,
+input[id$="_yellow"]:checked + label
+{
+    background-color: yellow;
+}
+
+.purple,
+input[id$="_purple"]:checked + label
+{
+    color: pink;
+    background-color: purple;
+}
+
+.green,
+input[id$="_green"]:checked + label
+{
+    color: lime;
+    background-color: green;
+}
+
+.red,
+input[id$="_red"]:checked + label
+{
+    color: pink;
+    background-color: red;
+}
+
+.blue,
+input[id$="_blue"]:checked + label
+{
+    color: lightblue;
+    background-color: blue;
+}
+
+.omit,
+input[id$="_omit"]:checked + label
+{
+    background-color: lightgray;
+}
+
+fieldset > details > summary > span
+{
+    display: block;
+}
+
+fieldset > details > summary
+{
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.monster-name:hover
+{
+    cursor: pointer;
+}
+
+.buttons > *
+{
+    margin-right: 1rem;
+}
+
+#alert_dialog > div
+{
+    margin: 2rem;
+}
+
+#file_load_dialog fieldset
+{
+    font-size: small;
+    margin: 1rem;
+}
+
+.monster-rank:checked + span,
+input[name$="_rank"]:checked + label
+{
+    font-weight: bold;
+}
+
+input[type="checkbox"]:disabled + label,
+.monster-rank:disabled + span
+{
+    color: lightgray;
+}
+
+#downloadlink > span
+{
+    font-size: x-small;
+}
+
+#goal_expression + label + div legend
+{
+    font-size: small;
+}
+
+#goal_expression + label + div
+{
+    display: none;
+}
+
+#goal_expression:checked + label + div
+{
+    display: block;
+    margin: 5px;
+}
+
+#result_heart1 > span,
+#result_heart2 > span,
+#result_heart3 > span,
+#result_heart4 > span
+{
+    margin-right: 3px;
+}
+
+.result-item-heart1 > span,
+.result-item-heart2 > span,
+.result-item-heart3 > span,
+.result-item-heart4 > span
+{
+    margin-right: 6px;
+}
+
+.result-item-heart-score
+{
+    font-size: small;
+}
+
+.small
+{
+    font-size: small;
+}
+
+#result
+{
+    /* overflow-y: scroll; */
+}
+
+#heart_list
+{
+    height: 26rem;
+    overflow-y: scroll;
+}
+
+#result > div:first-child
+{
+    font-size: small;
+    border-bottom: 1px solid gray;
+    margin-bottom: 3px;
+}
+
+#result > div.outline > div:first-child
+{
+    font-size: small;
+    background-color: lightgray;
+    padding-left: 5px;
+}
+
+.description-expression > div:first-child
+{
+    font-size: small;
+}
+
+.description-expression tr > td
+{
+    font-size: small;
+}
+
+code.outline
+{
+    display: block;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+td > code
+{
+    word-break: break-all;
+}
+
+td
+{
+    border-bottom: 1px solid lightgray;
+}
+
+.error-expression
+{
+    border: 1px solid red;
+    background-color: #ffeeee;
+}

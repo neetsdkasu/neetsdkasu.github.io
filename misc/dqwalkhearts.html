@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@neetsdkasu" />
+    <meta name="twitter:creator" content="@neetsdkasu" />
+    <meta property="og:url" content="https://neetsdkasu.github.io/misc/dqwalkhearts/" />
+    <meta property="og:type" content="article" />
+    <meta property="og:locale" content="ja_JP" />
+    <meta property="og:title" content="DQ-Walk Hearts" />
+    <meta property="og:image" content="https://neetsdkasu.github.io/misc/dqwalkhearts/image.png" />
+    <meta property="og:description" content="find best score of heart set for DQ-Walk" />
+    <link rel="stylesheet" href="./dqwalkhearts/style.css" />
+    <title>DQ-Walk Hearts</title>
+    <script src="./dqwalkhearts/script.js" defer></script>
+  </head>
+  <body>
+
+    <header>
+      <h1>DQ-Walk Hearts</h1>
+    </header>
+
+    <dialog id="alert_dialog">
+      <div id="alert_message">アラート</div>
+      <hr />
+      <form method="dialog">
+        <div>
+          <button>オーケイ</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="file_load_dialog">
+      <div>こころリストをファイルから読み込む</div>
+      <hr />
+      <form method="dialog">
+        <div><input type="file" name="file" accept=".json,application/json" required /></div>
+        <fieldset>
+          <div><label><input type="radio" name="file_load_option" value="truncate"             >現在のリストを全て破棄してファイルのリストを読込む</label></div>
+          <div><label><input type="radio" name="file_load_option" value="file_as_newer"        >ファイルのリストを最新として現在のリストへ追加する</label></div>
+          <div><label><input type="radio" name="file_load_option" value="file_as_older" checked>現在のリストを最新としてファイルのリストを追加する</label></div>
+        </fieldset>
+        <hr />
+        <div>
+          <button type="button" value="cancel">キャンセル</button>
+          <button type="submit" value="load"  >読み込む</button>
+        </div>
+      </form>
+    </dialog>
+
+    <datalist id="monster_name_list"></datalist>
+
+    <!-- これ要らんかも(邪魔だし) -->
+    <datalist id="maximumcost_list">
+      <option value="0"></option>
+      <option value="1"></option>
+      <option value="2"></option>
+      <option value="3"></option>
+      <option value="4"></option>
+    </datalist>
+
+    <dialog id="add_heart_dialog">
+      <div>こころ追加</div>
+      <hr />
+      <form method="dialog">
+        <div><label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" required /></div>
+        <div><label for="add_cost">コスト:</label><input type="number" name="add_cost" id="add_cost" required /></div>
+        <div>
+          <span>色:</span>
+          <input type="radio" name="add_color" id="add_color_yellow" value="Yellow" required /><label for="add_color_yellow">黄(戦)</label>
+          <input type="radio" name="add_color" id="add_color_purple" value="Purple" required /><label for="add_color_purple">紫(魔)</label>
+          <input type="radio" name="add_color" id="add_color_green"  value="Green"  required /><label for="add_color_green" >緑(僧)</label>
+          <input type="radio" name="add_color" id="add_color_red"    value="Red"    required /><label for="add_color_red"   >赤(武)</label>
+          <input type="radio" name="add_color" id="add_color_blue"   value="Blue"   required /><label for="add_color_blue"  >青(盗)</label>
+        </div>
+        <fieldset>
+          <div>
+            <span>ランク:</span>
+            <input type="radio" name="add_rank" id="add_rank_s_plus" value="S_plus" required><label for="add_rank_s_plus">S+</label>
+            <input type="radio" name="add_rank" id="add_rank_s"      value="S"      required><label for="add_rank_s"     >S</label>
+            <input type="radio" name="add_rank" id="add_rank_a"      value="A"      required><label for="add_rank_a"     >A</label>
+            <input type="radio" name="add_rank" id="add_rank_b"      value="B"      required><label for="add_rank_b"     >B</label>
+            <input type="radio" name="add_rank" id="add_rank_c"      value="C"      required><label for="add_rank_c"     >C</label>
+            <input type="radio" name="add_rank" id="add_rank_d"      value="D"      required><label for="add_rank_d"     >D</label>
+          </div>
+          <div>
+            <label for="add_maximumhp">HP:</label>
+            <input type="number" name="add_maximumhp" id="add_maximumhp" required />
+          </div>
+          <div>
+            <label for="add_maximummp">MP:</label>
+            <input type="number" name="add_maximummp" id="add_maximummp" required />
+          </div>
+          <div>
+            <label for="add_power">力:</label>
+            <input type="number" name="add_power" id="add_power" required />
+          </div>
+          <div>
+            <label for="add_defence">守り:</label>
+            <input type="number" name="add_defence" id="add_defence" required />
+          </div>
+          <div>
+            <label for="add_attackmagic">攻魔:</label>
+            <input type="number" name="add_attackmagic" id="add_attackmagic" required />
+          </div>
+          <div>
+            <label for="add_recovermagic">回魔:</label>
+            <input type="number" name="add_recovermagic" id="add_recovermagic" required />
+          </div>
+          <div>
+            <label for="add_speed">早さ:</label>
+            <input type="number" name="add_speed" id="add_speed" required />
+          </div>
+          <div>
+            <label for="add_deftness">器用:</label>
+            <input type="number" name="add_deftness" id="add_deftness" required />
+          </div>
+          <div>
+            <label for="add_maximumcost">こころ最大コスト:</label>
+            <input type="number" name="add_maximumcost" id="add_maximumcost" list="maximumcost_list" />
+          </div>
+          <div>
+            <label for="add_effects">スキル・特殊効果:</label>
+            <input type="text" name="add_effects" id="add_effects" placeholder="ギラ 毒耐性+3% メラ呪文ダメージ+5% など" />
+          </div>
+        </fieldset>
+        <hr />
+        <div>
+          <button type="button" value="cancel">キャンセル</button>
+          <button type="submit" value="add"   >追加する</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="score_list_dialog">
+      <div class="message"></div>
+      <form method="dialog">
+        <div><button type="submit" value="ok">オーケイ</button></div>
+      </form>
+      <hr />
+      <table>
+        <thead>
+          <tr>
+            <th>色</th>
+            <th>コスト</th>
+            <th>名前</th>
+            <th>ランク</th>
+            <th>スコア</th>
+            <th>効果UP時</th>
+          </tr>
+        </thead>
+        <tbody>
+        </tbody>
+      </table>
+    </dialog>
+
+    <dialog id="search_heart_dialog">
+      <div>探索対象</div>
+      <hr />
+      <form method="dialog">
+        <div>
+          <label for="preset_heartset">プリセット:</label>
+          <select name="preset_heartset" id="preset_heartset">
+            <option value="101" selected>戦士</option>
+            <option value="102"         >魔法使い</option>
+            <option value="103"         >僧侶</option>
+            <option value="104"         >武闘家</option>
+            <option value="105"         >盗賊</option>
+            <option value="106"         >踊り子</option>
+            <option value="107"         >遊び人</option>
+            <option value="201"         >バトルマスター</option>
+            <option value="202"         >賢者</option>
+            <option value="203"         >レンジャー</option>
+            <option value="204"         >魔法戦士</option>
+            <option value="205"         >パラディン</option>
+            <option value="206"         >スーパースター</option>
+            <option value="207"         >海賊</option>
+            <option value="208"         >まものマスター</option>
+          </select>
+        </div>
+        <div>
+          <span>こころ枠1:</span>
+          <input type="checkbox" name="heart1_yellow" id="heart1_yellow" checked /><label for="heart1_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart1_purple" id="heart1_purple" checked /><label for="heart1_purple">紫(魔)</label>
+          <input type="checkbox" name="heart1_green"  id="heart1_green"  checked /><label for="heart1_green" >緑(僧)</label>
+          <input type="checkbox" name="heart1_red"    id="heart1_red"    checked /><label for="heart1_red"   >赤(武)</label>
+          <input type="checkbox" name="heart1_blue"   id="heart1_blue"   checked /><label for="heart1_blue"  >青(盗)</label>
+        </div>
+        <div>
+          <span>こころ枠2:</span>
+          <input type="checkbox" name="heart2_yellow" id="heart2_yellow" checked /><label for="heart2_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart2_purple" id="heart2_purple"         /><label for="heart2_purple">紫(魔)</label>
+          <input type="checkbox" name="heart2_green"  id="heart2_green"          /><label for="heart2_green" >緑(僧)</label>
+          <input type="checkbox" name="heart2_red"    id="heart2_red"            /><label for="heart2_red"   >赤(武)</label>
+          <input type="checkbox" name="heart2_blue"   id="heart2_blue"           /><label for="heart2_blue"  >青(盗)</label>
+        </div>
+        <div>
+          <span>こころ枠3:</span>
+          <input type="checkbox" name="heart3_yellow" id="heart3_yellow" checked /><label for="heart3_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart3_purple" id="heart3_purple"         /><label for="heart3_purple">紫(魔)</label>
+          <input type="checkbox" name="heart3_green"  id="heart3_green"          /><label for="heart3_green" >緑(僧)</label>
+          <input type="checkbox" name="heart3_red"    id="heart3_red"            /><label for="heart3_red"   >赤(武)</label>
+          <input type="checkbox" name="heart3_blue"   id="heart3_blue"           /><label for="heart3_blue"  >青(盗)</label>
+        </div>
+        <div>
+          <span>こころ枠4:</span>
+          <input type="checkbox" name="heart4_yellow" id="heart4_yellow" disabled /><label for="heart4_yellow">黄(戦)</label>
+          <input type="checkbox" name="heart4_purple" id="heart4_purple" disabled /><label for="heart4_purple">紫(魔)</label>
+          <input type="checkbox" name="heart4_green"  id="heart4_green"  disabled /><label for="heart4_green" >緑(僧)</label>
+          <input type="checkbox" name="heart4_red"    id="heart4_red"    disabled /><label for="heart4_red"   >赤(武)</label>
+          <input type="checkbox" name="heart4_blue"   id="heart4_blue"   disabled /><label for="heart4_blue"  >青(盗)</label>
+          <input type="checkbox" name="heart4_omit"   id="heart4_omit"   checked  /><label for="heart4_omit"  >使用しない</label>
+        </div>
+        <div>
+          <label for="heart_maximum_cost">こころ最大コスト:</label>
+          <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" min="0" max="1000" required />
+        </div>
+        <div>
+          <span>最大化:</span>
+          <input type="radio" name="goal" id="goal_maximumhp"    value="maximumhp"    checked /><label for="goal_maximumhp"   >HP</label>
+          <input type="radio" name="goal" id="goal_maximummp"    value="maximummp"            /><label for="goal_maximummp"   >MP</label>
+          <input type="radio" name="goal" id="goal_power"        value="power"                /><label for="goal_power"       >力</label>
+          <input type="radio" name="goal" id="goal_defence"      value="defence"              /><label for="goal_defence"     >守り</label>
+          <input type="radio" name="goal" id="goal_attackmagic"  value="attackmagic"          /><label for="goal_attackmagic" >攻魔</label>
+          <input type="radio" name="goal" id="goal_recovermagic" value="recovermagic"         /><label for="goal_recovermagic">回魔</label>
+          <input type="radio" name="goal" id="goal_speed"        value="speed"                /><label for="goal_speed"       >早さ</label>
+          <input type="radio" name="goal" id="goal_deftness"     value="deftness"             /><label for="goal_deftness"    >器用</label>
+          <input type="radio" name="goal" id="goal_expression"   value="expression"           /><label for="goal_expression"  >式</label>
+          <div>
+            <fieldset>
+              <div class="small">各『こころ』ごとにこの計算式でスコアを計算し、スコアの合計を最大化するセットを探す</div>
+              <div><label for="expression">式：</label><input type="text" name="expression" id="expression" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DFT" maxLength="300" size="60" /></div>
+              <div>
+                <details class="small description-expression">
+                  <summary>説明を見る</summary>
+                  <div>英数字記号は全て半角、英字は大文字で。</div>
+                  <div>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th></th>
+                          <th>式での表記</th>
+                          <th>例</th>
+                          <th>備考</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr>
+                          <td>HP</td>
+                          <td><code>HP</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>MP</td>
+                          <td><code>MP</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>力</td>
+                          <td><code>PWR</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>守り</td>
+                          <td><code>DEF</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>攻魔</td>
+                          <td><code>AMG</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>回魔</td>
+                          <td><code>RMG</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>早さ</td>
+                          <td><code>SPD</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>器用</td>
+                          <td><code>DFT</code></td>
+                          <td><code></code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>足し算</td>
+                          <td><code>+</code></td>
+                          <td><code>HP+MP</code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>掛け算</td>
+                          <td><code>*</code></td>
+                          <td><code>MP*AMG</code></td>
+                          <td>計算順序は足し算より優先される</td>
+                        </tr>
+                        <tr>
+                          <td>最小</td>
+                          <td><code>MIN( , )</code></td>
+                          <td><code>MIN(HP,MP)</code></td>
+                          <td>カンマ区切りで指定した式のうち最小になる値を選ぶ</td>
+                        </tr>
+                        <tr>
+                          <td>最大</td>
+                          <td><code>MAX( , )</code></td>
+                          <td><code>MAX(PWR,AMG)</code></td>
+                          <td>カンマ区切りで指定した式のうち最大になる値を選ぶ</td>
+                        </tr>
+                        <tr>
+                          <td>整数</td>
+                          <td><code></code></td>
+                          <td><code>HP*7+PWR*10</code></td>
+                          <td></td>
+                        </tr>
+                        <tr>
+                          <td>順序</td>
+                          <td><code>( )</code></td>
+                          <td><code>(HP+MP)*(PWR+SPD)</code></td>
+                          <td>計算順序で掛け算より足し算を優先したいときに使う</td>
+                        </tr>
+                        <tr>
+                          <td>名前</td>
+                          <td><code>NAME( )</code></td>
+                          <td><code>HP+NAME(キメラ)*1000</code></td>
+                          <td>指定の名前のこころのとき<code>NAME</code>の値は<code>1</code>になる<br />
+                              それ以外のこころのとき<code>NAME</code>の値は<code>0</code>になる</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                  <div>
+                    <details>
+                      <summary class="small">その他</summary>
+                      <table>
+                        <thead>
+                          <tr>
+                            <th></th>
+                            <th>式での表記</th>
+                            <th>例</th>
+                            <th>備考</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr>
+                            <td>色</td>
+                            <td><code>COLOR( )</code></td>
+                            <td><code>PWR+COLOR(黄)*5</code></td>
+                            <td>こころが指定の色のとき<code>COLOR</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>COLOR</code>の値は<code>0</code>になる<br />
+                                <code>COLOR</code>に指定できる色は<code>黄</code>,<code>紫</code>,<code>緑</code>,<code>赤</code>,<code>青</code>のいずれか</td>
+                          </tr>
+                          <tr>
+                            <td>コスト</td>
+                            <td><code>COST</code></td>
+                            <td><code>HP+COST</code></td>
+                            <td>こころのコストを計算式に使用できる</td>
+                          </tr>
+                          <tr>
+                            <td>スキル</td>
+                            <td><code>SKILL( )</code></td>
+                            <td><code>MP+SKILL(メラ)*8</code></td>
+                            <td>指定した文字列と完全一致するスキル・特殊効果があるとき<code>SKILL</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>SKILL</code>の値は<code>0</code>になる</td>
+                          </tr>
+                          <tr>
+                            <td>一部</td>
+                            <td><code>FIND( )</code></td>
+                            <td><code>PWR+FIND(体技)*5</code></td>
+                            <td>指定した文字列が含まれるスキル・特殊効果が1つでもあるとき<code>FIND</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>FIND</code>の値は<code>0</code>になる</td>
+                          </tr>
+                          <tr>
+                            <td>個数</td>
+                            <td><code>COUNT( )</code></td>
+                            <td><code>10*COUNT(耐性)+HP</code></td>
+                            <td><code>COUNT</code>の値は指定した文字列を含むスキル・特殊効果の個数になる</td>
+                          </tr>
+                          <tr>
+                            <td>数値</td>
+                            <td><code>NUM( # )</code></td>
+                            <td><code>NUM(毒耐性+#%)+DEF</code></td>
+                            <td>スキル・特殊効果で<code>#</code>の位置に数値があるとき<code>NUM</code>の値はその数値になる<br />
+                                それ以外のとき<code>NUM</code>の値は<code>0</code>になる<br />
+                                指定の文字列の数値(<code>#</code>)以外の部分はスキル・特殊効果と完全一致する必要がある</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </details>
+                  </div>
+                </details>
+              </div>
+              <hr />
+              <div><button type="button" value="check" id="check_expression">式の確認</button></div>
+            </fieldset>
+          </div>
+        </div>
+        <div>
+          <button type="button" value="cancel">キャンセル</button>
+          <button type="submit" value="start">探索開始</button>
+        </div>
+      </form>
+    </dialog>
+
+    <main>
+
+      <section class="outline">
+        <h5>こころセット</h5>
+        <div class="buttons">
+          <button id="search_heart">探索</button>
+        </div>
+        <hr />
+        <div>
+          <div><span>セット:</span> <span id="result_setname"></span></div>
+          <div><span>こころ枠1:</span> <span id="result_heart1"></span></div>
+          <div><span>こころ枠2:</span> <span id="result_heart2"></span></div>
+          <div><span>こころ枠3:</span> <span id="result_heart3"></span></div>
+          <div><span>こころ枠4:</span> <span id="result_heart4"></span></div>
+          <div><span>こころ最大コスト:</span> <span id="result_maximumcost"></span></div>
+          <div><span>最大化:</span> <span id="result_goal"></span></div>
+        </div>
+        <hr />
+        <div id="result"></div>
+      </section>
+
+      <section class="outline">
+        <h5>こころリスト</h5>
+        <div class="buttons">
+          <button id="add_heart">こころ追加</button>
+          <button id="load_file">ファイル読込</button>
+          <span>
+            <button id="download">ダウンロード</button>
+            <span id="downloadlink" hidden>
+              <a href="" download="dqwalkhearts.json" type="application/json">dqwalkhearts.json</a>
+              <span></span>
+            </span>
+          </span>
+        </div>
+        <hr />
+        <div id="heart_list"></div>
+      </section>
+
+    </main>
+
+    <footer>
+      <nav><a href=".">misc</a></nav>
+    </footer>
+
+    <template id="heart_list_item">
+      <fieldset>
+        <details>
+          <summary>
+            <span>
+              <span class="monster-color"></span>
+              <span class="monster-cost"></span>
+            </span>
+            <span class="monster-name"></span>
+            <span>
+              <label><input type="radio" class="monster-rank" value="S_plus"><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"     ><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"     ><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"     ><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"     ><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"     ><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"  ><span>－</span></label>
+            </span>
+          </summary>
+          <div><span>HP:</span> <span class="monster-maximumhp"></span></div>
+          <div><span>MP:</span> <span class="monster-maximummp"></span></div>
+          <div><span>力:</span> <span class="monster-power"></span></div>
+          <div><span>守り:</span> <span class="monster-defence"></span></div>
+          <div><span>攻魔:</span> <span class="monster-attackmagic"></span></div>
+          <div><span>回魔:</span> <span class="monster-recovermagic"></span></div>
+          <div><span>早さ:</span> <span class="monster-speed"></span></div>
+          <div><span>器用:</span> <span class="monster-deftness"></span></div>
+          <div><span>こころ最大コスト:</span> <span class="monster-maximumcost"></span></div>
+          <div><span>スキル・特殊効果:</span> <span class="monster-effects"></span></div>
+          <div><button type="button">追加・編集</button></div>
+        </details>
+      </fieldset>
+    </template>
+
+    <template id="result_item">
+      <div class="outline">
+        <div><span>候補</span> <span class="result-item-number"></span></div>
+        <div><span>スコア:</span> <span class="result-item-score"></span></div>
+        <div><span>こころコスト:</span> <span class="result-item-cost"></span></div>
+        <div><span>こころ枠1:</span> <span class="result-item-heart1"></span></div>
+        <div><span>こころ枠2:</span> <span class="result-item-heart2"></span></div>
+        <div><span>こころ枠3:</span> <span class="result-item-heart3"></span></div>
+        <div><span>こころ枠4:</span> <span class="result-item-heart4"></span></div>
+        <div><span>HP:</span> <span class="result-item-maximumhp"></span></div>
+        <div><span>MP:</span> <span class="result-item-maximummp"></span></div>
+        <div><span>力:</span> <span class="result-item-power"></span></div>
+        <div><span>守り:</span> <span class="result-item-defence"></span></div>
+        <div><span>攻魔:</span> <span class="result-item-attackmagic"></span></div>
+        <div><span>回魔:</span> <span class="result-item-recovermagic"></span></div>
+        <div><span>早さ:</span> <span class="result-item-speed"></span></div>
+        <div><span>器用:</span> <span class="result-item-deftness"></span></div>
+        <div><span>スキル・特殊効果1:</span> <span class="result-item-effects1"></span></div>
+        <div><span>スキル・特殊効果2:</span> <span class="result-item-effects2"></span></div>
+        <div><span>スキル・特殊効果3:</span> <span class="result-item-effects3"></span></div>
+        <div><span>スキル・特殊効果4:</span> <span class="result-item-effects4"></span></div>
+      </div>
+    </template>
+
+  </body>
+</html>
