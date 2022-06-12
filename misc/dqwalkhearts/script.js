@@ -4,7 +4,7 @@
 //
 // author: Leonardone @ NEETSDKASU
 //
-const DEBUG = true;
+const DEBUG = false;
 const LocalStoragePath = "dqwalkhearts";
 function dialogAlert(msg) {
     document.getElementById("alert_message").textContent = msg;
