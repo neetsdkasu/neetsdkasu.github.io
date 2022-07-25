@@ -21,6 +21,8 @@ function binarySearch(arr, value, less) {
     // そもバイナリサーチというやつが難しすぎて実装できないが
     throw "not implemented";
 }
+// 配列に昇順で新しいアイテムを挿入する
+// 挿入箇所は線形探索で求める
 function insert(arr, value, less) {
     const index = arr.findIndex(e => less(value, e));
     if (index < 0) {
@@ -97,6 +99,7 @@ let monsterMap = new Map();
 let monsterList = [];
 let monsterNameList = [];
 let noStorage = false;
+// こころリストをブラウザのストレージに保存
 function saveMonsterList() {
     if (noStorage) {
         return;
@@ -110,6 +113,7 @@ function saveMonsterList() {
         console.log(err);
     }
 }
+// こころリストをブラウザのストレージから読み込む
 function loadMonsterList() {
     if (noStorage) {
         return;
@@ -128,6 +132,7 @@ function loadMonsterList() {
         console.log(err);
     }
 }
+// 新規のモンスター名になるこころを追加したときのこころ表示処理
 function showNewHeart(monster) {
     const template = document.getElementById("heart_list_item");
     const fragment = template.content.cloneNode(true);
@@ -138,6 +143,7 @@ function showNewHeart(monster) {
     };
     text(".monster-name", monster.name);
     text(".monster-cost", monster.cost);
+    // TODO 虹色に対応する
     const csi = SingleColorInfoMap.get(monster.color);
     text(".monster-color", csi.text).classList.add(csi.colorName);
     const radios = fragment.querySelectorAll('input.monster-rank');
@@ -240,6 +246,7 @@ function showNewHeart(monster) {
         holder.insertBefore(fragment, next);
     }
 }
+// 表示済みのモンスターのこころの情報を最新情報で表示しなおす
 function showUpdatedHeart(monster, reorder) {
     const item = document.getElementById(`monster-${monster.id}`);
     if (reorder) {
@@ -261,6 +268,7 @@ function showUpdatedHeart(monster, reorder) {
     };
     text(".monster-name", monster.name);
     text(".monster-cost", monster.cost);
+    // TODO 虹色に対応する
     const csi = SingleColorInfoMap.get(monster.color);
     const classList = text(".monster-color", csi.text).classList;
     SingleColorInfoMap.forEach((v) => {
@@ -314,6 +322,8 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-effects", heart.effects);
     }
 }
+// モンスター名リストに新しいモンスター名を追加する
+// ※モンスター名リストはこころ追加フォームのブラウザのサジェスト機能に利用される
 function addMonsterNameList(newName) {
     const item = document.createElement("option");
     item.value = newName;
@@ -327,6 +337,7 @@ function addMonsterNameList(newName) {
         list.insertBefore(item, before);
     }
 }
+// 新しいこころを追加する（情報は上書きされる）
 function addHeart(newMonster) {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name);
@@ -358,6 +369,7 @@ function addHeart(newMonster) {
         showNewHeart(newMonster);
     }
 }
+// 職業ごとのこころ枠の組み合わせをフォームに設定する
 function setPreset(job) {
     function update(n, c, v) {
         const id = `heart${n + 1}_${c}`;
@@ -392,6 +404,7 @@ function setPreset(job) {
         elem("heart4_blue");
     }
 }
+// 読み込んだjsonファイルがMonster[]かどうかを確認する
 function isMonsterList(obj) {
     if (!Array.isArray(obj)) {
         console.log("こころリストじゃないJSONファイル");
@@ -406,6 +419,7 @@ function isMonsterList(obj) {
     }
     return true;
 }
+// オブジェクトがMonster型かどうかを確認する
 function isMonster(anyobj) {
     if (typeof anyobj !== "object" || anyobj === null) {
         console.log("オブジェクト型じゃない");
@@ -507,6 +521,7 @@ function isMonster(anyobj) {
     }
     // ここ以下はたぶん普通はバリデータの役割。型検査の役割じゃないと思う。
     {
+        // TODO 虹色のこころ対応
         if (m.color === Color.Unset || m.color === Color.Omit || m.color === Color.Rainbow) {
             console.log("こころの色の指定として不正 ${Color[m.color]}");
             console.log(m);
@@ -535,6 +550,7 @@ function isMonster(anyobj) {
     }
     return true;
 }
+// 現在のこころリストを破棄して新しいこころリストに置き換える
 function replaceMonsterList(newMonsterList) {
     monsterMap = new Map();
     monsterList = [];
@@ -545,11 +561,15 @@ function replaceMonsterList(newMonsterList) {
         addHeart(monster);
     }
 }
+// 現在のこころリストに別のこころリストで上書きする
+// ※同一モンスターの情報があった場合に別のこころリストのほうが優先される
 function addAllMonsterList(list) {
     for (const monster of list) {
         addHeart(monster);
     }
 }
+// 現在のこころリストに別のこころリストをマージする
+// ※同一モンスターの情報があった場合に現在のこころリストのほうが優先される
 function mergeMonsterList(list) {
     for (const monster of list) {
         if (monsterMap.has(monster.name)) {
@@ -565,6 +585,7 @@ function mergeMonsterList(list) {
         addHeart(monster);
     }
 }
+// こころの基本のパラメータだけ見るシンプルなスコア計算オブジェクトを生成する
 function makeSimpleScorer(param) {
     return {
         calc: (color, monster) => {
@@ -604,6 +625,7 @@ class ExprParser {
         this.chars = [...expr];
         this.worderr = null;
     }
+    // 空白文字をスキップ
     skipWhitespaces() {
         while (this.pos < this.chars.length) {
             if (this.chars[this.pos].match(/^\s+$/)) {
@@ -614,6 +636,7 @@ class ExprParser {
             }
         }
     }
+    // 現在位置の文字を取得し、かつ、現在位置を1文字分進める
     next() {
         if (this.pos < this.chars.length) {
             const ch = this.chars[this.pos];
@@ -631,6 +654,7 @@ class ExprParser {
             return null;
         }
     }
+    // 現在位置を1文字分戻る
     back() {
         if (this.pos > 0) {
             if (DEBUG) {
@@ -647,6 +671,7 @@ class ExprParser {
             throw "BUG";
         }
     }
+    // MIN
     minScorer() {
         if (this.next() !== "(") {
             return null;
@@ -684,6 +709,7 @@ class ExprParser {
             }
         }
     }
+    // MAX
     maxScorer() {
         if (this.next() !== "(") {
             return null;
@@ -721,6 +747,7 @@ class ExprParser {
             }
         }
     }
+    // NAME
     nameScorer() {
         if (this.next() !== "(") {
             return null;
@@ -748,6 +775,7 @@ class ExprParser {
             return null;
         }
     }
+    // COLOR
     colorScorer() {
         if (this.next() !== "(") {
             return null;
@@ -769,6 +797,7 @@ class ExprParser {
                 break;
             }
         }
+        // TODO 虹色に対応する
         if (color === null) {
             this.worderr = [pos0, pos1];
             return null;
@@ -780,6 +809,7 @@ class ExprParser {
             calc: (c, m) => m.color === color ? 1 : 0
         };
     }
+    // SKILL
     skillNameScorer() {
         if (this.next() !== "(") {
             return null;
@@ -810,6 +840,7 @@ class ExprParser {
             }
         };
     }
+    // FIND
     partOfSkillNameScorer() {
         if (this.next() !== "(") {
             return null;
@@ -839,6 +870,7 @@ class ExprParser {
             }
         };
     }
+    // COUNT
     countOfPartOfSkillNameScorer() {
         if (this.next() !== "(") {
             return null;
@@ -869,6 +901,7 @@ class ExprParser {
             }
         };
     }
+    // NUM
     pickNumberFromSkillScorer() {
         if (this.next() !== "(") {
             return null;
@@ -918,6 +951,7 @@ class ExprParser {
             }
         };
     }
+    // スコア計算の種類を特定して返す
     getScorer(ch1) {
         const pos0 = this.pos - 1;
         const sci = this.parseInteger(ch1);
@@ -977,6 +1011,7 @@ class ExprParser {
                 return null;
         }
     }
+    // 数値リテラル
     parseInteger(ch1) {
         if (ch1.match(/^\D+$/)) {
             return null;
@@ -994,6 +1029,7 @@ class ExprParser {
             v = v * 10 + parseInt(ch);
         }
     }
+    // 文字列のパース（引数の名前に使える文字）
     parseName(ch1) {
         if (ch1.match(/^[\s\(\),]+$/)) {
             return null;
@@ -1008,6 +1044,7 @@ class ExprParser {
             w += ch;
         }
     }
+    // 文字列のパース（式に使える文字）
     parseWord(ch1) {
         if (ch1.match(/^[\d\s\(\)\+\*,]+$/)) {
             return null;
@@ -1022,6 +1059,7 @@ class ExprParser {
             w += ch;
         }
     }
+    // 何らかの値（数値や関数）
     parseValue() {
         this.skipWhitespaces();
         const ch1 = this.next();
@@ -1042,6 +1080,7 @@ class ExprParser {
             return this.getScorer(ch1);
         }
     }
+    // エラーの取得
     err() {
         let pos1;
         let pos2;
@@ -1058,6 +1097,7 @@ class ExprParser {
         const str3 = this.chars.slice(pos2).join("");
         return new ExprSyntaxError(this.pos, [str1, str2, str3]);
     }
+    // 部分式をパースする(再帰的実行されるので結果的に式全体をパースすることになる)
     parse() {
         const vStack = [];
         const opStack = [];
@@ -1130,6 +1170,7 @@ class ExprParser {
         }
     }
 }
+// 式をパースする
 function parseExpression(expr) {
     const parser = new ExprParser(expr);
     const sc = parser.parse();
@@ -1140,6 +1181,7 @@ function parseExpression(expr) {
         return sc;
     }
 }
+// こころ枠の組み合わせから職業名を特定する
 function inferSetName(colors) {
     if (colors.length < 3 || colors.length > 4) {
         return "カスタム";
@@ -1157,6 +1199,7 @@ function inferSetName(colors) {
     }
     return "カスタム";
 }
+// フォーム情報を解析する
 function parseTarget(elements) {
     const elem = (name) => elements.namedItem(name);
     const target = {
@@ -1248,6 +1291,11 @@ function parseTarget(elements) {
     document.getElementById("result_goal").textContent = target.expr;
     return target;
 }
+// 最大スコアのこころセットの組み合わせ数を求めるだけ
+// 組み合わせ爆発回避用
+// TODO 最終的なベストの組み合わせ数だけじゃなく、
+//      途中段階で異常な組み合わせ数が出る可能性を考慮したほうがいい
+//      メモリ不足回避のために
 function calcNumOfBestHeartSet(target) {
     const OFFSET = 10;
     const COUNT = target.colors.length;
@@ -1325,6 +1373,7 @@ function calcNumOfBestHeartSet(target) {
     }
     return bestCount;
 }
+// ツリー上になってるこころセットの組み合わせを展開する
 function extractHeartSet(stack, tmp, heartSet) {
     tmp[heartSet.pos] = heartSet.monster;
     if (heartSet.subsets.length === 0) {
@@ -1337,6 +1386,7 @@ function extractHeartSet(stack, tmp, heartSet) {
     }
     tmp[heartSet.pos] = null;
 }
+// ベストなこころ組み合わせを求めて表示する
 function searchHeartSet(target) {
     const OFFSET = 10;
     const COUNT = target.colors.length;
@@ -1495,6 +1545,7 @@ function searchHeartSet(target) {
                 continue;
             }
             const h = fragment.querySelector(`.result-item-heart${p + 1}`);
+            // TODO 虹色に対応する
             const info = SingleColorInfoMap.get(m.color);
             const colorSpan = h.appendChild(document.createElement("span"));
             colorSpan.classList.add(info.colorName);
@@ -1513,11 +1564,13 @@ function searchHeartSet(target) {
     result.insertBefore(document.createElement("div"), result.firstElementChild)
         .textContent = `件数: ${omitDuplicate.size}`;
 }
+// デモ用データの加工
 function convertToDummy(list) {
     for (let i = 0; i < list.length; i++) {
         list[i].name = `ダミーデータ${i + 1}`;
     }
 }
+// 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("preset_heartset")
     .addEventListener("change", () => {
     const sel = document.getElementById("preset_heartset");
@@ -1530,6 +1583,7 @@ document.getElementById("preset_heartset")
     }
     dialogAlert(`Unknown ID: ${value}`);
 });
+// こころ枠の不使用を設定/解除に色のオプションの有効/無効を切り替える
 document.getElementById("heart4_omit")
     .addEventListener("change", () => {
     const omit = document.getElementById("heart4_omit").checked;
@@ -1547,6 +1601,7 @@ document.getElementById("heart4_omit")
     elem("heart4_red");
     elem("heart4_blue");
 });
+// こころ追加フォームを開く
 document.getElementById("add_heart")
     .addEventListener("click", () => {
     const dialog = document.getElementById("add_heart_dialog");
@@ -1554,6 +1609,7 @@ document.getElementById("add_heart")
     dialog.returnValue = "";
     dialog.showModal();
 });
+// こころ追加フォームにおいて登録済みモンスター名を入れたときにコストや色を自動補完する
 document.getElementById("add_monster_name")
     .addEventListener("change", () => {
     const name = document.getElementById("add_monster_name").value;
@@ -1565,12 +1621,14 @@ document.getElementById("add_monster_name")
         elements.namedItem("add_color").value = `${Color[monster.color]}`;
     }
 });
+// こころ追加フォームでキャンセルしたとき
 document.querySelector('#add_heart_dialog button[value="cancel"]')
     .addEventListener("click", () => {
     const dialog = document.getElementById("add_heart_dialog");
     dialog.returnValue = "cancel";
     dialog.close();
 });
+// 新しいこころを追加する（フォームを閉じたときに発動）
 document.getElementById("add_heart_dialog")
     .addEventListener("close", (event) => {
     const dialog = document.getElementById("add_heart_dialog");
@@ -1607,6 +1665,7 @@ document.getElementById("add_heart_dialog")
     dialogAlert(`${monster.name} ${Rank[monster.hearts[0].rank]} を追加しました`);
     saveMonsterList();
 });
+// ダウンロードボタンを押したときの処理
 document.getElementById("download")
     .addEventListener("click", () => {
     if (monsterList.length === 0) {
@@ -1625,12 +1684,14 @@ document.getElementById("download")
     const json = JSON.stringify(monsterList);
     reader.readAsDataURL(new Blob([json]));
 });
+// ファイル読込フォームのキャンセル
 document.querySelector('#file_load_dialog button[value="cancel"]')
     .addEventListener("click", () => {
     const dialog = document.getElementById("file_load_dialog");
     dialog.returnValue = "cancel";
     dialog.close();
 });
+// ファイル読込フォームを開く
 document.getElementById("load_file")
     .addEventListener("click", () => {
     const dialog = document.getElementById("file_load_dialog");
@@ -1638,6 +1699,7 @@ document.getElementById("load_file")
     dialog.returnValue = "";
     dialog.showModal();
 });
+// ファイルを読み込む（フォームを閉じたときに発動）
 document.getElementById("file_load_dialog")
     .addEventListener("close", () => {
     const dialog = document.getElementById("file_load_dialog");
@@ -1668,6 +1730,7 @@ document.getElementById("file_load_dialog")
         dialogAlert(`${err}`);
     });
 });
+// 最大化するオプションで式を選んだときと式から切り替えたときのフォーム見た目の処理
 (function () {
     const e = document.getElementById("expression");
     const ge = document.getElementById("goal_expression");
@@ -1679,12 +1742,14 @@ document.getElementById("file_load_dialog")
         goal.addEventListener("change", f);
     }
 })();
+// こころセット探索対象の設定フォームのキャンセル
 document.querySelector('#search_heart_dialog button[value="cancel"]')
     .addEventListener("click", () => {
     const dialog = document.getElementById("search_heart_dialog");
     dialog.returnValue = "cancel";
     dialog.close();
 });
+// こころセットを探索する（フォームを閉じたときに発動）
 document.getElementById("search_heart_dialog")
     .addEventListener("close", () => {
     const dialog = document.getElementById("search_heart_dialog");
@@ -1711,11 +1776,13 @@ document.getElementById("search_heart_dialog")
         }
     }
 });
+// こころセット探索フォームを開く
 document.getElementById("search_heart")
     .addEventListener("click", () => {
     const dialog = document.getElementById("search_heart_dialog");
     dialog.showModal();
 });
+// 式の確認ボタンを押した時の処理
 document.getElementById("check_expression")
     .addEventListener("click", () => {
     const dialog = document.getElementById("score_list_dialog");
@@ -1770,6 +1837,7 @@ document.getElementById("check_expression")
     }
     dialog.showModal();
 });
+// ページのURLのパラメータの処理
 (function () {
     const params = new URLSearchParams(window.location.search);
     if (params.has("demo")) {
@@ -1794,6 +1862,7 @@ document.getElementById("check_expression")
         loadMonsterList();
     }
 })();
+// デバッグモードであることの確認
 if (DEBUG) {
     dialogAlert("[DEBUG] OK");
 }
