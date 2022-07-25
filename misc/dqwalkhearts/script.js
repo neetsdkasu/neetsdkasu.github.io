@@ -1513,6 +1513,11 @@ function searchHeartSet(target) {
     result.insertBefore(document.createElement("div"), result.firstElementChild)
         .textContent = `件数: ${omitDuplicate.size}`;
 }
+function convertToDummy(list) {
+    for (let i = 0; i < list.length; i++) {
+        list[i].name = `ダミーデータ${i + 1}`;
+    }
+}
 document.getElementById("preset_heartset")
     .addEventListener("change", () => {
     const sel = document.getElementById("preset_heartset");
@@ -1773,6 +1778,7 @@ document.getElementById("check_expression")
             .then(r => r.json())
             .then(json => {
             if (isMonsterList(json)) {
+                convertToDummy(json);
                 addAllMonsterList(json);
             }
         })

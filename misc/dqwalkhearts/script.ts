@@ -1598,6 +1598,12 @@ function searchHeartSet(target: Target): void {
         .textContent = `件数: ${omitDuplicate.size}`;
 }
 
+function convertToDummy(list: Monster[]) {
+    for (let i = 0; i < list.length; i++) {
+        list[i].name = `ダミーデータ${i+1}`;
+    }
+}
+
 document.getElementById("preset_heartset")!
 .addEventListener("change", () => {
     const sel = document.getElementById("preset_heartset") as HTMLSelectElement;
@@ -1867,6 +1873,7 @@ document.getElementById("check_expression")!
         .then(r => r.json())
         .then( json => {
             if (isMonsterList(json)) {
+                convertToDummy(json);
                 addAllMonsterList(json);
             }
         })
