@@ -207,6 +207,7 @@ function showNewHeart(monster: Monster): void {
         if (elm.value === "omit") {
             elm.addEventListener("change", () => {
                 monster.target = null;
+                saveMonsterList();
                 showUpdatedHeart(monster, false);
             });
         } else {
@@ -214,6 +215,7 @@ function showNewHeart(monster: Monster): void {
             elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
             elm.addEventListener("change", () => {
                 monster.target = rank;
+                saveMonsterList();
                 showUpdatedHeart(monster, false);
             });
         }
