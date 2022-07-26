@@ -1120,6 +1120,13 @@ class ExprParser {
                 return this.colorScorer();
             case "ABS":
                 return this.absScorer();
+            case "FIT":
+                return { calc: (c, m) => {
+                        if (m.target === null) {
+                            return 0;
+                        }
+                        return ((c & m.color) !== 0) ? 1 : 0;
+                    } };
             default:
                 if (DEBUG) {
                     console.log(`name ${name} is undefined`);
