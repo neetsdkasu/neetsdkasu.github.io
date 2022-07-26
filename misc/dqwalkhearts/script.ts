@@ -655,6 +655,15 @@ function makeSimpleScorer(param: keyof Status): Scorer {
     };
 }
 
+// 計算結果の正負を逆にする
+function toMinusScorer(sc: Scorer): Scorer {
+    return {
+        calc: (color: Color, monster: Monster) => {
+            return -sc.calc(color, monster);
+        },
+    };
+}
+
 // こころのスコアを計算するためのインターフェース
 interface Scorer {
     calc: (color: Color, monster: Monster) => number;
@@ -1172,13 +1181,13 @@ class ExprParser {
 
     // 文字列のパース（式に使える文字）
     parseWord(ch1: string): string | null {
-        if (ch1.match(/^[\d\s\(\)\+\*,]+$/)) {
+        if (ch1.match(/^[\d\s\(\)\+\-\*,]+$/)) {
             return null;
         }
         let w = ch1;
         for (;;) {
             const ch = this.next();
-            if (ch === null || ch.match(/^[\s\(\)\+\*,]+$/)) {
+            if (ch === null || ch.match(/^[\s\(\)\+\-\*,]+$/)) {
                 this.back();
                 return w;
             }
@@ -1228,10 +1237,15 @@ class ExprParser {
     parse(): Scorer | null {
         const vStack: Scorer[] = [];
         const opStack: string[] = [];
+        let minus = false;
         for (;;) {
-            const sc1 = this.parseValue();
+            let sc1 = this.parseValue();
             if (sc1 === null) {
                 return null;
+            }
+            if (minus) {
+                sc1 = toMinusScorer(sc1);
+                minus = false;
             }
             vStack.push(sc1);
             // 古いTypeScriptではopStack.at(-1)が使えない…？
@@ -1285,6 +1299,12 @@ class ExprParser {
                     console.log(`operator ${ch2}`);
                 }
                 opStack.push(ch2);
+            } else if (ch2 === "-") {
+                if (DEBUG) {
+                    console.log(`operator ${ch2}`);
+                }
+                minus = true;
+                opStack.push("+");
             } else {
                 if (DEBUG) {
                     console.log(`unknown token ${ch2}`);

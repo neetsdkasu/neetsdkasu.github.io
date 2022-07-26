@@ -608,6 +608,14 @@ function makeSimpleScorer(param) {
         },
     };
 }
+// 計算結果の正負を逆にする
+function toMinusScorer(sc) {
+    return {
+        calc: (color, monster) => {
+            return -sc.calc(color, monster);
+        },
+    };
+}
 const MaximumHPScorer = makeSimpleScorer("maximumHP");
 const MaximumMPScorer = makeSimpleScorer("maximumMP");
 const PowerScorer = makeSimpleScorer("power");
@@ -1100,13 +1108,13 @@ class ExprParser {
     }
     // 文字列のパース（式に使える文字）
     parseWord(ch1) {
-        if (ch1.match(/^[\d\s\(\)\+\*,]+$/)) {
+        if (ch1.match(/^[\d\s\(\)\+\-\*,]+$/)) {
             return null;
         }
         let w = ch1;
         for (;;) {
             const ch = this.next();
-            if (ch === null || ch.match(/^[\s\(\)\+\*,]+$/)) {
+            if (ch === null || ch.match(/^[\s\(\)\+\-\*,]+$/)) {
                 this.back();
                 return w;
             }
@@ -1155,10 +1163,15 @@ class ExprParser {
     parse() {
         const vStack = [];
         const opStack = [];
+        let minus = false;
         for (;;) {
-            const sc1 = this.parseValue();
+            let sc1 = this.parseValue();
             if (sc1 === null) {
                 return null;
+            }
+            if (minus) {
+                sc1 = toMinusScorer(sc1);
+                minus = false;
             }
             vStack.push(sc1);
             // 古いTypeScriptではopStack.at(-1)が使えない…？
@@ -1214,6 +1227,13 @@ class ExprParser {
                     console.log(`operator ${ch2}`);
                 }
                 opStack.push(ch2);
+            }
+            else if (ch2 === "-") {
+                if (DEBUG) {
+                    console.log(`operator ${ch2}`);
+                }
+                minus = true;
+                opStack.push("+");
             }
             else {
                 if (DEBUG) {
