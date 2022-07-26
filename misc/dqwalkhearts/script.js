@@ -4,7 +4,7 @@
 //
 // author: Leonardone @ NEETSDKASU
 //
-const DEBUG = false;
+const DEBUG = true;
 const LocalStoragePath = "dqwalkhearts";
 function dialogAlert(msg) {
     document.getElementById("alert_message").textContent = msg;
@@ -95,6 +95,11 @@ const SingleColorInfoMap = (() => {
     m.set(Color.Blue, { color: Color.Blue, text: "青(盗)", colorName: "blue" });
     return m;
 })();
+const RainbowColorInfo = {
+    color: Color.Rainbow,
+    text: "虹(？)",
+    colorName: "rainbow",
+};
 let monsterMap = new Map();
 let monsterList = [];
 let monsterNameList = [];
@@ -143,8 +148,9 @@ function showNewHeart(monster) {
     };
     text(".monster-name", monster.name);
     text(".monster-cost", monster.cost);
-    // TODO 虹色に対応する
-    const csi = SingleColorInfoMap.get(monster.color);
+    const csi = (monster.color === Color.Rainbow)
+        ? RainbowColorInfo
+        : SingleColorInfoMap.get(monster.color);
     text(".monster-color", csi.text).classList.add(csi.colorName);
     const radios = fragment.querySelectorAll('input.monster-rank');
     const monsterRankRadioName = `monster_${monster.id}_rank`;
@@ -268,8 +274,9 @@ function showUpdatedHeart(monster, reorder) {
     };
     text(".monster-name", monster.name);
     text(".monster-cost", monster.cost);
-    // TODO 虹色に対応する
-    const csi = SingleColorInfoMap.get(monster.color);
+    const csi = (monster.color === Color.Rainbow)
+        ? RainbowColorInfo
+        : SingleColorInfoMap.get(monster.color);
     const classList = text(".monster-color", csi.text).classList;
     SingleColorInfoMap.forEach((v) => {
         classList.remove(v.colorName);
@@ -521,8 +528,7 @@ function isMonster(anyobj) {
     }
     // ここ以下はたぶん普通はバリデータの役割。型検査の役割じゃないと思う。
     {
-        // TODO 虹色のこころ対応
-        if (m.color === Color.Unset || m.color === Color.Omit || m.color === Color.Rainbow) {
+        if (m.color === Color.Unset || m.color === Color.Omit) {
             console.log("こころの色の指定として不正 ${Color[m.color]}");
             console.log(m);
             return false;
@@ -797,7 +803,9 @@ class ExprParser {
                 break;
             }
         }
-        // TODO 虹色に対応する
+        if (RainbowColorInfo.text.startsWith(wd)) {
+            color = RainbowColorInfo.color;
+        }
         if (color === null) {
             this.worderr = [pos0, pos1];
             return null;
@@ -1545,8 +1553,9 @@ function searchHeartSet(target) {
                 continue;
             }
             const h = fragment.querySelector(`.result-item-heart${p + 1}`);
-            // TODO 虹色に対応する
-            const info = SingleColorInfoMap.get(m.color);
+            const info = (m.color === Color.Rainbow)
+                ? RainbowColorInfo
+                : SingleColorInfoMap.get(m.color);
             const colorSpan = h.appendChild(document.createElement("span"));
             colorSpan.classList.add(info.colorName);
             colorSpan.textContent = info.text;
