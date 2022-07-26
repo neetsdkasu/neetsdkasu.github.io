@@ -870,6 +870,25 @@ class ExprParser {
         }
     }
 
+    // ABS
+    absScorer(): Scorer | null {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const sc = this.parse();
+        if (sc === null) {
+            return null;
+        }
+        const ch = this.next();
+        if (ch === ")") {
+            return {
+                calc: (c: Color, m: Monster) => Math.abs(sc.calc(c, m))
+            };
+        } else {
+            return null;
+        }
+    }
+
     // NAME
     nameScorer(): Scorer | null {
         if (this.next() !== "(") {
@@ -1135,6 +1154,8 @@ class ExprParser {
                 return { calc: (c: Color, m: Monster) => m.cost };
             case "COLOR":
                 return this.colorScorer();
+            case "ABS":
+                return this.absScorer();
             default:
                 if (DEBUG) {
                     console.log(`name ${name} is undefined`);
