@@ -68,11 +68,12 @@
         <div><label for="add_cost">コスト:</label><input type="number" name="add_cost" id="add_cost" required /></div>
         <div>
           <span>色:</span>
-          <input type="radio" name="add_color" id="add_color_yellow" value="Yellow" required /><label for="add_color_yellow">黄(戦)</label>
-          <input type="radio" name="add_color" id="add_color_purple" value="Purple" required /><label for="add_color_purple">紫(魔)</label>
-          <input type="radio" name="add_color" id="add_color_green"  value="Green"  required /><label for="add_color_green" >緑(僧)</label>
-          <input type="radio" name="add_color" id="add_color_red"    value="Red"    required /><label for="add_color_red"   >赤(武)</label>
-          <input type="radio" name="add_color" id="add_color_blue"   value="Blue"   required /><label for="add_color_blue"  >青(盗)</label>
+          <input type="radio" name="add_color" id="add_color_yellow"  value="Yellow"  required /><label for="add_color_yellow"  >黄(戦)</label>
+          <input type="radio" name="add_color" id="add_color_purple"  value="Purple"  required /><label for="add_color_purple"  >紫(魔)</label>
+          <input type="radio" name="add_color" id="add_color_green"   value="Green"   required /><label for="add_color_green"   >緑(僧)</label>
+          <input type="radio" name="add_color" id="add_color_red"     value="Red"     required /><label for="add_color_red"     >赤(武)</label>
+          <input type="radio" name="add_color" id="add_color_blue"    value="Blue"    required /><label for="add_color_blue"    >青(盗)</label>
+          <input type="radio" name="add_color" id="add_color_rainbow" value="Rainbow" required /><label for="add_color_rainbow" >虹(？)</label>
         </div>
         <fieldset>
           <div>
@@ -394,6 +395,34 @@
                             <td>スキル・特殊効果で<code>#</code>の位置に数値があるとき<code>NUM</code>の値はその数値になる<br />
                                 それ以外のとき<code>NUM</code>の値は<code>0</code>になる<br />
                                 指定の文字列の数値(<code>#</code>)以外の部分はスキル・特殊効果と完全一致する必要がある</td>
+                          </tr>
+                          <tr>
+                            <td>昇順</td>
+                            <td><code>LESS( , )</code></td>
+                            <td><code>LESS(PWR,AMG)</code></td>
+                            <td>カンマ区切りで指定した式において<br />
+                                右側の式の値より左側の式の値が小さい(つまり昇順に並んでいる)とき<code>LESS</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>LESS</code>の値は<code>0</code>になる</td>
+                          </tr>
+                          <tr>
+                            <td>引き算</td>
+                            <td><code>-</code></td>
+                            <td><code>HP-MP</code></td>
+                            <td>計算順序は掛け算のほうが優先される<br />
+                                計算順序で足し算や他の引き算とは左側にあるほうが優先されて計算される</td>
+                          </tr>
+                          <tr>
+                            <td>絶対値</td>
+                            <td><code>ABS( )</code></td>
+                            <td><code>ABS(PWR-AMG)</code></td>
+                            <td><code>ABS</code>の値は括弧内で指定した式の値の絶対値になる</td>
+                          </tr>
+                          <tr>
+                            <td>適合</td>
+                            <td><code>FIT</code></td>
+                            <td><code>FIT*10</code></td>
+                            <td>こころの値がアップするこころ枠でのスコア計算のとき<code>FIT</code>は<code>1</code>になる<br />
+                                それ以外のときは<code>FIT</code>は<code>0</code>になる</td>
                           </tr>
                         </tbody>
                       </table>
