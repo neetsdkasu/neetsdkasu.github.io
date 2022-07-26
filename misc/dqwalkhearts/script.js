@@ -612,6 +612,9 @@ function makeSimpleScorer(param) {
 function toMinusScorer(sc) {
     return {
         calc: (color, monster) => {
+            if (monster.target === null) {
+                return 0;
+            }
             return -sc.calc(color, monster);
         },
     };
@@ -707,6 +710,9 @@ class ExprParser {
                 }
                 return {
                     calc: (c, m) => {
+                        if (m.target === null) {
+                            return 0;
+                        }
                         let v = list[0].calc(c, m);
                         for (let i = 1; i < list.length; i++) {
                             v = Math.min(v, list[i].calc(c, m));
@@ -745,6 +751,9 @@ class ExprParser {
                 }
                 return {
                     calc: (c, m) => {
+                        if (m.target === 0) {
+                            return 0;
+                        }
                         let v = list[0].calc(c, m);
                         for (let i = 1; i < list.length; i++) {
                             v = Math.max(v, list[i].calc(c, m));
@@ -783,6 +792,9 @@ class ExprParser {
                 }
                 return {
                     calc: (c, m) => {
+                        if (m.target === null) {
+                            return 0;
+                        }
                         let v = list[0].calc(c, m);
                         for (let i = 1; i < list.length; i++) {
                             const w = list[i].calc(c, m);
@@ -817,7 +829,12 @@ class ExprParser {
         const ch = this.next();
         if (ch === ")") {
             return {
-                calc: (c, m) => Math.abs(sc.calc(c, m))
+                calc: (c, m) => {
+                    if (m.target === null) {
+                        return 0;
+                    }
+                    return Math.abs(sc.calc(c, m));
+                }
             };
         }
         else {
@@ -844,7 +861,12 @@ class ExprParser {
                 return null;
             }
             return {
-                calc: (c, m) => m.name === wd ? 1 : 0
+                calc: (c, m) => {
+                    if (m.target === null) {
+                        return 0;
+                    }
+                    return m.name === wd ? 1 : 0;
+                }
             };
         }
         else {
@@ -885,7 +907,12 @@ class ExprParser {
             return null;
         }
         return {
-            calc: (c, m) => m.color === color ? 1 : 0
+            calc: (c, m) => {
+                if (m.target === null) {
+                    return 0;
+                }
+                return m.color === color ? 1 : 0;
+            }
         };
     }
     // SKILL
@@ -1081,7 +1108,9 @@ class ExprParser {
             case "LESS":
                 return this.lessScorer();
             case "COST":
-                return { calc: (c, m) => m.cost };
+                return { calc: (c, m) => {
+                        return (m.target === null) ? 0 : m.cost;
+                    } };
             case "COLOR":
                 return this.colorScorer();
             case "ABS":
@@ -1107,7 +1136,9 @@ class ExprParser {
                 if (DEBUG) {
                     console.log(`integer ${v}`);
                 }
-                return { calc: (c, m) => v };
+                return { calc: (c, m) => {
+                        return (m.target === null) ? 0 : v;
+                    } };
             }
             v = v * 10 + parseInt(ch);
         }
@@ -1205,6 +1236,9 @@ class ExprParser {
                 const t1 = vStack.pop();
                 vStack.push({
                     calc: (c, m) => {
+                        if (m.target === null) {
+                            return 0;
+                        }
                         const v1 = t1.calc(c, m);
                         const v2 = t2.calc(c, m);
                         return v1 * v2;
@@ -1225,6 +1259,9 @@ class ExprParser {
                     if (op === "+") {
                         vStack.push({
                             calc: (c, m) => {
+                                if (m.target === null) {
+                                    return 0;
+                                }
                                 const v1 = t1.calc(c, m);
                                 const v2 = t2.calc(c, m);
                                 return v1 + v2;
@@ -1234,6 +1271,9 @@ class ExprParser {
                     else if (op === "*") {
                         vStack.push({
                             calc: (c, m) => {
+                                if (m.target === null) {
+                                    return 0;
+                                }
                                 const v1 = t1.calc(c, m);
                                 const v2 = t2.calc(c, m);
                                 return v1 * v2;

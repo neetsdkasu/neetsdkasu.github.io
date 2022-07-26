@@ -659,6 +659,9 @@ function makeSimpleScorer(param: keyof Status): Scorer {
 function toMinusScorer(sc: Scorer): Scorer {
     return {
         calc: (color: Color, monster: Monster) => {
+            if (monster.target === null) {
+                return 0;
+            }
             return -sc.calc(color, monster);
         },
     };
@@ -776,6 +779,9 @@ class ExprParser {
                 }
                 return {
                     calc: (c: Color, m: Monster) => {
+                        if (m.target === null) {
+                            return 0;
+                        }
                         let v = list[0].calc(c, m);
                         for (let i = 1; i < list.length; i++) {
                             v = Math.min(v, list[i].calc(c, m));
@@ -813,6 +819,9 @@ class ExprParser {
                 }
                 return {
                     calc: (c: Color, m: Monster) => {
+                        if (m.target === 0) {
+                            return 0;
+                        }
                         let v = list[0].calc(c, m);
                         for (let i = 1; i < list.length; i++) {
                             v = Math.max(v, list[i].calc(c, m));
@@ -850,6 +859,9 @@ class ExprParser {
                 }
                 return {
                     calc: (c: Color, m: Monster) => {
+                        if (m.target === null) {
+                            return 0;
+                        }
                         let v = list[0].calc(c, m);
                         for (let i = 1; i < list.length; i++) {
                             const w = list[i].calc(c, m);
@@ -882,7 +894,12 @@ class ExprParser {
         const ch = this.next();
         if (ch === ")") {
             return {
-                calc: (c: Color, m: Monster) => Math.abs(sc.calc(c, m))
+                calc: (c: Color, m: Monster) => {
+                    if (m.target === null) {
+                        return 0;
+                    }
+                    return Math.abs(sc.calc(c, m));
+                }
             };
         } else {
             return null;
@@ -909,7 +926,12 @@ class ExprParser {
                 return null;
             }
             return {
-                calc: (c: Color, m: Monster) => m.name === wd ? 1 : 0
+                calc: (c: Color, m: Monster) => {
+                    if (m.target === null) {
+                        return 0;
+                    }
+                    return m.name === wd ? 1 : 0;
+                }
             };
         } else {
             this.worderr = [pos0, pos1];
@@ -950,7 +972,12 @@ class ExprParser {
             return null;
         }
         return {
-            calc: (c: Color, m: Monster) => m.color === color ? 1 : 0
+            calc: (c: Color, m: Monster) => {
+                if (m.target === null) {
+                    return 0;
+                }
+                return m.color === color ? 1 : 0;
+            }
         };
     }
 
@@ -1151,7 +1178,9 @@ class ExprParser {
             case "LESS":
                 return this.lessScorer();
             case "COST":
-                return { calc: (c: Color, m: Monster) => m.cost };
+                return { calc: (c: Color, m: Monster) => {
+                    return (m.target === null) ? 0 : m.cost;
+                }};
             case "COLOR":
                 return this.colorScorer();
             case "ABS":
@@ -1178,7 +1207,9 @@ class ExprParser {
                 if (DEBUG) {
                     console.log(`integer ${v}`);
                 }
-                return { calc: (c: Color, m: Monster) => v };
+                return { calc: (c: Color, m: Monster) => {
+                    return (m.target === null) ? 0 : v;
+                }};
             }
             v = v * 10 + parseInt(ch);
         }
@@ -1279,6 +1310,9 @@ class ExprParser {
                 const t1 = vStack.pop()!;
                 vStack.push({
                     calc: (c: Color, m: Monster) => {
+                        if (m.target === null) {
+                            return 0;
+                        }
                         const v1 = t1.calc(c, m);
                         const v2 = t2.calc(c, m);
                         return v1 * v2;
@@ -1299,6 +1333,9 @@ class ExprParser {
                     if (op === "+") {
                         vStack.push({
                             calc: (c: Color, m: Monster) => {
+                                if (m.target === null) {
+                                    return 0;
+                                }
                                 const v1 = t1.calc(c, m);
                                 const v2 = t2.calc(c, m);
                                 return v1 + v2;
@@ -1307,6 +1344,9 @@ class ExprParser {
                     } else if (op === "*") {
                         vStack.push({
                             calc: (c: Color, m: Monster) => {
+                                if (m.target === null) {
+                                    return 0;
+                                }
                                 const v1 = t1.calc(c, m);
                                 const v2 = t2.calc(c, m);
                                 return v1 * v2;
