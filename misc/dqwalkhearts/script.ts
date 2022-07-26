@@ -712,6 +712,10 @@ class ExprParser {
         this.worderr = null;
     }
 
+    isEOF(): boolean {
+        return this.pos >= this.chars.length;
+    }
+
     // 空白文字をスキップ
     skipWhitespaces(): void {
         while (this.pos < this.chars.length) {
@@ -1382,8 +1386,12 @@ function parseExpression(expr: string): Scorer {
     const sc = parser.parse();
     if (sc === null) {
         throw parser.err();
-    } else {
+    }
+    parser.skipWhitespaces();
+    if (parser.isEOF()) {
         return sc;
+    } else {
+        throw parser.err();
     }
 }
 

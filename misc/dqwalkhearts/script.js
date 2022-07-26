@@ -642,6 +642,9 @@ class ExprParser {
         this.chars = [...expr];
         this.worderr = null;
     }
+    isEOF() {
+        return this.pos >= this.chars.length;
+    }
     // 空白文字をスキップ
     skipWhitespaces() {
         while (this.pos < this.chars.length) {
@@ -1312,8 +1315,12 @@ function parseExpression(expr) {
     if (sc === null) {
         throw parser.err();
     }
-    else {
+    parser.skipWhitespaces();
+    if (parser.isEOF()) {
         return sc;
+    }
+    else {
+        throw parser.err();
     }
 }
 // こころ枠の組み合わせから職業名を特定する
