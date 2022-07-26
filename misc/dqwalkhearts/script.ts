@@ -4,7 +4,7 @@
 // author: Leonardone @ NEETSDKASU
 //
 
-const DEBUG: boolean = true;
+const DEBUG: boolean = false;
 
 const LocalStoragePath = "dqwalkhearts";
 
