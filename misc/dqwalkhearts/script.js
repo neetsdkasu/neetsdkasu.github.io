@@ -753,6 +753,50 @@ class ExprParser {
             }
         }
     }
+    // LESS
+    lessScorer() {
+        if (this.next() !== "(") {
+            return null;
+        }
+        const list = [];
+        for (;;) {
+            const sc = this.parse();
+            if (sc === null) {
+                return null;
+            }
+            list.push(sc);
+            if (DEBUG) {
+                console.log(`less values count ${list.length}`);
+            }
+            const ch = this.next();
+            if (ch === ")") {
+                if (DEBUG) {
+                    console.log(`less finally values count ${list.length}`);
+                }
+                return {
+                    calc: (c, m) => {
+                        let v = list[0].calc(c, m);
+                        for (let i = 1; i < list.length; i++) {
+                            const w = list[i].calc(c, m);
+                            if (v < w) {
+                                v = w;
+                            }
+                            else {
+                                return 0;
+                            }
+                        }
+                        return 1;
+                    }
+                };
+            }
+            else if (ch === ",") {
+                continue;
+            }
+            else {
+                return null;
+            }
+        }
+    }
     // NAME
     nameScorer() {
         if (this.next() !== "(") {
@@ -1007,6 +1051,8 @@ class ExprParser {
                 return this.countOfPartOfSkillNameScorer();
             case "NUM":
                 return this.pickNumberFromSkillScorer();
+            case "LESS":
+                return this.lessScorer();
             case "COST":
                 return { calc: (c, m) => m.cost };
             case "COLOR":
