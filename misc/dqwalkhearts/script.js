@@ -283,6 +283,7 @@ function showUpdatedHeart(monster, reorder) {
     SingleColorInfoMap.forEach((v) => {
         classList.remove(v.colorName);
     });
+    classList.remove(RainbowColorInfo.colorName);
     classList.add(csi.colorName);
     const radios = item.querySelectorAll('input.monster-rank');
     if (monster.target === null) {
@@ -1956,7 +1957,9 @@ document.getElementById("check_expression")
                 if (m.target === null) {
                     continue;
                 }
-                const info = SingleColorInfoMap.get(m.color);
+                const info = (m.color === Color.Rainbow)
+                    ? RainbowColorInfo
+                    : SingleColorInfoMap.get(m.color);
                 const tr = tbody.appendChild(document.createElement("tr"));
                 const c = tr.appendChild(document.createElement("td"));
                 c.classList.add(info.colorName);
