@@ -1816,6 +1816,20 @@ function convertToDummy(list) {
     }
     for (let i = 0; i < list.length; i++) {
         list[i].name = `ダミーデータ${i + 1}`;
+        for (const h of list[i].hearts) {
+            h.effects = h.effects
+                .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)(斬|体|R)/g, "$1属性$2")
+                .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)呪/g, "$1系呪")
+                .replace(/体D/g, "体技D")
+                .replace(/斬体/g, "斬・体")
+                .replace(/斬/g, "斬撃")
+                .replace(/D/g, "ダメージ")
+                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人)/g, "$1系")
+                .replace(/呪文/g, "じゅもん")
+                .replace(/全状態異常/g, "全ての状態異常")
+                .replace(/悪状態変化/g, "悪い状態変化")
+                .replace(/R/g, "耐性");
+        }
     }
 }
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
