@@ -4,11 +4,20 @@
 // author: Leonardone @ NEETSDKASU
 //
 
-const DEBUG: boolean = false;
+const DEVELOP = true;
+
+const DEBUG: boolean = DEVELOP || new URLSearchParams(window.location.search).has("DEBUG");
+
+if (DEBUG) {
+    console.log("DEBUG MODE");
+}
 
 const LocalStoragePath = "dqwalkhearts";
 
 function dialogAlert(msg: string): void {
+    if (DEBUG) {
+        console.log(`dialogAlert: ${msg}`);
+    }
     document.getElementById("alert_message")!.textContent = msg;
     const dialog = document.getElementById("alert_dialog")! as HTMLDialogElement;
     dialog.showModal();
@@ -151,14 +160,40 @@ let monsterNameList: string[] = [];
 
 let noStorage: boolean = false;
 
+const IDENT: number = Date.now();
+
+if (DEBUG) {
+    console.log(`IDENT: ${IDENT}`);
+}
+
+enum Trigger {
+    UpdateStatus,
+    ChooseRank,
+}
+
+interface Data {
+    ident: number;
+    trigger: Trigger;
+    monsterList: Monster[];
+}
+
 // こころリストをブラウザのストレージに保存
-function saveMonsterList(): void {
+function saveMonsterList(trigger: Trigger): void {
+    if (DEBUG) {
+        console.log(`call saveMonsterList(${Trigger[trigger]})`);
+    }
     if (noStorage) {
+        if (DEBUG) {
+            console.log("no save to storage");
+        }
         return;
     }
     try {
         const json = JSON.stringify(monsterList);
         window.localStorage.setItem(LocalStoragePath, json);
+        if (DEBUG) {
+            console.log("saved to storage");
+        }
     } catch (err) {
         noStorage = true;
         console.log(err);
@@ -167,21 +202,53 @@ function saveMonsterList(): void {
 
 // こころリストをブラウザのストレージから読み込む
 function loadMonsterList(): void {
+    if (DEBUG) {
+        console.log("call loadMonsterList");
+    }
     if (noStorage) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
         return;
     }
     try {
         const json = window.localStorage.getItem(LocalStoragePath);
         if (json !== null) {
             const list: unknown = JSON.parse(json);
+            if (isData(list)) {
+                if (DEBUG) {
+                    console.log("load from storage");
+                }
+                throw "not implemented";
+            }
             if (isMonsterList(list)) {
                 addAllMonsterList(list);
+                if (DEBUG) {
+                    console.log("load from storage");
+                }
             }
         }
     } catch (err) {
         noStorage = true;
         console.log(err);
     }
+}
+
+function isData(anyobj: Data | unknown): anyobj is Data {
+    if (typeof anyobj !== "object" || anyobj === null) {
+        return false;
+    }
+    const obj: {[key: string]: any} = anyobj;
+    if (!(("ident" in obj) && typeof obj["ident"] === "number")) {
+        return false;
+    }
+    if (!(("trigger" in obj) && (obj["trigger"] === Trigger.ChooseRank || obj["trigger"] === Trigger.UpdateStatus))) {
+        return false;
+    }
+    if (!(("monsterList" in obj) && isMonsterList(obj["monsterList"]))) {
+        return false;
+    }
+    return true;
 }
 
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
@@ -207,7 +274,7 @@ function showNewHeart(monster: Monster): void {
         if (elm.value === "omit") {
             elm.addEventListener("change", () => {
                 monster.target = null;
-                saveMonsterList();
+                saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
             });
         } else {
@@ -215,7 +282,7 @@ function showNewHeart(monster: Monster): void {
             elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
             elm.addEventListener("change", () => {
                 monster.target = rank;
-                saveMonsterList();
+                saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
             });
         }
@@ -390,21 +457,43 @@ function addMonsterNameList(newName: string): void {
     }
 }
 
+// ２つのこころが等しいかどうか
+function equalHearts(h1: Heart, h2: Heart): boolean {
+    for (const param in h1) {
+        if (h1[param as keyof Heart] !== h2[param as keyof Heart]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // 新しいこころを追加する（情報は上書きされる）
-function addHeart(newMonster: Monster): void {
+function addHeart(newMonster: Monster): boolean {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name)!;
+        let updated = false;
         for (const heart of newMonster.hearts) {
             const index = monster.hearts.findIndex(h => h.rank === heart.rank);
             if (index < 0) {
                 monster.hearts.push(heart);
-            } else {
+                updated = true;
+            } else if (!equalHearts(monster.hearts[index], heart)) {
                 monster.hearts[index] = heart;
+                updated = true;
             }
         }
-        monster.target = newMonster.target;
-        monster.color = newMonster.color;
+        if (monster.target !== newMonster.target) {
+            monster.target = newMonster.target;
+            updated = true;
+        }
+        if (monster.color !== newMonster.color) {
+            monster.color = newMonster.color;
+            updated = true;
+        }
         if (monster.cost === newMonster.cost) {
+            if (!updated) {
+                return false;
+            }
             showUpdatedHeart(monster, false);
         } else {
             monster.cost = newMonster.cost;
@@ -418,6 +507,7 @@ function addHeart(newMonster: Monster): void {
         insert(monsterList, newMonster, (n, e) => n.cost > e.cost);
         showNewHeart(newMonster);
     }
+    return true;
 }
 
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
@@ -617,15 +707,23 @@ function replaceMonsterList(newMonsterList: Monster[]): void {
 
 // 現在のこころリストに別のこころリストで上書きする
 // ※同一モンスターの情報があった場合に別のこころリストのほうが優先される
-function addAllMonsterList(list: Monster[]): void {
+function addAllMonsterList(list: Monster[]): boolean {
+    let updated = false;
     for (const monster of list) {
-        addHeart(monster);
+        if (addHeart(monster)) {
+            updated = true;
+        }
     }
+    if (DEBUG) {
+        console.log(`addAllMonsterList: updated: ${updated}`);
+    }
+    return updated;
 }
 
 // 現在のこころリストに別のこころリストをマージする
 // ※同一モンスターの情報があった場合に現在のこころリストのほうが優先される
-function mergeMonsterList(list: Monster[]): void {
+function mergeMonsterList(list: Monster[]): boolean {
+    let updated = false;
     for (const monster of list) {
         if (monsterMap.has(monster.name)) {
             const orig = monsterMap.get(monster.name)!;
@@ -637,8 +735,14 @@ function mergeMonsterList(list: Monster[]): void {
             monster.cost = orig.cost;
             monster.target = orig.target;
         }
-        addHeart(monster);
+        if (addHeart(monster)) {
+            updated = true;
+        }
     }
+    if (DEBUG) {
+        console.log(`mergeMonsterList: updated: ${updated}`);
+    }
+    return updated;
 }
 
 // こころの基本のパラメータだけ見るシンプルなスコア計算オブジェクトを生成する
@@ -1805,6 +1909,9 @@ function searchHeartSet(target: Target): void {
 
 // デモ用データの加工
 function convertToDummy(list: Monster[]) {
+    if (DEBUG) {
+        console.log("fill dummy data");
+    }
     for (let i = 0; i < list.length; i++) {
         list[i].name = `ダミーデータ${i+1}`;
     }
@@ -1846,6 +1953,9 @@ document.getElementById("heart4_omit")!
 // こころ追加フォームを開く
 document.getElementById("add_heart")!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click add_heart");
+    }
     const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
     (dialog.querySelector("form") as HTMLFormElement).reset();
     dialog.returnValue = "";
@@ -1868,6 +1978,9 @@ document.getElementById("add_monster_name")!
 // こころ追加フォームでキャンセルしたとき
 document.querySelector('#add_heart_dialog button[value="cancel"]')!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click add_heart_dialog CANCEL button");
+    }
     const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
     dialog.returnValue = "cancel";
     dialog.close();
@@ -1876,6 +1989,9 @@ document.querySelector('#add_heart_dialog button[value="cancel"]')!
 // 新しいこころを追加する（フォームを閉じたときに発動）
 document.getElementById("add_heart_dialog")!
 .addEventListener("close", (event) => {
+    if (DEBUG) {
+        console.log("close add_heart_dialog");
+    }
     const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
     if (dialog.returnValue !== "add") {
         return;
@@ -1906,14 +2022,22 @@ document.getElementById("add_heart_dialog")!
         }],
         target: rank,
     };
-    addHeart(monster);
+    const updated: boolean = addHeart(monster);
+    if (DEBUG) {
+        console.log(`add heart: updated: ${updated}`);
+    }
     dialogAlert(`${monster.name} ${Rank[monster.hearts[0].rank]} を追加しました`);
-    saveMonsterList();
+    if (updated) {
+        saveMonsterList(Trigger.UpdateStatus);
+    }
 });
 
 // ダウンロードボタンを押したときの処理
 document.getElementById("download")!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click download");
+    }
     if (monsterList.length === 0) {
         dialogAlert("リストが空だよ");
         return;
@@ -1934,6 +2058,9 @@ document.getElementById("download")!
 // ファイル読込フォームのキャンセル
 document.querySelector('#file_load_dialog button[value="cancel"]')!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click file_load_dialog CANCEL button");
+    }
     const dialog = document.getElementById("file_load_dialog") as HTMLDialogElement;
     dialog.returnValue = "cancel";
     dialog.close();
@@ -1942,6 +2069,9 @@ document.querySelector('#file_load_dialog button[value="cancel"]')!
 // ファイル読込フォームを開く
 document.getElementById("load_file")!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click load_file");
+    }
     const dialog = document.getElementById("file_load_dialog") as HTMLDialogElement;
     (dialog.querySelector("form") as HTMLFormElement).reset();
     dialog.returnValue = "";
@@ -1951,6 +2081,9 @@ document.getElementById("load_file")!
 // ファイルを読み込む（フォームを閉じたときに発動）
 document.getElementById("file_load_dialog")!
 .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close file_as_older");
+    }
     const dialog = document.getElementById("file_load_dialog") as HTMLDialogElement;
     if (dialog.returnValue !== "load") {
         return;
@@ -1963,18 +2096,22 @@ document.getElementById("file_load_dialog")!
         if (!isMonsterList(list)) {
             throw "ファイルフォーマットが不正です！";
         }
+        let updated: boolean = false;
         switch (option) {
             case "file_as_newer":
-                addAllMonsterList(list);
+                updated = addAllMonsterList(list);
                 break;
             case "file_as_older":
-                mergeMonsterList(list);
+                updated = mergeMonsterList(list);
                 break;
             default:
                 replaceMonsterList(list);
+                updated = true;
                 break;
         }
-        saveMonsterList();
+        if (updated) {
+            saveMonsterList(Trigger.UpdateStatus);
+        }
     }).catch( err => {
         dialogAlert(`${err}`);
     });
@@ -1996,6 +2133,9 @@ document.getElementById("file_load_dialog")!
 // こころセット探索対象の設定フォームのキャンセル
 document.querySelector('#search_heart_dialog button[value="cancel"]')!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click search_heart_dialog CANCEL button");
+    }
     const dialog = document.getElementById("search_heart_dialog") as HTMLDialogElement;
     dialog.returnValue = "cancel";
     dialog.close();
@@ -2004,6 +2144,9 @@ document.querySelector('#search_heart_dialog button[value="cancel"]')!
 // こころセットを探索する（フォームを閉じたときに発動）
 document.getElementById("search_heart_dialog")!
 .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close check_heart_dialog");
+    }
     const dialog = document.getElementById("search_heart_dialog") as HTMLDialogElement;
     if (dialog.returnValue !== "start") {
         return;
@@ -2030,6 +2173,9 @@ document.getElementById("search_heart_dialog")!
 // こころセット探索フォームを開く
 document.getElementById("search_heart")!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click search_heart");
+    }
     const dialog = document.getElementById("search_heart_dialog") as HTMLDialogElement;
     dialog.showModal();
 });
@@ -2037,6 +2183,9 @@ document.getElementById("search_heart")!
 // 式の確認ボタンを押した時の処理
 document.getElementById("check_expression")!
 .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_expression");
+    }
     const dialog = document.getElementById("score_list_dialog") as HTMLDialogElement;
     const exprSrc = (document.getElementById("expression") as HTMLInputElement).value;
     const msg = dialog.querySelector(".message")!;
@@ -2229,7 +2378,13 @@ document.getElementById("calc_status_distance")!.addEventListener("click", () =>
 // ページのURLのパラメータの処理
 (function () {
     const params = new URLSearchParams(window.location.search);
+    if (DEBUG) {
+        console.log(`page URL parameters: ${params}`);
+    }
     if (params.has("demo")) {
+        if (DEBUG) {
+            console.log("load demo data");
+        }
         noStorage = true;
         fetch("./dqwalkhearts/dqwalkhearts.json")
         .then(r => r.json())
@@ -2244,6 +2399,9 @@ document.getElementById("calc_status_distance")!.addEventListener("click", () =>
             console.log(err);
         });
     } else if (params.has("nostorage")) {
+        if (DEBUG) {
+            console.log("no storage mode");
+        }
         noStorage = true;
     } else {
         loadMonsterList();
