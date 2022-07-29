@@ -2088,6 +2088,144 @@ document.getElementById("check_expression")!
     dialog.showModal();
 });
 
+// ステータス近距離を求める
+document.getElementById("calc_status_distance")!.addEventListener("click", () => {
+    const tbody = document.getElementById("status_distance_tbody")!;
+    tbody.innerHTML = "";
+    if (monsterList.length === 0) {
+        dialogAlert("こころが１個もないよ");
+        return;
+    }
+    function isUpward(m: Status, target: Status): boolean {
+        return m.maximumHP    <= target.maximumHP
+            && m.maximumMP    <= target.maximumMP
+            && m.power        <= target.power
+            && m.defence      <= target.defence
+            && m.attackMagic  <= target.attackMagic
+            && m.recoverMagic <= target.recoverMagic
+            && m.speed        <= target.speed
+            && m.deftness     <= target.deftness
+            && (m.maximumHP    < target.maximumHP
+             || m.maximumMP    < target.maximumMP
+             || m.power        < target.power
+             || m.defence      < target.defence
+             || m.attackMagic  < target.attackMagic
+             || m.recoverMagic < target.recoverMagic
+             || m.speed        < target.speed
+             || m.deftness     < target.deftness
+             );
+    }
+    function euclidean(m1: Status, m2: Status): number {
+        return Math.sqrt(Math.pow(m1.maximumHP    - m2.maximumHP   , 2)
+                       + Math.pow(m1.maximumMP    - m2.maximumMP   , 2)
+                       + Math.pow(m1.power        - m2.power       , 2)
+                       + Math.pow(m1.defence      - m2.defence     , 2)
+                       + Math.pow(m1.attackMagic  - m2.attackMagic , 2)
+                       + Math.pow(m1.recoverMagic - m2.recoverMagic, 2)
+                       + Math.pow(m1.speed        - m2.speed       , 2)
+                       + Math.pow(m1.deftness     - m2.deftness    , 2)
+                       );
+    }
+    function manhattan(m1: Status, m2: Status): number {
+        return Math.abs(m1.maximumHP    - m2.maximumHP)
+             + Math.abs(m1.maximumMP    - m2.maximumMP)
+             + Math.abs(m1.power        - m2.power)
+             + Math.abs(m1.defence      - m2.defence)
+             + Math.abs(m1.attackMagic  - m2.attackMagic)
+             + Math.abs(m1.recoverMagic - m2.recoverMagic)
+             + Math.abs(m1.speed        - m2.speed)
+             + Math.abs(m1.deftness     - m2.deftness);
+    }
+    interface DistStatus {
+        monster: Monster | null;
+        distance: number;
+    }
+    for (let a = 0; a < monsterList.length; a++) {
+        let upwardEuclidean: DistStatus = { monster: null, distance: 9999999 };
+        let upwardManhattan: DistStatus = { monster: null, distance: 9999999 };
+        let downwardEuclidean: DistStatus = { monster: null, distance: 9999999 };
+        let downwardManhattan: DistStatus = { monster: null, distance: 9999999 };
+        let nearestEuclidean: DistStatus = { monster: null, distance: 9999999 };
+        let nearestManhattan: DistStatus = { monster: null, distance: 9999999 };
+        const m1 = monsterList[a];
+        if (m1.target === null) {
+            continue;
+        }
+        const h1 = m1.hearts.find(h => h.rank === m1.target)!;
+        for (let b = 0; b < monsterList.length; b++) {
+            if (a === b) {
+                continue;
+            }
+            const m2 = monsterList[b];
+            if (m2.target === null) {
+                continue;
+            }
+            const h2 = m2.hearts.find(h => h.rank === m2.target)!;
+            let ed = euclidean(h1, h2);
+            let md = manhattan(h1, h2);
+            if (isUpward(h1, h2)) {
+                if (ed < upwardEuclidean.distance) {
+                    upwardEuclidean.monster = m2;
+                    upwardEuclidean.distance = ed
+                }
+                if (md < upwardManhattan.distance) {
+                    upwardManhattan.monster = m2;
+                    upwardManhattan.distance = md;;
+                }
+            }
+            if (isUpward(h2, h1)) {
+                if (ed < downwardEuclidean.distance) {
+                    downwardEuclidean.monster = m2;
+                    downwardEuclidean.distance = ed
+                }
+                if (md < downwardManhattan.distance) {
+                    downwardManhattan.monster = m2;
+                    downwardManhattan.distance = md;;
+                }
+            }
+            if (ed < nearestEuclidean.distance) {
+                nearestEuclidean.monster = m2;
+                nearestEuclidean.distance = ed;
+            }
+            if (md < nearestManhattan.distance) {
+                nearestManhattan.monster = m2;
+                nearestManhattan.distance = md;
+            }
+        }
+        const tr = tbody.appendChild(document.createElement("tr"));
+        const targetTd = tr.appendChild(document.createElement("td"));
+        const targetSpan = targetTd.appendChild(document.createElement("span"));
+        const targetInfo = m1.color === Color.Rainbow
+                         ? RainbowColorInfo
+                         : SingleColorInfoMap.get(m1.color)!;
+        targetSpan.classList.add(targetInfo.colorName);
+        targetSpan.textContent = targetInfo.text;
+        targetTd.appendChild(document.createElement("span")).textContent =
+            `${m1.cost} ${m1.name} ${Rank[m1.target]}`;
+        function append(ds: DistStatus) {
+            const td = tr.appendChild(document.createElement("td"));
+            if (ds.monster === null) {
+                td.textContent = "－";
+                return;
+            }
+            const info = ds.monster.color === Color.Rainbow
+                       ? RainbowColorInfo
+                       : SingleColorInfoMap.get(ds.monster.color)!;
+            const span = td.appendChild(document.createElement("span"));
+            span.classList.add(info.colorName);
+            span.textContent = info.text;
+            td.appendChild(document.createElement("span")).textContent =
+                `${ds.monster.cost} ${ds.monster.name} ${Rank[ds.monster.target!]} (${Math.ceil(ds.distance)})`;
+        }
+        append(upwardEuclidean);
+        append(upwardManhattan);
+        append(downwardEuclidean);
+        append(downwardManhattan);
+        append(nearestEuclidean);
+        append(nearestManhattan);
+    }
+});
+
 // ページのURLのパラメータの処理
 (function () {
     const params = new URLSearchParams(window.location.search);

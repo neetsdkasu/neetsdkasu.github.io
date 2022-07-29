@@ -230,3 +230,11 @@ td
     border: 1px solid red;
     background-color: #ffeeee;
 }
+
+#status_distance_tbody > tr > td {
+    font-size: 0.5rem;
+}
+
+#status_distance_tbody > tr:hover {
+    background-color: #eeffff;
+}
