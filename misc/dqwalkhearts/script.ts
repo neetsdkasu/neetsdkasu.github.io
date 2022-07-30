@@ -1916,16 +1916,18 @@ function convertToDummy(list: Monster[]) {
         list[i].name = `ダミーデータ${i+1}`;
         for (const h of list[i].hearts) {
             h.effects = h.effects
-                .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)(斬|体|R)/g, "$1属性$2")
-                .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)呪/g, "$1系呪")
+                .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)(斬|体|呪|R)/g, "$1属性$2")
+                .replace(/スキル(斬|体)/g, "スキルの$1")
                 .replace(/体D/g, "体技D")
                 .replace(/斬体/g, "斬・体")
                 .replace(/斬/g, "斬撃")
-                .replace(/D/g, "ダメージ")
-                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人)/g, "$1系")
+                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人|虫|悪魔)/g, "$1系への")
+                .replace(/回復\+(\d)/g, "回復効果+$1")
+                .replace(/P(\d+)回復/g, "Pを$1回復する")
                 .replace(/呪文/g, "じゅもん")
-                .replace(/全状態異常/g, "全ての状態異常")
+                .replace(/全状態異常/g, "すべての状態異常")
                 .replace(/悪状態変化/g, "悪い状態変化")
+                .replace(/D/g, "ダメージ")
                 .replace(/R/g, "耐性");
         }
     }
