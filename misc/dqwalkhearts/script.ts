@@ -189,7 +189,12 @@ function saveMonsterList(trigger: Trigger): void {
         return;
     }
     try {
-        const json = JSON.stringify(monsterList);
+        const data: Data = {
+            ident: IDENT,
+            trigger: trigger,
+            monsterList: monsterList
+        };
+        const json = JSON.stringify(data);
         window.localStorage.setItem(LocalStoragePath, json);
         if (DEBUG) {
             console.log("saved to storage");
@@ -214,17 +219,16 @@ function loadMonsterList(): void {
     try {
         const json = window.localStorage.getItem(LocalStoragePath);
         if (json !== null) {
-            const list: unknown = JSON.parse(json);
-            if (isData(list)) {
+            const data: unknown = JSON.parse(json);
+            if (isData(data)) {
+                addAllMonsterList(data.monsterList);
                 if (DEBUG) {
-                    console.log("load from storage");
+                    console.log("load from storage (Data)");
                 }
-                throw "not implemented";
-            }
-            if (isMonsterList(list)) {
-                addAllMonsterList(list);
+            } else if (isMonsterList(data)) {
+                addAllMonsterList(data);
                 if (DEBUG) {
-                    console.log("load from storage");
+                    console.log("load from storage (Monster[])");
                 }
             }
         }
@@ -233,6 +237,59 @@ function loadMonsterList(): void {
         console.log(err);
     }
 }
+
+// 別のタブやウインドウでlocalStorageに変更があった場合に呼び出される
+window.addEventListener("storage", e => {
+    if (DEBUG) {
+        console.log("updated storage");
+    }
+    if (e instanceof StorageEvent) {
+        if (DEBUG) {
+            console.log(`storage key: ${e.key}`);
+        }
+        if (e.key !== LocalStoragePath) {
+            console.log(`not dqwalkhearts data`);
+            return;
+        }
+        if (e.newValue === null) {
+            console.log("delete value");
+            return;
+        }
+        const data = JSON.parse(e.newValue);
+        let tempList: Monster[] = [];
+        if (isData(data)) {
+            if (DEBUG) {
+                console.log(`ident: ${data.ident} (this window: ${IDENT})`);
+            }
+            if (data.trigger === Trigger.ChooseRank) {
+                if (DEBUG) {
+                    console.log("trigger is ChooseRank");
+                }
+                return;
+            }
+            tempList = data.monsterList;
+        } else if (isMonsterList(data)) {
+            if (DEBUG) {
+                console.log("update by old script");
+            }
+            tempList = data;
+        }
+        for (const m of tempList) {
+            if (monsterMap.has(m.name)) {
+                const orig = monsterMap.get(m.name)!;
+                m.target = orig.target;
+            }
+        }
+        const updated = addAllMonsterList(tempList);
+        if (DEBUG) {
+            if (updated) {
+                console.log("update monsterList");
+            } else {
+                console.log("no update monsterList");
+            }
+        }
+    }
+});
 
 function isData(anyobj: Data | unknown): anyobj is Data {
     if (typeof anyobj !== "object" || anyobj === null) {
@@ -706,7 +763,7 @@ function replaceMonsterList(newMonsterList: Monster[]): void {
 }
 
 // 現在のこころリストに別のこころリストで上書きする
-// ※同一モンスターの情報があった場合に別のこころリストのほうが優先される
+// ※同一モンスターの情報があった場合に引数のこころリストのほうが優先される
 function addAllMonsterList(list: Monster[]): boolean {
     let updated = false;
     for (const monster of list) {
