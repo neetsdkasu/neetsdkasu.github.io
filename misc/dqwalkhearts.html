@@ -480,7 +480,48 @@
         <div id="heart_list"></div>
       </section>
 
+      <hr />
+
+      <section>
+        <h5>ステータス近距離</h5>
+        <details>
+          <div>※リストで選択されているランクのこころのみ対象</div>
+          <dl>
+            <dt>上位互換</dt><dd>対象のこころのステータスに対して『ステータス全部が以上でかつステータスの少なくとも１つが上のこころ』の中でステータス距離が一番近いこころ</dd>
+            <dt>下位互換</dt><dd>対象のこここを上位互換とするこころの中でステータス距離が一番近いこころ</dd>
+            <dt>近距離</dt><dd>対象のこころにステータス距離が一番近いこころ</dd>
+            <dt>ステータス距離</dt><dd>EuclideanかManhattanで求める値</dd>
+            <dt>Euclidean</dt><dd>各ステータス差の二乗和の平方根で距離を求める</dd>
+            <dt>Manhattan</dt><dd>各ステータス差の絶対値の和で距離を求める</dd>
+
+          </dl>
+          <button id="calc_status_distance">計算</button>
+          <table>
+            <thead>
+              <tr>
+                <th rowspan="2">対象</th>
+                <th colspan="2">上位互換</th>
+                <th colspan="2">下位互換</th>
+                <th colspan="2">近距離</th>
+              </th>
+              <tr>
+                <th>Euclidean</th>
+                <th>Manhattan</th>
+                <th>Euclidean</th>
+                <th>Manhattan</th>
+                <th>Euclidean</th>
+                <th>Manhattan</th>
+              </th>
+            </thead>
+            <tbody id="status_distance_tbody">
+            </tbody>
+          </table>
+        </details>
+      </section>
+
     </main>
+
+    <hr />
 
     <footer>
       <nav><a href=".">misc</a></nav>

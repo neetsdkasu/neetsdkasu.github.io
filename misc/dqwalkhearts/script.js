@@ -4,9 +4,16 @@
 //
 // author: Leonardone @ NEETSDKASU
 //
-const DEBUG = false;
+const DEVELOP = false;
+const DEBUG = DEVELOP || new URLSearchParams(window.location.search).has("DEBUG");
+if (DEBUG) {
+    console.log("DEBUG MODE");
+}
 const LocalStoragePath = "dqwalkhearts";
 function dialogAlert(msg) {
+    if (DEBUG) {
+        console.log(`dialogAlert: ${msg}`);
+    }
     document.getElementById("alert_message").textContent = msg;
     const dialog = document.getElementById("alert_dialog");
     dialog.showModal();
@@ -104,14 +111,37 @@ let monsterMap = new Map();
 let monsterList = [];
 let monsterNameList = [];
 let noStorage = false;
+const IDENT = Date.now();
+if (DEBUG) {
+    console.log(`IDENT: ${IDENT}`);
+}
+var Trigger;
+(function (Trigger) {
+    Trigger[Trigger["UpdateStatus"] = 0] = "UpdateStatus";
+    Trigger[Trigger["ChooseRank"] = 1] = "ChooseRank";
+})(Trigger || (Trigger = {}));
 // こころリストをブラウザのストレージに保存
-function saveMonsterList() {
+function saveMonsterList(trigger) {
+    if (DEBUG) {
+        console.log(`call saveMonsterList(${Trigger[trigger]})`);
+    }
     if (noStorage) {
+        if (DEBUG) {
+            console.log("no save to storage");
+        }
         return;
     }
     try {
-        const json = JSON.stringify(monsterList);
+        const data = {
+            ident: IDENT,
+            trigger: trigger,
+            monsterList: monsterList
+        };
+        const json = JSON.stringify(data);
         window.localStorage.setItem(LocalStoragePath, json);
+        if (DEBUG) {
+            console.log("saved to storage");
+        }
     }
     catch (err) {
         noStorage = true;
@@ -120,15 +150,30 @@ function saveMonsterList() {
 }
 // こころリストをブラウザのストレージから読み込む
 function loadMonsterList() {
+    if (DEBUG) {
+        console.log("call loadMonsterList");
+    }
     if (noStorage) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
         return;
     }
     try {
         const json = window.localStorage.getItem(LocalStoragePath);
         if (json !== null) {
-            const list = JSON.parse(json);
-            if (isMonsterList(list)) {
-                addAllMonsterList(list);
+            const data = JSON.parse(json);
+            if (isData(data)) {
+                addAllMonsterList(data.monsterList);
+                if (DEBUG) {
+                    console.log("load from storage (Data)");
+                }
+            }
+            else if (isMonsterList(data)) {
+                addAllMonsterList(data);
+                if (DEBUG) {
+                    console.log("load from storage (Monster[])");
+                }
             }
         }
     }
@@ -136,6 +181,82 @@ function loadMonsterList() {
         noStorage = true;
         console.log(err);
     }
+}
+// 別のタブやウインドウでlocalStorageに変更があった場合に呼び出される
+window.addEventListener("storage", e => {
+    if (DEBUG) {
+        console.log("updated storage");
+    }
+    if (e instanceof StorageEvent) {
+        if (DEBUG) {
+            console.log(`storage key: ${e.key}`);
+        }
+        if (e.key !== LocalStoragePath) {
+            console.log(`not dqwalkhearts data`);
+            return;
+        }
+        if (e.newValue === null) {
+            console.log("delete value");
+            return;
+        }
+        const data = JSON.parse(e.newValue);
+        let tempList = [];
+        if (isData(data)) {
+            if (DEBUG) {
+                console.log(`ident: ${data.ident} (this window: ${IDENT})`);
+            }
+            if (data.ident === IDENT) {
+                // ここには到達しないはず
+                // 到達する場合は、別タブ・別ウインドウでIDENTが同時タイミングで生成されたとき…
+                // Date.now()の精度が悪くて、ブラウザ(PC)のパフォーマンスが高速だと、ありうる
+                return;
+            }
+            if (data.trigger === Trigger.ChooseRank) {
+                if (DEBUG) {
+                    console.log("trigger is ChooseRank");
+                }
+                return;
+            }
+            tempList = data.monsterList;
+        }
+        else if (isMonsterList(data)) {
+            if (DEBUG) {
+                console.log("update by old script");
+            }
+            tempList = data;
+        }
+        for (const m of tempList) {
+            if (monsterMap.has(m.name)) {
+                const orig = monsterMap.get(m.name);
+                m.target = orig.target;
+            }
+        }
+        const updated = addAllMonsterList(tempList);
+        if (DEBUG) {
+            if (updated) {
+                console.log("update monsterList");
+            }
+            else {
+                console.log("no update monsterList");
+            }
+        }
+    }
+});
+function isData(anyobj) {
+    if (typeof anyobj !== "object" || anyobj === null) {
+        return false;
+    }
+    const obj = anyobj;
+    if (!(("ident" in obj) && typeof obj["ident"] === "number")) {
+        return false;
+    }
+    if (!(("trigger" in obj) && (obj["trigger"] === Trigger.ChooseRank || obj["trigger"] === Trigger.UpdateStatus))) {
+        return false;
+    }
+    if (!(("monsterList" in obj) && isMonsterList(obj["monsterList"]))) {
+        return false;
+    }
+    return true;
 }
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
 function showNewHeart(monster) {
@@ -160,7 +281,7 @@ function showNewHeart(monster) {
         if (elm.value === "omit") {
             elm.addEventListener("change", () => {
                 monster.target = null;
-                saveMonsterList();
+                saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
             });
         }
@@ -169,7 +290,7 @@ function showNewHeart(monster) {
             elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
             elm.addEventListener("change", () => {
                 monster.target = rank;
-                saveMonsterList();
+                saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
             });
         }
@@ -347,22 +468,43 @@ function addMonsterNameList(newName) {
         list.insertBefore(item, before);
     }
 }
+// ２つのこころが等しいかどうか
+function equalHearts(h1, h2) {
+    for (const param in h1) {
+        if (h1[param] !== h2[param]) {
+            return false;
+        }
+    }
+    return true;
+}
 // 新しいこころを追加する（情報は上書きされる）
 function addHeart(newMonster) {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name);
+        let updated = false;
         for (const heart of newMonster.hearts) {
             const index = monster.hearts.findIndex(h => h.rank === heart.rank);
             if (index < 0) {
                 monster.hearts.push(heart);
+                updated = true;
             }
-            else {
+            else if (!equalHearts(monster.hearts[index], heart)) {
                 monster.hearts[index] = heart;
+                updated = true;
             }
         }
-        monster.target = newMonster.target;
-        monster.color = newMonster.color;
+        if (monster.target !== newMonster.target) {
+            monster.target = newMonster.target;
+            updated = true;
+        }
+        if (monster.color !== newMonster.color) {
+            monster.color = newMonster.color;
+            updated = true;
+        }
         if (monster.cost === newMonster.cost) {
+            if (!updated) {
+                return false;
+            }
             showUpdatedHeart(monster, false);
         }
         else {
@@ -378,6 +520,7 @@ function addHeart(newMonster) {
         insert(monsterList, newMonster, (n, e) => n.cost > e.cost);
         showNewHeart(newMonster);
     }
+    return true;
 }
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 function setPreset(job) {
@@ -571,15 +714,23 @@ function replaceMonsterList(newMonsterList) {
     }
 }
 // 現在のこころリストに別のこころリストで上書きする
-// ※同一モンスターの情報があった場合に別のこころリストのほうが優先される
+// ※同一モンスターの情報があった場合に引数のこころリストのほうが優先される
 function addAllMonsterList(list) {
+    let updated = false;
     for (const monster of list) {
-        addHeart(monster);
+        if (addHeart(monster)) {
+            updated = true;
+        }
     }
+    if (DEBUG) {
+        console.log(`addAllMonsterList: updated: ${updated}`);
+    }
+    return updated;
 }
 // 現在のこころリストに別のこころリストをマージする
 // ※同一モンスターの情報があった場合に現在のこころリストのほうが優先される
 function mergeMonsterList(list) {
+    let updated = false;
     for (const monster of list) {
         if (monsterMap.has(monster.name)) {
             const orig = monsterMap.get(monster.name);
@@ -591,8 +742,14 @@ function mergeMonsterList(list) {
             monster.cost = orig.cost;
             monster.target = orig.target;
         }
-        addHeart(monster);
+        if (addHeart(monster)) {
+            updated = true;
+        }
     }
+    if (DEBUG) {
+        console.log(`mergeMonsterList: updated: ${updated}`);
+    }
+    return updated;
 }
 // こころの基本のパラメータだけ見るシンプルなスコア計算オブジェクトを生成する
 function makeSimpleScorer(param) {
@@ -1719,8 +1876,27 @@ function searchHeartSet(target) {
 }
 // デモ用データの加工
 function convertToDummy(list) {
+    if (DEBUG) {
+        console.log("fill dummy data");
+    }
     for (let i = 0; i < list.length; i++) {
         list[i].name = `ダミーデータ${i + 1}`;
+        for (const h of list[i].hearts) {
+            h.effects = h.effects
+                .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)(斬|体|呪|R)/g, "$1属性$2")
+                .replace(/スキル(斬|体)/g, "スキルの$1")
+                .replace(/体D/g, "体技D")
+                .replace(/斬体/g, "斬・体")
+                .replace(/斬/g, "斬撃")
+                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人|虫|悪魔)/g, "$1系への")
+                .replace(/回復\+(\d)/g, "回復効果+$1")
+                .replace(/P(\d+)回復/g, "Pを$1回復する")
+                .replace(/呪文/g, "じゅもん")
+                .replace(/全状態異常/g, "すべての状態異常")
+                .replace(/悪状態変化/g, "悪い状態変化")
+                .replace(/D/g, "ダメージ")
+                .replace(/R/g, "耐性");
+        }
     }
 }
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
@@ -1757,6 +1933,9 @@ document.getElementById("heart4_omit")
 // こころ追加フォームを開く
 document.getElementById("add_heart")
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click add_heart");
+    }
     const dialog = document.getElementById("add_heart_dialog");
     dialog.querySelector("form").reset();
     dialog.returnValue = "";
@@ -1777,6 +1956,9 @@ document.getElementById("add_monster_name")
 // こころ追加フォームでキャンセルしたとき
 document.querySelector('#add_heart_dialog button[value="cancel"]')
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click add_heart_dialog CANCEL button");
+    }
     const dialog = document.getElementById("add_heart_dialog");
     dialog.returnValue = "cancel";
     dialog.close();
@@ -1784,6 +1966,9 @@ document.querySelector('#add_heart_dialog button[value="cancel"]')
 // 新しいこころを追加する（フォームを閉じたときに発動）
 document.getElementById("add_heart_dialog")
     .addEventListener("close", (event) => {
+    if (DEBUG) {
+        console.log("close add_heart_dialog");
+    }
     const dialog = document.getElementById("add_heart_dialog");
     if (dialog.returnValue !== "add") {
         return;
@@ -1814,13 +1999,21 @@ document.getElementById("add_heart_dialog")
             }],
         target: rank,
     };
-    addHeart(monster);
+    const updated = addHeart(monster);
+    if (DEBUG) {
+        console.log(`add heart: updated: ${updated}`);
+    }
     dialogAlert(`${monster.name} ${Rank[monster.hearts[0].rank]} を追加しました`);
-    saveMonsterList();
+    if (updated) {
+        saveMonsterList(Trigger.UpdateStatus);
+    }
 });
 // ダウンロードボタンを押したときの処理
 document.getElementById("download")
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click download");
+    }
     if (monsterList.length === 0) {
         dialogAlert("リストが空だよ");
         return;
@@ -1840,6 +2033,9 @@ document.getElementById("download")
 // ファイル読込フォームのキャンセル
 document.querySelector('#file_load_dialog button[value="cancel"]')
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click file_load_dialog CANCEL button");
+    }
     const dialog = document.getElementById("file_load_dialog");
     dialog.returnValue = "cancel";
     dialog.close();
@@ -1847,6 +2043,9 @@ document.querySelector('#file_load_dialog button[value="cancel"]')
 // ファイル読込フォームを開く
 document.getElementById("load_file")
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click load_file");
+    }
     const dialog = document.getElementById("file_load_dialog");
     dialog.querySelector("form").reset();
     dialog.returnValue = "";
@@ -1855,6 +2054,9 @@ document.getElementById("load_file")
 // ファイルを読み込む（フォームを閉じたときに発動）
 document.getElementById("file_load_dialog")
     .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close file_as_older");
+    }
     const dialog = document.getElementById("file_load_dialog");
     if (dialog.returnValue !== "load") {
         return;
@@ -1867,18 +2069,22 @@ document.getElementById("file_load_dialog")
         if (!isMonsterList(list)) {
             throw "ファイルフォーマットが不正です！";
         }
+        let updated = false;
         switch (option) {
             case "file_as_newer":
-                addAllMonsterList(list);
+                updated = addAllMonsterList(list);
                 break;
             case "file_as_older":
-                mergeMonsterList(list);
+                updated = mergeMonsterList(list);
                 break;
             default:
                 replaceMonsterList(list);
+                updated = true;
                 break;
         }
-        saveMonsterList();
+        if (updated) {
+            saveMonsterList(Trigger.UpdateStatus);
+        }
     }).catch(err => {
         dialogAlert(`${err}`);
     });
@@ -1898,6 +2104,9 @@ document.getElementById("file_load_dialog")
 // こころセット探索対象の設定フォームのキャンセル
 document.querySelector('#search_heart_dialog button[value="cancel"]')
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click search_heart_dialog CANCEL button");
+    }
     const dialog = document.getElementById("search_heart_dialog");
     dialog.returnValue = "cancel";
     dialog.close();
@@ -1905,6 +2114,9 @@ document.querySelector('#search_heart_dialog button[value="cancel"]')
 // こころセットを探索する（フォームを閉じたときに発動）
 document.getElementById("search_heart_dialog")
     .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close check_heart_dialog");
+    }
     const dialog = document.getElementById("search_heart_dialog");
     if (dialog.returnValue !== "start") {
         return;
@@ -1932,12 +2144,18 @@ document.getElementById("search_heart_dialog")
 // こころセット探索フォームを開く
 document.getElementById("search_heart")
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click search_heart");
+    }
     const dialog = document.getElementById("search_heart_dialog");
     dialog.showModal();
 });
 // 式の確認ボタンを押した時の処理
 document.getElementById("check_expression")
     .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_expression");
+    }
     const dialog = document.getElementById("score_list_dialog");
     const exprSrc = document.getElementById("expression").value;
     const msg = dialog.querySelector(".message");
@@ -1992,10 +2210,149 @@ document.getElementById("check_expression")
     }
     dialog.showModal();
 });
+// ステータス近距離を求める
+document.getElementById("calc_status_distance").addEventListener("click", () => {
+    const tbody = document.getElementById("status_distance_tbody");
+    tbody.innerHTML = "";
+    if (monsterList.length === 0) {
+        dialogAlert("こころが１個もないよ");
+        return;
+    }
+    function isUpward(m, target) {
+        return m.maximumHP <= target.maximumHP
+            && m.maximumMP <= target.maximumMP
+            && m.power <= target.power
+            && m.defence <= target.defence
+            && m.attackMagic <= target.attackMagic
+            && m.recoverMagic <= target.recoverMagic
+            && m.speed <= target.speed
+            && m.deftness <= target.deftness
+            && (m.maximumHP < target.maximumHP
+                || m.maximumMP < target.maximumMP
+                || m.power < target.power
+                || m.defence < target.defence
+                || m.attackMagic < target.attackMagic
+                || m.recoverMagic < target.recoverMagic
+                || m.speed < target.speed
+                || m.deftness < target.deftness);
+    }
+    function euclidean(m1, m2) {
+        return Math.sqrt(Math.pow(m1.maximumHP - m2.maximumHP, 2)
+            + Math.pow(m1.maximumMP - m2.maximumMP, 2)
+            + Math.pow(m1.power - m2.power, 2)
+            + Math.pow(m1.defence - m2.defence, 2)
+            + Math.pow(m1.attackMagic - m2.attackMagic, 2)
+            + Math.pow(m1.recoverMagic - m2.recoverMagic, 2)
+            + Math.pow(m1.speed - m2.speed, 2)
+            + Math.pow(m1.deftness - m2.deftness, 2));
+    }
+    function manhattan(m1, m2) {
+        return Math.abs(m1.maximumHP - m2.maximumHP)
+            + Math.abs(m1.maximumMP - m2.maximumMP)
+            + Math.abs(m1.power - m2.power)
+            + Math.abs(m1.defence - m2.defence)
+            + Math.abs(m1.attackMagic - m2.attackMagic)
+            + Math.abs(m1.recoverMagic - m2.recoverMagic)
+            + Math.abs(m1.speed - m2.speed)
+            + Math.abs(m1.deftness - m2.deftness);
+    }
+    for (let a = 0; a < monsterList.length; a++) {
+        let upwardEuclidean = { monster: null, distance: 9999999 };
+        let upwardManhattan = { monster: null, distance: 9999999 };
+        let downwardEuclidean = { monster: null, distance: 9999999 };
+        let downwardManhattan = { monster: null, distance: 9999999 };
+        let nearestEuclidean = { monster: null, distance: 9999999 };
+        let nearestManhattan = { monster: null, distance: 9999999 };
+        const m1 = monsterList[a];
+        if (m1.target === null) {
+            continue;
+        }
+        const h1 = m1.hearts.find(h => h.rank === m1.target);
+        for (let b = 0; b < monsterList.length; b++) {
+            if (a === b) {
+                continue;
+            }
+            const m2 = monsterList[b];
+            if (m2.target === null) {
+                continue;
+            }
+            const h2 = m2.hearts.find(h => h.rank === m2.target);
+            let ed = euclidean(h1, h2);
+            let md = manhattan(h1, h2);
+            if (isUpward(h1, h2)) {
+                if (ed < upwardEuclidean.distance) {
+                    upwardEuclidean.monster = m2;
+                    upwardEuclidean.distance = ed;
+                }
+                if (md < upwardManhattan.distance) {
+                    upwardManhattan.monster = m2;
+                    upwardManhattan.distance = md;
+                    ;
+                }
+            }
+            if (isUpward(h2, h1)) {
+                if (ed < downwardEuclidean.distance) {
+                    downwardEuclidean.monster = m2;
+                    downwardEuclidean.distance = ed;
+                }
+                if (md < downwardManhattan.distance) {
+                    downwardManhattan.monster = m2;
+                    downwardManhattan.distance = md;
+                    ;
+                }
+            }
+            if (ed < nearestEuclidean.distance) {
+                nearestEuclidean.monster = m2;
+                nearestEuclidean.distance = ed;
+            }
+            if (md < nearestManhattan.distance) {
+                nearestManhattan.monster = m2;
+                nearestManhattan.distance = md;
+            }
+        }
+        const tr = tbody.appendChild(document.createElement("tr"));
+        const targetTd = tr.appendChild(document.createElement("td"));
+        const targetSpan = targetTd.appendChild(document.createElement("span"));
+        const targetInfo = m1.color === Color.Rainbow
+            ? RainbowColorInfo
+            : SingleColorInfoMap.get(m1.color);
+        targetSpan.classList.add(targetInfo.colorName);
+        targetSpan.textContent = targetInfo.text;
+        targetTd.appendChild(document.createElement("span")).textContent =
+            `${m1.cost} ${m1.name} ${Rank[m1.target]}`;
+        function append(ds) {
+            const td = tr.appendChild(document.createElement("td"));
+            if (ds.monster === null) {
+                td.textContent = "－";
+                return;
+            }
+            const info = ds.monster.color === Color.Rainbow
+                ? RainbowColorInfo
+                : SingleColorInfoMap.get(ds.monster.color);
+            const span = td.appendChild(document.createElement("span"));
+            span.classList.add(info.colorName);
+            span.textContent = info.text;
+            td.appendChild(document.createElement("span")).textContent =
+                `${ds.monster.cost} ${ds.monster.name} ${Rank[ds.monster.target]} (${Math.ceil(ds.distance)})`;
+        }
+        append(upwardEuclidean);
+        append(upwardManhattan);
+        append(downwardEuclidean);
+        append(downwardManhattan);
+        append(nearestEuclidean);
+        append(nearestManhattan);
+    }
+});
 // ページのURLのパラメータの処理
 (function () {
     const params = new URLSearchParams(window.location.search);
+    if (DEBUG) {
+        console.log(`page URL parameters: ${params}`);
+    }
     if (params.has("demo")) {
+        if (DEBUG) {
+            console.log("load demo data");
+        }
         noStorage = true;
         fetch("./dqwalkhearts/dqwalkhearts.json")
             .then(r => r.json())
@@ -2011,6 +2368,9 @@ document.getElementById("check_expression")
         });
     }
     else if (params.has("nostorage")) {
+        if (DEBUG) {
+            console.log("no storage mode");
+        }
         noStorage = true;
     }
     else {
