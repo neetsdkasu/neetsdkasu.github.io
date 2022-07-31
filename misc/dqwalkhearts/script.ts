@@ -261,6 +261,12 @@ window.addEventListener("storage", e => {
             if (DEBUG) {
                 console.log(`ident: ${data.ident} (this window: ${IDENT})`);
             }
+            if (data.ident === IDENT) {
+                // ここには到達しないはず
+                // 到達する場合は、別タブ・別ウインドウでIDENTが同時タイミングで生成されたとき…
+                // Date.now()の精度が悪くて、ブラウザ(PC)のパフォーマンスが高速だと、ありうる
+                return;
+            }
             if (data.trigger === Trigger.ChooseRank) {
                 if (DEBUG) {
                     console.log("trigger is ChooseRank");
