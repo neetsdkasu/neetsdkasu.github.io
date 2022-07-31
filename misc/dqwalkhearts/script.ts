@@ -4,7 +4,7 @@
 // author: Leonardone @ NEETSDKASU
 //
 
-const DEVELOP = true;
+const DEVELOP = false;
 
 const DEBUG: boolean = DEVELOP || new URLSearchParams(window.location.search).has("DEBUG");
 
