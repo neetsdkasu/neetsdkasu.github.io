@@ -2257,6 +2257,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             + Math.abs(m1.deftness - m2.deftness);
     }
     for (let a = 0; a < monsterList.length; a++) {
+        let upwardMinCost = { monster: null, distance: 9999999 };
         let upwardEuclidean = { monster: null, distance: 9999999 };
         let upwardManhattan = { monster: null, distance: 9999999 };
         let downwardEuclidean = { monster: null, distance: 9999999 };
@@ -2280,6 +2281,11 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             let ed = euclidean(h1, h2);
             let md = manhattan(h1, h2);
             if (isUpward(h1, h2)) {
+                const cd = (m2.cost - h2.maximumCost) - (m1.cost - h1.maximumCost);
+                if (cd < upwardMinCost.distance) {
+                    upwardMinCost.monster = m2;
+                    upwardMinCost.distance = cd;
+                }
                 if (ed < upwardEuclidean.distance) {
                     upwardEuclidean.monster = m2;
                     upwardEuclidean.distance = ed;
@@ -2335,6 +2341,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             td.appendChild(document.createElement("span")).textContent =
                 `${ds.monster.cost} ${ds.monster.name} ${Rank[ds.monster.target]} (${Math.ceil(ds.distance)})`;
         }
+        append(upwardMinCost);
         append(upwardEuclidean);
         append(upwardManhattan);
         append(downwardEuclidean);
