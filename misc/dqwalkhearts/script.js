@@ -310,7 +310,7 @@ function showNewHeart(monster) {
         text(".monster-attackmagic", "-");
         text(".monster-recovermagic", "-");
         text(".monster-speed", "-");
-        text(".monster-deftness", "-");
+        text(".monster-dexterity", "-");
         text(".monster-maximumcost", "-");
         text(".monster-effects", "-");
     }
@@ -330,7 +330,7 @@ function showNewHeart(monster) {
         text(".monster-attackmagic", heart.attackMagic);
         text(".monster-recovermagic", heart.recoverMagic);
         text(".monster-speed", heart.speed);
-        text(".monster-deftness", heart.deftness);
+        text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
     }
@@ -358,7 +358,7 @@ function showNewHeart(monster) {
             elem("add_attackmagic", `${h.attackMagic}`);
             elem("add_recovermagic", `${h.recoverMagic}`);
             elem("add_speed", `${h.speed}`);
-            elem("add_deftness", `${h.deftness}`);
+            elem("add_dexterity", `${h.dexterity}`);
             elem("add_maximumcost", `${h.maximumCost}`);
             elem("add_effects", `${h.effects}`);
         }
@@ -426,7 +426,7 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-attackmagic", "-");
         text(".monster-recovermagic", "-");
         text(".monster-speed", "-");
-        text(".monster-deftness", "-");
+        text(".monster-dexterity", "-");
         text(".monster-maximumcost", "-");
         text(".monster-effects", "-");
     }
@@ -448,7 +448,7 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-attackmagic", heart.attackMagic);
         text(".monster-recovermagic", heart.recoverMagic);
         text(".monster-speed", heart.speed);
-        text(".monster-deftness", heart.deftness);
+        text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
     }
@@ -593,7 +593,7 @@ function isMonster(anyobj) {
                 attackMagic: 1,
                 recoverMagic: 1,
                 speed: 1,
-                deftness: 1,
+                dexterity: 1,
                 rank: Rank.S_plus,
                 maximumCost: 1,
                 effects: "str",
@@ -650,10 +650,16 @@ function isMonster(anyobj) {
         }
         for (const param in heart) {
             if (param in h === false) {
-                console.log(`パラメータが存在しない ${param}`);
-                console.log(h);
-                console.log(obj);
-                return false;
+                if (param === "dexterity" && ("deftness" in h)) {
+                    h["dexterity"] = h["deftness"];
+                    delete h["deftness"];
+                }
+                else {
+                    console.log(`パラメータが存在しない ${param}`);
+                    console.log(h);
+                    console.log(obj);
+                    return false;
+                }
             }
             const x = typeof heart[param];
             const y = typeof h[param];
@@ -786,7 +792,7 @@ const DefenceScorer = makeSimpleScorer("defence");
 const AttackMagicScorer = makeSimpleScorer("attackMagic");
 const RecoverMagicScorer = makeSimpleScorer("recoverMagic");
 const SpeedScorer = makeSimpleScorer("speed");
-const DeftnessScorer = makeSimpleScorer("deftness");
+const DexterityScorer = makeSimpleScorer("dexterity");
 class ExprSyntaxError {
     constructor(p, ss) {
         this.pos = p;
@@ -1253,7 +1259,8 @@ class ExprParser {
             case "SPD":
                 return SpeedScorer;
             case "DFT":
-                return DeftnessScorer;
+            case "DEX":
+                return DexterityScorer;
             case "MAX":
                 return this.maxScorer();
             case "MIN":
@@ -1563,8 +1570,8 @@ function parseTarget(elements) {
             target.scorer = SpeedScorer;
             target.expr = "早さ";
             break;
-        case "deftness":
-            target.scorer = DeftnessScorer;
+        case "dexterity":
+            target.scorer = DexterityScorer;
             target.expr = "器用";
             break;
         case "expression":
@@ -1803,7 +1810,7 @@ function searchHeartSet(target) {
             attackMagic: 0,
             recoverMagic: 0,
             speed: 0,
-            deftness: 0,
+            dexterity: 0,
             cost: 0,
             maximumCost: 0,
         };
@@ -1821,7 +1828,7 @@ function searchHeartSet(target) {
             st.attackMagic += AttackMagicScorer.calc(c, m);
             st.recoverMagic += RecoverMagicScorer.calc(c, m);
             st.speed += SpeedScorer.calc(c, m);
-            st.deftness += DeftnessScorer.calc(c, m);
+            st.dexterity += DexterityScorer.calc(c, m);
             st.cost += m.cost;
             st.maximumCost += m.hearts.find(h => h.rank === m.target).maximumCost;
         }
@@ -1846,7 +1853,7 @@ function searchHeartSet(target) {
         text(".result-item-attackmagic", `${st.attackMagic}`);
         text(".result-item-recovermagic", `${st.recoverMagic}`);
         text(".result-item-speed", `${st.speed}`);
-        text(".result-item-deftness", `${st.deftness}`);
+        text(".result-item-dexterity", `${st.dexterity}`);
         for (let p = 0; p < COUNT; p++) {
             const c = target.colors[p];
             const m = heartSet[p];
@@ -1992,7 +1999,7 @@ document.getElementById("add_heart_dialog")
                 attackMagic: num("add_attackmagic"),
                 recoverMagic: num("add_recovermagic"),
                 speed: num("add_speed"),
-                deftness: num("add_deftness"),
+                dexterity: num("add_dexterity"),
                 rank: rank,
                 maximumCost: num("add_maximumcost"),
                 effects: str("add_effects").trim(),
@@ -2226,7 +2233,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             && m.attackMagic <= target.attackMagic
             && m.recoverMagic <= target.recoverMagic
             && m.speed <= target.speed
-            && m.deftness <= target.deftness
+            && m.dexterity <= target.dexterity
             && (m.maximumHP < target.maximumHP
                 || m.maximumMP < target.maximumMP
                 || m.power < target.power
@@ -2234,7 +2241,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
                 || m.attackMagic < target.attackMagic
                 || m.recoverMagic < target.recoverMagic
                 || m.speed < target.speed
-                || m.deftness < target.deftness);
+                || m.dexterity < target.dexterity);
     }
     function euclidean(m1, m2) {
         return Math.sqrt(Math.pow(m1.maximumHP - m2.maximumHP, 2)
@@ -2244,7 +2251,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             + Math.pow(m1.attackMagic - m2.attackMagic, 2)
             + Math.pow(m1.recoverMagic - m2.recoverMagic, 2)
             + Math.pow(m1.speed - m2.speed, 2)
-            + Math.pow(m1.deftness - m2.deftness, 2));
+            + Math.pow(m1.dexterity - m2.dexterity, 2));
     }
     function manhattan(m1, m2) {
         return Math.abs(m1.maximumHP - m2.maximumHP)
@@ -2254,7 +2261,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             + Math.abs(m1.attackMagic - m2.attackMagic)
             + Math.abs(m1.recoverMagic - m2.recoverMagic)
             + Math.abs(m1.speed - m2.speed)
-            + Math.abs(m1.deftness - m2.deftness);
+            + Math.abs(m1.dexterity - m2.dexterity);
     }
     for (let a = 0; a < monsterList.length; a++) {
         let upwardMinCost = { monster: null, distance: 9999999 };
