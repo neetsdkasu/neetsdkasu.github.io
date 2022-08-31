@@ -114,8 +114,8 @@
             <input type="number" name="add_speed" id="add_speed" required />
           </div>
           <div>
-            <label for="add_deftness">器用:</label>
-            <input type="number" name="add_deftness" id="add_deftness" required />
+            <label for="add_dexterity">器用:</label>
+            <input type="number" name="add_dexterity" id="add_dexterity" required />
           </div>
           <div>
             <label for="add_maximumcost">こころ最大コスト:</label>
@@ -226,12 +226,12 @@
           <input type="radio" name="goal" id="goal_attackmagic"  value="attackmagic"          /><label for="goal_attackmagic" >攻魔</label>
           <input type="radio" name="goal" id="goal_recovermagic" value="recovermagic"         /><label for="goal_recovermagic">回魔</label>
           <input type="radio" name="goal" id="goal_speed"        value="speed"                /><label for="goal_speed"       >早さ</label>
-          <input type="radio" name="goal" id="goal_deftness"     value="deftness"             /><label for="goal_deftness"    >器用</label>
+          <input type="radio" name="goal" id="goal_dexterity"    value="dexterity"            /><label for="goal_dexterity"   >器用</label>
           <input type="radio" name="goal" id="goal_expression"   value="expression"           /><label for="goal_expression"  >式</label>
           <div>
             <fieldset>
               <div class="small">各『こころ』ごとにこの計算式でスコアを計算し、スコアの合計を最大化するセットを探す</div>
-              <div><label for="expression">式：</label><input type="text" name="expression" id="expression" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DFT" maxLength="300" size="60" /></div>
+              <div><label for="expression">式：</label><input type="text" name="expression" id="expression" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DEX" maxLength="300" size="60" /></div>
               <div>
                 <details class="small description-expression">
                   <summary>説明を見る</summary>
@@ -291,7 +291,7 @@
                         </tr>
                         <tr>
                           <td>器用</td>
-                          <td><code>DFT</code></td>
+                          <td><code>DEX</code></td>
                           <td><code></code></td>
                           <td></td>
                         </tr>
@@ -555,7 +555,7 @@
           <div><span>攻魔:</span> <span class="monster-attackmagic"></span></div>
           <div><span>回魔:</span> <span class="monster-recovermagic"></span></div>
           <div><span>早さ:</span> <span class="monster-speed"></span></div>
-          <div><span>器用:</span> <span class="monster-deftness"></span></div>
+          <div><span>器用:</span> <span class="monster-dexterity"></span></div>
           <div><span>こころ最大コスト:</span> <span class="monster-maximumcost"></span></div>
           <div><span>スキル・特殊効果:</span> <span class="monster-effects"></span></div>
           <div><button type="button">追加・編集</button></div>
@@ -579,7 +579,7 @@
         <div><span>攻魔:</span> <span class="result-item-attackmagic"></span></div>
         <div><span>回魔:</span> <span class="result-item-recovermagic"></span></div>
         <div><span>早さ:</span> <span class="result-item-speed"></span></div>
-        <div><span>器用:</span> <span class="result-item-deftness"></span></div>
+        <div><span>器用:</span> <span class="result-item-dexterity"></span></div>
         <div><span>スキル・特殊効果1:</span> <span class="result-item-effects1"></span></div>
         <div><span>スキル・特殊効果2:</span> <span class="result-item-effects2"></span></div>
         <div><span>スキル・特殊効果3:</span> <span class="result-item-effects3"></span></div>
