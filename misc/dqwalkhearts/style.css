@@ -183,7 +183,7 @@ input[type="checkbox"]:disabled + label,
 
 #heart_list
 {
-    height: 26rem;
+    height: 32rem;
     overflow-y: scroll;
 }
 
