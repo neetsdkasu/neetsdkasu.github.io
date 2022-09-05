@@ -1522,6 +1522,7 @@ function parseTarget(elements) {
         setname: "",
         colors: [],
         maximumCost: 0,
+        asLimitCost: false,
         scorer: MaximumHPScorer,
         expr: "",
     };
@@ -1541,6 +1542,7 @@ function parseTarget(elements) {
     }
     target.setname = inferSetName(target.colors);
     target.maximumCost = parseInt(elem("heart_maximum_cost").value);
+    target.asLimitCost = elem("as_limit_heart_cost").checked;
     switch (elem("goal").value) {
         case "maximumhp":
             target.scorer = MaximumHPScorer;
@@ -1617,6 +1619,9 @@ function calcNumOfBestHeartSet(target) {
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
     const COST_LEN = target.maximumCost + 1 + OFFSET;
+    const getCost = target.asLimitCost
+        ? (m => m.cost)
+        : (m => m.cost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
     for (let i = 0; i < SET_LEN; i++) {
@@ -1628,7 +1633,7 @@ function calcNumOfBestHeartSet(target) {
         if (monster.target === null) {
             continue;
         }
-        const cost = monster.cost - monster.hearts.find(h => h.rank === monster.target).maximumCost;
+        const cost = getCost(monster);
         const scores = target.colors.map(c => target.scorer.calc(c, monster));
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
@@ -1708,6 +1713,9 @@ function searchHeartSet(target) {
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
     const COST_LEN = target.maximumCost + 1 + OFFSET;
+    const getCost = target.asLimitCost
+        ? (m => m.cost)
+        : (m => m.cost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
     for (let i = 0; i < SET_LEN; i++) {
@@ -1719,7 +1727,7 @@ function searchHeartSet(target) {
         if (monster.target === null) {
             continue;
         }
-        const cost = monster.cost - monster.hearts.find(h => h.rank === monster.target).maximumCost;
+        const cost = getCost(monster);
         const scores = target.colors.map(c => target.scorer.calc(c, monster));
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {

@@ -8,6 +8,10 @@ footer
     margin: 2rem 0px;
 }
 
+.small {
+    font-size: small;
+}
+
 .outline
 {
     border: 1px solid gray;
