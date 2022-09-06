@@ -216,6 +216,10 @@
         <div>
           <label for="heart_maximum_cost">こころ最大コスト:</label>
           <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" min="0" max="1000" required />
+          <span class="small">
+            <input type="checkbox" name="as_limit_heart_cost" id="as_limit_heart_cost" />
+            <label for="as_limit_heart_cost">上限コストとして扱う</label>
+          </span>
         </div>
         <div>
           <span>最大化:</span>
@@ -521,6 +525,66 @@
         </details>
       </section>
 
+      <hr class="secret" />
+
+      <section class="secret">
+        <h5>ダメージの目安の計算(雑)</h5>
+        <details>
+          <div class="outline" id="damage_nonheart">
+            <div class="small">こころ以外</div>
+            <div>
+              <label>攻撃力:<input type="number" min="0" max="9999" name="damage_nonheart_attack_power" /></label>
+              <label>攻撃魔力:<input type="number" min="0" max="9999" name="damage_nonheart_attack_magic" /></label>
+            </div>
+            <div>
+              <label>斬:<input type="number" min="0" max="999" name="damage_nonheart_zangeki" /></label>
+              <label>体:<input type="number" min="0" max="999" name="damage_nonheart_taigi" /></label>
+              <label>呪:<input type="number" min="0" max="999" name="damage_nonheart_jumon" /></label>
+            </div>
+            <div>
+              <label>属性A:<input type="number" min="0" max="999" name="damage_nonheart_type_a" /></label>
+              <label>属性B:<input type="number" min="0" max="999" name="damage_nonheart_type_b" /></label>
+              <label>属性C:<input type="number" min="0" max="999" name="damage_nonheart_type_c" /></label>
+            </div>
+            <div>
+              <label>属性A斬:<input type="number" min="0" max="999" name="damage_nonheart_type_a_zangeki" /></label>
+              <label>属性B斬:<input type="number" min="0" max="999" name="damage_nonheart_type_b_zangeki" /></label>
+              <label>属性C斬:<input type="number" min="0" max="999" name="damage_nonheart_type_c_zangeki" /></label>
+            </div>
+            <div>
+              <label>属性A体:<input type="number" min="0" max="999" name="damage_nonheart_type_a_taigi" /></label>
+              <label>属性B体:<input type="number" min="0" max="999" name="damage_nonheart_type_b_taigi" /></label>
+              <label>属性C体:<input type="number" min="0" max="999" name="damage_nonheart_type_c_taigi" /></label>
+            </div>
+            <div>
+              <label>属性A呪:<input type="number" min="0" max="999" name="damage_nonheart_type_a_jumon" /></label>
+              <label>属性B呪:<input type="number" min="0" max="999" name="damage_nonheart_type_b_jumon" /></label>
+              <label>属性C呪:<input type="number" min="0" max="999" name="damage_nonheart_type_c_jumon" /></label>
+            </div>
+            <div>
+              <label>系統X:<input type="number" min="0" max="999" name="damage_nonheart_monster_x" /></label>
+              <label>系統Y:<input type="number" min="0" max="999" name="damage_nonheart_monster_y" /></label>
+              <label>系統Z:<input type="number" min="0" max="999" name="damage_nonheart_monster_z" /></label>
+            </div>
+          </div>
+          <div class="outline">
+            <div class="small">こころ由来</div>
+            <div><button type="button" id="add_damage_heartset">追加</div>
+            <div id="damage_heartset_list"></div>
+          </div>
+          <div class="outline">
+            <div class="small">スキル</div>
+            <div><button type="button" id="add_damage_skill">追加</div>
+            <div id="damage_skill_list"></div>
+          </div>
+          <div class="outline">
+            <div class="small">結果</div>
+            <div><button type="button" id="calc_damages">計算</button></div>
+            <div id="damage_result"></div>
+          </div>
+        </details>
+      </section>
+
     </main>
 
     <hr />
@@ -528,6 +592,88 @@
     <footer>
       <nav><a href=".">misc</a></nav>
     </footer>
+
+    <template id="damage_skill_list_item">
+      <div class="outline damage_skill">
+        <div>
+          <label>名前<input type="text" name="damage_skill_name" /></label>
+          <label><input type="checkbox" name="damage_skill_use" checked />使用する</label>
+        </div>
+        <div>
+          <label>参照<select name="damage_skill_attack_base">
+            <option value="攻撃力" selected   >攻撃力</option>
+            <option value="攻撃魔力"          >攻撃魔力</option>
+            <option value="攻撃力＋攻撃魔力" >攻撃力＋攻撃魔力</option>
+          </select></label>
+          <label>威力<input type="number" min="0" max="9999" name="damage_skill_damage_rating" value="100" /></label>
+          <label>回数<input type="number" min="1" max="99" name="damage_skill_count" value="1" /></label>
+        <div>
+        </div>
+          <label>種類<select name="damage_skill_form">
+            <option value="斬撃" selected>斬撃</option>
+            <option value="体技"         >体技</option>
+            <option value="呪文"         >呪文</option>
+          </select></label>
+          <label>属性<select name="damage_skill_type">
+            <option value="なし" selected>なし</option>
+            <option value="属性A"        >属性A</option>
+            <option value="属性B"        >属性B</option>
+            <option value="属性C"        >属性C</option>
+          </select></label>
+          <!--
+              <label>系統<select name="damage_skill_monster">
+                <option value="なし" selected>なし</option>
+                <option value="系統X"        >系統X</option>
+                <option value="系統Y"        >系統Y</option>
+                <option value="系統Z"        >系統Z</option>
+              </select></label>
+            -->
+        </div>
+      </div>
+    </template>
+
+    <template id="damage_heartset_list_item">
+      <div class="outline damage_heartset">
+        <div>
+          <label>名前<input type="text" name="damage_heart_name" /></label>
+          <label><input type="checkbox" name="damage_heart_use" checked />使用する</label>
+        </div>
+        <div>
+          <label>力:<input type="number" min="0" max="9999" name="damage_heart_attack_power" /></label>
+          <label>攻魔:<input type="number" min="0" max="9999" name="damage_heart_attack_magic" /></label>
+        </div>
+        <div>
+          <label>斬:<input type="number" min="0" max="999" name="damage_heart_zangeki" /></label>
+          <label>体:<input type="number" min="0" max="999" name="damage_heart_taigi" /></label>
+          <label>呪:<input type="number" min="0" max="999" name="damage_heart_jumon"  /></label>
+        </div>
+        <div>
+          <label>属性A:<input type="number" min="0" max="999" name="damage_heart_type_a" /></label>
+          <label>属性B:<input type="number" min="0" max="999" name="damage_heart_type_b" /></label>
+          <label>属性C:<input type="number" min="0" max="999" name="damage_heart_type_c" /></label>
+        </div>
+        <div>
+          <label>属性A斬:<input type="number" min="0" max="999" name="damage_heart_type_a_zangeki" /></label>
+          <label>属性B斬:<input type="number" min="0" max="999" name="damage_heart_type_b_zangeki" /></label>
+          <label>属性C斬:<input type="number" min="0" max="999" name="damage_heart_type_c_zangeki" /></label>
+        </div>
+        <div>
+          <label>属性A体:<input type="number" min="0" max="999" name="damage_heart_type_a_taigi" /></label>
+          <label>属性B体:<input type="number" min="0" max="999" name="damage_heart_type_b_taigi" /></label>
+          <label>属性C体:<input type="number" min="0" max="999" name="damage_heart_type_c_taigi" /></label>
+        </div>
+        <div>
+          <label>属性A呪:<input type="number" min="0" max="999" name="damage_heart_type_a_jumon" /></label>
+          <label>属性B呪:<input type="number" min="0" max="999" name="damage_heart_type_b_jumon" /></label>
+          <label>属性C呪:<input type="number" min="0" max="999" name="damage_heart_type_c_jumon" /></label>
+        </div>
+        <div>
+          <label>系統X:<input type="number" min="0" max="999" name="damage_heart_monster_x" /></label>
+          <label>系統Y:<input type="number" min="0" max="999" name="damage_heart_monster_y" /></label>
+          <label>系統Z:<input type="number" min="0" max="999" name="damage_heart_monster_z" /></label>
+        </div>
+      </div>
+    </template>
 
     <template id="heart_list_item">
       <fieldset>

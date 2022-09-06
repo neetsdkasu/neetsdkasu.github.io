@@ -1522,6 +1522,7 @@ function parseTarget(elements) {
         setname: "",
         colors: [],
         maximumCost: 0,
+        asLimitCost: false,
         scorer: MaximumHPScorer,
         expr: "",
     };
@@ -1541,6 +1542,7 @@ function parseTarget(elements) {
     }
     target.setname = inferSetName(target.colors);
     target.maximumCost = parseInt(elem("heart_maximum_cost").value);
+    target.asLimitCost = elem("as_limit_heart_cost").checked;
     switch (elem("goal").value) {
         case "maximumhp":
             target.scorer = MaximumHPScorer;
@@ -1617,6 +1619,9 @@ function calcNumOfBestHeartSet(target) {
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
     const COST_LEN = target.maximumCost + 1 + OFFSET;
+    const getCost = target.asLimitCost
+        ? (m => m.cost)
+        : (m => m.cost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
     for (let i = 0; i < SET_LEN; i++) {
@@ -1628,7 +1633,7 @@ function calcNumOfBestHeartSet(target) {
         if (monster.target === null) {
             continue;
         }
-        const cost = monster.cost - monster.hearts.find(h => h.rank === monster.target).maximumCost;
+        const cost = getCost(monster);
         const scores = target.colors.map(c => target.scorer.calc(c, monster));
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
@@ -1708,6 +1713,9 @@ function searchHeartSet(target) {
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
     const COST_LEN = target.maximumCost + 1 + OFFSET;
+    const getCost = target.asLimitCost
+        ? (m => m.cost)
+        : (m => m.cost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
     for (let i = 0; i < SET_LEN; i++) {
@@ -1719,7 +1727,7 @@ function searchHeartSet(target) {
         if (monster.target === null) {
             continue;
         }
-        const cost = monster.cost - monster.hearts.find(h => h.rank === monster.target).maximumCost;
+        const cost = getCost(monster);
         const scores = target.colors.map(c => target.scorer.calc(c, monster));
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
@@ -1906,6 +1914,7 @@ function convertToDummy(list) {
         }
     }
 }
+/////////////////////////////////////////////////////////////////////////////////////
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("preset_heartset")
     .addEventListener("change", () => {
@@ -2217,6 +2226,7 @@ document.getElementById("check_expression")
     }
     dialog.showModal();
 });
+/////////////////////////////////////////////////////////////////////////////////////
 // ステータス近距離を求める
 document.getElementById("calc_status_distance").addEventListener("click", () => {
     const tbody = document.getElementById("status_distance_tbody");
@@ -2357,13 +2367,315 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
         append(nearestManhattan);
     }
 });
+/////////////////////////////////////////////////////////////////////////////////////
+class DamageToolData {
+    constructor(name) {
+        this.damageRating = 0;
+        this.count = 0;
+        this.attackPower = 0;
+        this.attackMagic = 0;
+        this.zangeki = 0;
+        this.taigi = 0;
+        this.jumon = 0;
+        this.typeA = 0;
+        this.typeB = 0;
+        this.typeC = 0;
+        this.typeAZangeki = 0;
+        this.typeBZangeki = 0;
+        this.typeCZangeki = 0;
+        this.typeATaigi = 0;
+        this.typeBTaigi = 0;
+        this.typeCTaigi = 0;
+        this.typeAJumon = 0;
+        this.typeBJumon = 0;
+        this.typeCJumon = 0;
+        this.monsterX = 0;
+        this.monsterY = 0;
+        this.monsterZ = 0;
+        this.name = name;
+    }
+}
+const damageToolUtil = {
+    heartsetCount: 0,
+    skillCount: 0,
+    nextHeartsetCount: () => {
+        damageToolUtil.heartsetCount++;
+        return damageToolUtil.heartsetCount;
+    },
+    nextSkillCount: () => {
+        damageToolUtil.skillCount++;
+        return damageToolUtil.skillCount;
+    },
+    getNonheart: () => {
+        const res = new DamageToolData("");
+        const form = document.getElementById("damage_nonheart");
+        const value = (n) => {
+            const v = parseInt(form.querySelector(`input[name="${n}"]`).value);
+            return Number.isNaN(v) ? 0 : v;
+        };
+        const value100 = (n) => value(n) / 100;
+        res.attackPower = value("damage_nonheart_attack_power");
+        res.attackMagic = value("damage_nonheart_attack_magic");
+        res.zangeki = value100("damage_nonheart_zangeki");
+        res.taigi = value100("damage_nonheart_taigi");
+        res.jumon = value100("damage_nonheart_jumon");
+        res.typeA = value100("damage_nonheart_type_a");
+        res.typeB = value100("damage_nonheart_type_b");
+        res.typeC = value100("damage_nonheart_type_c");
+        res.typeAZangeki = value100("damage_nonheart_type_a_zangeki");
+        res.typeBZangeki = value100("damage_nonheart_type_b_zangeki");
+        res.typeCZangeki = value100("damage_nonheart_type_c_zangeki");
+        res.typeATaigi = value100("damage_nonheart_type_a_taigi");
+        res.typeBTaigi = value100("damage_nonheart_type_b_taigi");
+        res.typeCTaigi = value100("damage_nonheart_type_c_taigi");
+        res.typeAJumon = value100("damage_nonheart_type_a_jumon");
+        res.typeBJumon = value100("damage_nonheart_type_b_jumon");
+        res.typeCJumon = value100("damage_nonheart_type_c_jumon");
+        res.monsterX = value100("damage_nonheart_monster_x");
+        res.monsterY = value100("damage_nonheart_monster_y");
+        res.monsterZ = value100("damage_nonheart_monster_z");
+        return res;
+    },
+    getHeartsetList: () => {
+        const res = [];
+        const heartsetList = document.getElementById("damage_heartset_list").querySelectorAll(".damage_heartset");
+        for (const heartset of heartsetList) {
+            const elem = (n) => heartset.querySelector(`input[name="${n}"]`);
+            if (!elem("damage_heart_use").checked) {
+                continue;
+            }
+            const value = (n) => {
+                const v = parseInt(elem(n).value);
+                return Number.isNaN(v) ? 0 : v;
+            };
+            const value100 = (n) => value(n) / 100;
+            const data = new DamageToolData(elem("damage_heart_name").value);
+            data.attackPower = value("damage_heart_attack_power");
+            data.attackMagic = value("damage_heart_attack_magic");
+            data.zangeki = value100("damage_heart_zangeki");
+            data.taigi = value100("damage_heart_taigi");
+            data.jumon = value100("damage_heart_jumon");
+            data.typeA = value100("damage_heart_type_a");
+            data.typeB = value100("damage_heart_type_b");
+            data.typeC = value100("damage_heart_type_c");
+            data.typeAZangeki = value100("damage_heart_type_a_zangeki");
+            data.typeBZangeki = value100("damage_heart_type_b_zangeki");
+            data.typeCZangeki = value100("damage_heart_type_c_zangeki");
+            data.typeATaigi = value100("damage_heart_type_a_taigi");
+            data.typeBTaigi = value("damage_heart_type_b_taigi");
+            data.typeCTaigi = value100("damage_heart_type_c_taigi");
+            data.typeAJumon = value100("damage_heart_type_a_jumon");
+            data.typeBJumon = value100("damage_heart_type_b_jumon");
+            data.typeCJumon = value100("damage_heart_type_c_jumon");
+            data.monsterX = value100("damage_heart_monster_x");
+            data.monsterY = value100("damage_heart_monster_y");
+            data.monsterZ = value100("damage_heart_monster_z");
+            res.push(data);
+        }
+        return res;
+    },
+    getSkillSetList: () => {
+        const res = [];
+        const skillList = document.getElementById("damage_skill_list").querySelectorAll(".damage_skill");
+        for (const skill of skillList) {
+            const elem = (n) => skill.querySelector(`input[name="${n}"]`);
+            if (!elem("damage_skill_use").checked) {
+                continue;
+            }
+            const value = (n) => {
+                const v = parseInt(elem(n).value);
+                return Number.isNaN(v) ? 0 : v;
+            };
+            const selValue = (n) => skill.querySelector(`select[name="${n}"]`).value;
+            const data = new DamageToolData(elem("damage_skill_name").value);
+            const skillAttackBase = selValue("damage_skill_attack_base");
+            if (skillAttackBase === "攻撃力") {
+                data.attackPower = 1;
+            }
+            else if (skillAttackBase === "攻撃魔力") {
+                data.attackMagic = 1;
+            }
+            else {
+                data.attackPower = 1;
+                data.attackMagic = 1;
+            }
+            data.damageRating = value("damage_skill_damage_rating") / 100;
+            data.count = value("damage_skill_count");
+            const skillForm = selValue("damage_skill_form");
+            if (skillForm === "斬撃") {
+                data.zangeki = 1;
+            }
+            else if (skillForm === "体技") {
+                data.taigi = 1;
+            }
+            else {
+                data.jumon = 1;
+            }
+            const skillType = selValue("damage_skill_type");
+            if (skillType === "属性A") {
+                data.typeA = 1;
+                data.typeAZangeki = data.zangeki;
+                data.typeATaigi = data.taigi;
+                data.typeAJumon = data.jumon;
+            }
+            else if (skillType === "属性B") {
+                data.typeB = 1;
+                data.typeBZangeki = data.zangeki;
+                data.typeBTaigi = data.taigi;
+                data.typeBJumon = data.jumon;
+            }
+            else if (skillType === "属性C") {
+                data.typeC = 1;
+                data.typeCZangeki = data.zangeki;
+                data.typeCTaigi = data.taigi;
+                data.typeCJumon = data.jumon;
+            }
+            /*
+                const skillMonster = selValue("damage_skill_monster");
+                if (skillMonster === "系統X") {
+                    data.monsterX = 1;
+                } else if (skillMonster === "系統Y") {
+                    data.monsterY = 1;
+                } else if (skillMonster === "系統Z") {
+                    data.monsterZ = 1;
+                }
+            */
+            res.push(data);
+        }
+        return res;
+    },
+};
+// ダメージ計算のこころセット追加
+document.getElementById("add_damage_heartset").addEventListener("click", () => {
+    const template = document.getElementById("damage_heartset_list_item");
+    const fragment = template.content.cloneNode(true);
+    const name = fragment.querySelector(`input[name="damage_heart_name"]`);
+    name.value = `こころセット${damageToolUtil.nextHeartsetCount()}`;
+    document.getElementById("damage_heartset_list").appendChild(fragment);
+});
+// ダメージ計算のスキル追加
+document.getElementById("add_damage_skill").addEventListener("click", () => {
+    const template = document.getElementById("damage_skill_list_item");
+    const fragment = template.content.cloneNode(true);
+    const name = fragment.querySelector(`input[name="damage_skill_name"]`);
+    name.value = `スキル${damageToolUtil.nextSkillCount()}`;
+    document.getElementById("damage_skill_list").appendChild(fragment);
+});
+// ダメージ計算
+document.getElementById("calc_damages").addEventListener("click", () => {
+    const result = document.getElementById("damage_result");
+    result.innerHTML = "";
+    const nonHeart = damageToolUtil.getNonheart();
+    const heartsetList = damageToolUtil.getHeartsetList();
+    const skillList = damageToolUtil.getSkillSetList();
+    const list = [
+        {
+            title: "系統なし",
+            calc: (heartset) => 1
+        },
+        {
+            title: "系統X",
+            calc: (heartset) => 1 + nonHeart.monsterX + heartset.monsterX
+        },
+        {
+            title: "系統Y",
+            calc: (heartset) => 1 + nonHeart.monsterY + heartset.monsterY
+        },
+        {
+            title: "系統Z",
+            calc: (heartset) => 1 + nonHeart.monsterZ + heartset.monsterZ
+        }
+    ];
+    for (const m of list) {
+        const nonDetails = result.appendChild(document.createElement("details"));
+        nonDetails.classList.add("outline");
+        nonDetails.appendChild(document.createElement("summary")).textContent = m.title;
+        for (let defence = 0; defence <= 1000; defence += 100) {
+            const det = nonDetails.appendChild(document.createElement("details"));
+            det.classList.add("outline");
+            const header = det.appendChild(document.createElement("summary"));
+            header.classList.add("small");
+            header.textContent = `守備力 ${defence}`;
+            const table = det.appendChild(document.createElement("table"));
+            const theadTr = table.appendChild(document.createElement("thead"))
+                .appendChild(document.createElement("tr"));
+            theadTr.appendChild(document.createElement("th"));
+            theadTr.appendChild(document.createElement("th")).textContent = "通常攻撃";
+            for (const skill of skillList) {
+                theadTr.appendChild(document.createElement("th")).textContent = skill.name;
+            }
+            const tbody = table.appendChild(document.createElement("tbody"));
+            for (const heartset of heartsetList) {
+                const tr = tbody.appendChild(document.createElement("tr"));
+                tr.appendChild(document.createElement("th")).textContent = heartset.name;
+                const baseDamage = Math.max(0, Math.floor((nonHeart.attackPower + heartset.attackPower) / 2 - defence / 4));
+                let td = tr.appendChild(document.createElement("td"));
+                td.classList.add("textright");
+                td.textContent = `${Math.floor(baseDamage * m.calc(heartset))}`;
+                for (const skill of skillList) {
+                    const attack = skill.attackPower * (nonHeart.attackPower + heartset.attackPower) +
+                        skill.attackMagic * (nonHeart.attackMagic + heartset.attackMagic);
+                    const skillBaseDamage = Math.max(0, Math.floor(attack / 2 - (1 - skill.jumon) * defence / 4));
+                    const damage = skillBaseDamage *
+                        skill.damageRating *
+                        (1 + skill.zangeki * (nonHeart.zangeki + heartset.zangeki)) *
+                        (1 + skill.taigi * (nonHeart.taigi + heartset.taigi)) *
+                        (1 + skill.jumon * (nonHeart.jumon + heartset.jumon)) *
+                        (1 + skill.typeA * (nonHeart.typeA + heartset.typeA) +
+                            skill.typeAZangeki * (nonHeart.typeAZangeki + heartset.typeAZangeki) +
+                            skill.typeATaigi * (nonHeart.typeATaigi + heartset.typeATaigi) +
+                            skill.typeAJumon * (nonHeart.typeAJumon + heartset.typeAJumon)) *
+                        (1 + skill.typeB * (nonHeart.typeB + heartset.typeB) +
+                            skill.typeBZangeki * (nonHeart.typeBZangeki + heartset.typeBZangeki) +
+                            skill.typeBTaigi * (nonHeart.typeBTaigi + heartset.typeBTaigi) +
+                            skill.typeBJumon * (nonHeart.typeBJumon + heartset.typeBJumon)) *
+                        (1 + skill.typeC * (nonHeart.typeC + heartset.typeC) +
+                            skill.typeCZangeki * (nonHeart.typeCZangeki + heartset.typeCZangeki) +
+                            skill.typeCTaigi * (nonHeart.typeCTaigi + heartset.typeCTaigi) +
+                            skill.typeCJumon * (nonHeart.typeCJumon + heartset.typeCJumon)) *
+                        m.calc(heartset);
+                    td = tr.appendChild(document.createElement("td"));
+                    td.classList.add("textright");
+                    td.textContent = `${Math.max(0, Math.floor(damage) * skill.count)}`;
+                }
+            }
+        }
+    }
+});
+/////////////////////////////////////////////////////////////////////////////////////
 // ページのURLのパラメータの処理
 (function () {
     const params = new URLSearchParams(window.location.search);
     if (DEBUG) {
         console.log(`page URL parameters: ${params}`);
     }
-    if (params.has("demo")) {
+    if (params.has("expose")) {
+        if (DEBUG) {
+            console.log("expose secrets");
+        }
+        const secrets = document.querySelectorAll(".secret");
+        for (const sec of secrets) {
+            sec.classList.remove("secret");
+        }
+    }
+    if (params.has("online")) {
+        if (DEBUG) {
+            console.log("load online data");
+        }
+        noStorage = true;
+        fetch("./dqwalkhearts/dqwalkhearts.json")
+            .then(r => r.json())
+            .then(json => {
+            if (isMonsterList(json)) {
+                addAllMonsterList(json);
+            }
+        })
+            .catch(err => {
+            dialogAlert(`${err}`);
+            console.log(err);
+        });
+    }
+    else if (params.has("demo")) {
         if (DEBUG) {
             console.log("load demo data");
         }

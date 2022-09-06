@@ -1,6 +1,6 @@
 body
 {
-    padding: 1rem 2rem 2rem 2rem;
+    padding: 1rem 2rem 10rem 2rem;
 }
 
 footer
@@ -12,6 +12,11 @@ footer
 {
     border: 1px solid gray;
     margin: 5px;
+}
+
+.textright
+{
+    text-align: right;
 }
 
 section.outline
@@ -179,7 +184,7 @@ input[type="checkbox"]:disabled + label,
 
 #heart_list
 {
-    height: 26rem;
+    height: 32rem;
     overflow-y: scroll;
 }
 
@@ -237,4 +242,8 @@ td
 
 #status_distance_tbody > tr:hover {
     background-color: #eeffff;
+}
+
+.secret {
+    display: none;
 }
