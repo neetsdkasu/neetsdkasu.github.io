@@ -2530,16 +2530,16 @@ const damageToolUtil = {
                 data.typeCTaigi = data.taigi;
                 data.typeCJumon = data.jumon;
             }
-            const skillMonster = selValue("damage_skill_monster");
-            if (skillMonster === "系統X") {
-                data.monsterX = 1;
-            }
-            else if (skillMonster === "系統Y") {
-                data.monsterY = 1;
-            }
-            else if (skillMonster === "系統Z") {
-                data.monsterZ = 1;
-            }
+            /*
+                const skillMonster = selValue("damage_skill_monster");
+                if (skillMonster === "系統X") {
+                    data.monsterX = 1;
+                } else if (skillMonster === "系統Y") {
+                    data.monsterY = 1;
+                } else if (skillMonster === "系統Z") {
+                    data.monsterZ = 1;
+                }
+            */
             res.push(data);
         }
         return res;
@@ -2563,11 +2563,84 @@ document.getElementById("add_damage_skill").addEventListener("click", () => {
 });
 // ダメージ計算
 document.getElementById("calc_damages").addEventListener("click", () => {
-    document.getElementById("damage_result").innerHTML = "";
+    const result = document.getElementById("damage_result");
+    result.innerHTML = "";
     const nonHeart = damageToolUtil.getNonheart();
     const heartsetList = damageToolUtil.getHeartsetList();
     const skillList = damageToolUtil.getSkillSetList();
-    document.getElementById("damage_result").textContent = "OK";
+    const list = [
+        {
+            title: "系統なし",
+            calc: (heartset) => 1
+        },
+        {
+            title: "系統X",
+            calc: (heartset) => 1 + nonHeart.monsterX + heartset.monsterX
+        },
+        {
+            title: "系統Y",
+            calc: (heartset) => 1 + nonHeart.monsterY + heartset.monsterY
+        },
+        {
+            title: "系統Z",
+            calc: (heartset) => 1 + nonHeart.monsterZ + heartset.monsterZ
+        }
+    ];
+    for (const m of list) {
+        const nonDetails = result.appendChild(document.createElement("details"));
+        nonDetails.classList.add("outline");
+        nonDetails.appendChild(document.createElement("summary")).textContent = m.title;
+        for (let defence = 0; defence <= 1000; defence += 100) {
+            const det = nonDetails.appendChild(document.createElement("details"));
+            det.classList.add("outline");
+            const header = det.appendChild(document.createElement("summary"));
+            header.classList.add("small");
+            header.textContent = `守備力 ${defence}`;
+            const table = det.appendChild(document.createElement("table"));
+            const theadTr = table.appendChild(document.createElement("thead"))
+                .appendChild(document.createElement("tr"));
+            theadTr.appendChild(document.createElement("th"));
+            theadTr.appendChild(document.createElement("th")).textContent = "通常攻撃";
+            for (const skill of skillList) {
+                theadTr.appendChild(document.createElement("th")).textContent = skill.name;
+            }
+            const tbody = table.appendChild(document.createElement("tbody"));
+            for (const heartset of heartsetList) {
+                const tr = tbody.appendChild(document.createElement("tr"));
+                tr.appendChild(document.createElement("th")).textContent = heartset.name;
+                const baseDamage = Math.max(0, Math.floor((nonHeart.attackPower + heartset.attackPower) / 2 - defence / 4));
+                let td = tr.appendChild(document.createElement("td"));
+                td.classList.add("textright");
+                td.textContent = `${Math.floor(baseDamage * m.calc(heartset))}`;
+                for (const skill of skillList) {
+                    const attack = skill.attackPower * (nonHeart.attackPower + heartset.attackPower) +
+                        skill.attackMagic * (nonHeart.attackMagic + heartset.attackMagic);
+                    const skillBaseDamage = Math.max(0, Math.floor(attack / 2 - (1 - skill.jumon) * defence / 4));
+                    const damage = skillBaseDamage *
+                        skill.damageRating *
+                        (1 + skill.zangeki * (nonHeart.zangeki + heartset.zangeki)) *
+                        (1 + skill.taigi * (nonHeart.taigi + heartset.taigi)) *
+                        (1 + skill.jumon * (nonHeart.jumon + heartset.jumon)) *
+                        (1 + skill.typeA * (nonHeart.typeA + heartset.typeA) +
+                            skill.typeAZangeki * (nonHeart.typeAZangeki + heartset.typeAZangeki) +
+                            skill.typeATaigi * (nonHeart.typeATaigi + heartset.typeATaigi) +
+                            skill.typeAJumon * (nonHeart.typeAJumon + heartset.typeAJumon)) *
+                        (1 + skill.typeB * (nonHeart.typeB + heartset.typeB) +
+                            skill.typeBZangeki * (nonHeart.typeBZangeki + heartset.typeBZangeki) +
+                            skill.typeBTaigi * (nonHeart.typeBTaigi + heartset.typeBTaigi) +
+                            skill.typeBJumon * (nonHeart.typeBJumon + heartset.typeBJumon)) *
+                        (1 + skill.typeC * (nonHeart.typeC + heartset.typeC) +
+                            skill.typeCZangeki * (nonHeart.typeCZangeki + heartset.typeCZangeki) +
+                            skill.typeCTaigi * (nonHeart.typeCTaigi + heartset.typeCTaigi) +
+                            skill.typeCJumon * (nonHeart.typeCJumon + heartset.typeCJumon)) *
+                        m.calc(heartset);
+                    td = tr.appendChild(document.createElement("td"));
+                    td.classList.add("textright");
+                    td.textContent = `${Math.max(0, Math.floor(damage) * skill.count)}`;
+                }
+            }
+        }
+    }
 });
 /////////////////////////////////////////////////////////////////////////////////////
 // ページのURLのパラメータの処理

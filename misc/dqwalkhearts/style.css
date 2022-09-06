@@ -8,14 +8,15 @@ footer
     margin: 2rem 0px;
 }
 
-.small {
-    font-size: small;
-}
-
 .outline
 {
     border: 1px solid gray;
     margin: 5px;
+}
+
+.textright
+{
+    text-align: right;
 }
 
 section.outline

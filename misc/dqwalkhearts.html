@@ -217,7 +217,7 @@
           <label for="heart_maximum_cost">こころ最大コスト:</label>
           <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" min="0" max="1000" required />
           <span class="small">
-            <input type="checkbox" name="as_limit_heart_cost" id="as_limit_heart_cost" /> 
+            <input type="checkbox" name="as_limit_heart_cost" id="as_limit_heart_cost" />
             <label for="as_limit_heart_cost">上限コストとして扱う</label>
           </span>
         </div>
@@ -524,11 +524,11 @@
           </table>
         </details>
       </section>
-      
+
       <hr class="secret" />
-      
+
       <section class="secret">
-        <h5>ダメージ計算(雑)</h5>
+        <h5>ダメージの目安の計算(雑)</h5>
         <details>
           <div class="outline" id="damage_nonheart">
             <div class="small">こころ以外</div>
@@ -592,7 +592,7 @@
     <footer>
       <nav><a href=".">misc</a></nav>
     </footer>
-    
+
     <template id="damage_skill_list_item">
       <div class="outline damage_skill">
         <div>
@@ -620,12 +620,14 @@
             <option value="属性B"        >属性B</option>
             <option value="属性C"        >属性C</option>
           </select></label>
-          <label>系統<select name="damage_skill_monster">
-            <option value="なし" selected>なし</option>
-            <option value="系統X"        >系統X</option>
-            <option value="系統Y"        >系統Y</option>
-            <option value="系統Z"        >系統Z</option>
-          </select></label>
+          <!--
+              <label>系統<select name="damage_skill_monster">
+                <option value="なし" selected>なし</option>
+                <option value="系統X"        >系統X</option>
+                <option value="系統Y"        >系統Y</option>
+                <option value="系統Z"        >系統Z</option>
+              </select></label>
+            -->
         </div>
       </div>
     </template>
