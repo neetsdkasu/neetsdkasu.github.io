@@ -527,7 +527,7 @@
 
       <hr class="secret" />
 
-      <section class="secret">
+      <section class="secret damagetool">
         <h5>ダメージの目安の計算(雑)</h5>
         <details>
           <div class="outline" id="damage_nonheart">
@@ -567,16 +567,19 @@
               <label>系統Z:<input type="number" min="0" max="999" name="damage_nonheart_monster_z" /></label>
             </div>
           </div>
+          <hr />
           <div class="outline">
             <div class="small">こころ由来</div>
             <div><button type="button" id="add_damage_heartset">追加</div>
             <div id="damage_heartset_list"></div>
           </div>
+          <hr />
           <div class="outline">
             <div class="small">スキル</div>
-            <div><button type="button" id="add_damage_skill">追加</div>
+            <div><button type="button" id="add_damage_skill">スキル追加</div>
             <div id="damage_skill_list"></div>
           </div>
+          <hr />
           <div class="outline">
             <div class="small">結果</div>
             <div><button type="button" id="calc_damages">計算</button></div>

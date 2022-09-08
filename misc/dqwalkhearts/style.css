@@ -19,12 +19,15 @@ footer
     text-align: right;
 }
 
+.damagetool > details > div.outline,
 section.outline
 {
     padding-bottom: 5px;
     margin-bottom: 1rem;
 }
 
+#damage_result > details > summary,
+.damagetool > details > div.outline > div.small,
 section.outline > h5
 {
     margin-top: 0px;
