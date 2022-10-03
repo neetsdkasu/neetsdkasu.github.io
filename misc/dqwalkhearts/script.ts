@@ -461,6 +461,7 @@ function showUpdatedHeart(monster: Monster, reorder: boolean): void {
     classList.add(csi.colorName);
     const radios = item.querySelectorAll('input.monster-rank');
     if (monster.target === null) {
+        item.classList.remove("not-best");
         item.classList.add("omit");
         for (const radio of radios) {
             const elm = radio as HTMLInputElement;
@@ -483,6 +484,11 @@ function showUpdatedHeart(monster: Monster, reorder: boolean): void {
         text(".monster-effects", "-");
     } else {
         item.classList.remove("omit");
+        if (monster.hearts.every(h => h.rank >= monster.target!)) {
+            item.classList.remove("not-best");
+        } else {
+            item.classList.add("not-best");
+        }
         const heart = monster.hearts.find(h => h.rank === monster.target)!;
         for (const radio of radios) {
             const elm = radio as HTMLInputElement;

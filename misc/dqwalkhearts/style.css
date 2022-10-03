@@ -88,6 +88,11 @@ input[id$="_omit"]:checked + label
     background-color: lightgray;
 }
 
+.not-best
+{
+    background-color: khaki;
+}
+
 fieldset > details > summary > span
 {
     display: block;
