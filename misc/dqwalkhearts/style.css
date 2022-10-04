@@ -185,6 +185,11 @@ input[type="checkbox"]:disabled + label,
     font-size: small;
 }
 
+.very-small
+{
+    font-size: xx-small;
+}
+
 #result
 {
     /* overflow-y: scroll; */

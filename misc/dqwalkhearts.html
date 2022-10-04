@@ -64,7 +64,11 @@
       <div>こころ追加</div>
       <hr />
       <form method="dialog">
-        <div><label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" required /></div>
+        <div>
+          <span class="very-small">※同名の別種こころは登録できません(名前変えて登録して頂戴)</span>
+          <br />
+          <label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" required />
+        </div>
         <div><label for="add_cost">コスト:</label><input type="number" name="add_cost" id="add_cost" required /></div>
         <div>
           <span>色:</span>
