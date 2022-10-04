@@ -96,40 +96,43 @@ interface Heart extends Status {
 interface Job {
     id: number;
     name: string;
+    powerUp: number;
     colors: Color[];
 }
 
 const JobPreset: Job[] = [
-    { id: 101, name: "戦士",
+    { id: 101, name: "戦士", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.Omit] },
-    { id: 102, name: "魔法使い",
+    { id: 102, name: "魔法使い", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.Omit] },
-    { id: 103, name: "僧侶",
+    { id: 103, name: "僧侶", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Green, Color.Green, Color.Omit] },
-    { id: 104, name: "武闘家",
+    { id: 104, name: "武闘家", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Red, Color.Red, Color.Omit] },
-    { id: 105, name: "盗賊",
+    { id: 105, name: "盗賊", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.Omit] },
-    { id: 106, name: "踊り子",
+    { id: 106, name: "踊り子", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Blue, Color.Green, Color.Omit] },
-    { id: 107, name: "遊び人",
+    { id: 107, name: "遊び人", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.Omit] },
-    { id: 201, name: "バトルマスター",
+    { id: 201, name: "バトルマスター", powerUp: 1.2,
         colors: [Color.Yellow|Color.Red, Color.Rainbow, Color.Red, Color.Red] },
-    { id: 202, name: "賢者",
+    { id: 202, name: "賢者", powerUp: 1.2,
         colors: [Color.Green|Color.Purple, Color.Rainbow, Color.Green|Color.Purple, Color.Green|Color.Purple] },
-    { id: 203, name: "レンジャー",
+    { id: 203, name: "レンジャー", powerUp: 1.2,
         colors: [Color.Red|Color.Blue, Color.Rainbow, Color.Blue, Color.Blue] },
-    { id: 204, name: "魔法戦士",
+    { id: 204, name: "魔法戦士", powerUp: 1.2,
         colors: [Color.Yellow|Color.Purple, Color.Rainbow, Color.Yellow|Color.Purple, Color.Yellow|Color.Purple] },
-    { id: 205, name: "パラディン",
+    { id: 205, name: "パラディン", powerUp: 1.2,
         colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow, Color.Yellow] },
-    { id: 206, name: "スーパースター",
+    { id: 206, name: "スーパースター", powerUp: 1.2,
         colors: [Color.Blue|Color.Green, Color.Rainbow, Color.Blue, Color.Green] },
-    { id: 207, name: "海賊",
+    { id: 207, name: "海賊", powerUp: 1.2,
         colors: [Color.Yellow|Color.Blue, Color.Rainbow, Color.Yellow, Color.Blue] },
-    { id: 208, name: "まものマスター",
+    { id: 208, name: "まものマスター", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Rainbow, Color.Blue|Color.Purple, Color.Blue|Color.Purple] },
+    { id: 301, name: "ゴッドハンド", powerUp: 1.3,
+        colors: [Color.Yellow|Color.Red, Color.Rainbow, Color.Red, Color.Yellow] }
 ];
 
 interface SingleColorInfo {
@@ -613,6 +616,7 @@ function setPreset(job: Job): void {
         elem("heart4_red");
         elem("heart4_blue");
     }
+    (document.getElementById("heart_power_up") as HTMLInputElement).value = `${job.powerUp}`;
 }
 
 // 読み込んだjsonファイルがMonster[]かどうかを確認する
@@ -819,6 +823,12 @@ function mergeMonsterList(list: Monster[]): boolean {
     return updated;
 }
 
+let powerUp = 1.2;
+
+function updatePowerUp() {
+    powerUp = parseFloat((document.getElementById("heart_power_up") as HTMLInputElement).value);
+}
+
 // こころの基本のパラメータだけ見るシンプルなスコア計算オブジェクトを生成する
 function makeSimpleScorer(param: keyof Status): Scorer {
     return {
@@ -828,7 +838,7 @@ function makeSimpleScorer(param: keyof Status): Scorer {
             }
             const heart = monster.hearts.find(h => h.rank === monster.target)!;
             if ((color & monster.color) !== 0) {
-                return Math.ceil(1.2 * heart[param]);
+                return Math.ceil(powerUp * heart[param]);
             } else {
                 return heart[param];
             }
@@ -1598,7 +1608,9 @@ function inferSetName(colors: Color[]): string {
     for (const job of JobPreset) {
         const jc = job.colors.slice().sort((a, b) => a - b);
         if (colors.every((v, i) => jc[i] === v)) {
-            return job.name;
+            if (`${job.powerUp}` === `${powerUp}`) {
+                return job.name;
+            }
         }
     }
     return "カスタム";
@@ -1606,6 +1618,7 @@ function inferSetName(colors: Color[]): string {
 
 // フォーム情報を解析する
 function parseTarget(elements: HTMLFormControlsCollection): Target {
+    updatePowerUp();
     const elem = (name: string) => elements.namedItem(name) as (HTMLInputElement | null);
     const target: Target = {
         setname: "",
@@ -1694,6 +1707,7 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
             e.textContent = "－";
         }
     }
+    document.getElementById("result_power_up")!.textContent = `${powerUp}`;
     document.getElementById("result_maximumcost")!.textContent = `${target.maximumCost}`;
     document.getElementById("result_goal")!.textContent = target.expr;
     return target;
@@ -2288,6 +2302,7 @@ document.getElementById("check_expression")!
     if (DEBUG) {
         console.log("click check_expression");
     }
+    updatePowerUp();
     const dialog = document.getElementById("score_list_dialog") as HTMLDialogElement;
     const exprSrc = (document.getElementById("expression") as HTMLInputElement).value;
     const msg = dialog.querySelector(".message")!;
