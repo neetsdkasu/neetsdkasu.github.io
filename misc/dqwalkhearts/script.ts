@@ -2020,12 +2020,15 @@ function convertToDummy(list: Monster[]) {
                 .replace(/斬体R/g, "斬体技R")
                 .replace(/斬体/g, "斬・体")
                 .replace(/斬/g, "斬撃")
-                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人|虫|悪魔)/g, "$1系への")
+                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人|虫|悪魔|？？？？)/g, "$1系への")
                 .replace(/回復\+(\d)/g, "回復効果+$1")
                 .replace(/P(\d+)回復/g, "Pを$1回復する")
                 .replace(/呪文/g, "じゅもん")
                 .replace(/全状態異常/g, "すべての状態異常")
                 .replace(/悪状態変化/g, "悪い状態変化")
+                .replace(/最大(HP|MP)/g, "さいだい$1")
+                .replace(/戦闘時/g, "戦闘時の")
+                .replace(/道具/g, "どうぐ")
                 .replace(/D/g, "ダメージ")
                 .replace(/R/g, "耐性");
         }
