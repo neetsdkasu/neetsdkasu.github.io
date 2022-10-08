@@ -221,6 +221,7 @@
         <div>
           <label for="heart_power_up">色適合時の変化:</label>
           <input type="number" name="heart_power_up" id="heart_power_up" min="1.0" max="2.0" step="0.1" value="1.2" required />
+          倍
         </div>
         <div>
           <label for="heart_maximum_cost">こころ最大コスト:</label>
@@ -469,7 +470,7 @@
           <div><span>こころ枠2:</span> <span id="result_heart2"></span></div>
           <div><span>こころ枠3:</span> <span id="result_heart3"></span></div>
           <div><span>こころ枠4:</span> <span id="result_heart4"></span></div>
-          <div><span>色適合時の変化:</span> <span id="result_power_up"></span></div>
+          <div><span>色適合時の変化:</span> <span id="result_power_up"></span>倍</div>
           <div><span>こころ最大コスト:</span> <span id="result_maximumcost"></span></div>
           <div><span>最大化:</span> <span id="result_goal"></span></div>
         </div>
@@ -492,6 +493,8 @@
         </div>
         <hr />
         <div id="heart_list"></div>
+        <hr />
+        <div class="small">ランク変更箇所: <span id="changed_rank_count">0</span></div>
       </section>
 
       <hr />

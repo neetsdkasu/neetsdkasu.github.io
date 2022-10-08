@@ -260,6 +260,22 @@ function isData(anyobj) {
     }
     return true;
 }
+function updateChangedRankCount() {
+    let count = 0;
+    for (const monster of monsterList) {
+        if (monster.target === null) {
+            count++;
+            continue;
+        }
+        if (monster.hearts.length === 1) {
+            continue;
+        }
+        if (!monster.hearts.every(h => h.rank >= monster.target)) {
+            count++;
+        }
+    }
+    document.getElementById("changed_rank_count").textContent = `${count}`;
+}
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
 function showNewHeart(monster) {
     const template = document.getElementById("heart_list_item");
@@ -285,6 +301,7 @@ function showNewHeart(monster) {
                 monster.target = null;
                 saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
+                updateChangedRankCount();
             });
         }
         else {
@@ -294,6 +311,7 @@ function showNewHeart(monster) {
                 monster.target = rank;
                 saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
+                updateChangedRankCount();
             });
         }
     }
@@ -317,6 +335,9 @@ function showNewHeart(monster) {
         text(".monster-effects", "-");
     }
     else {
+        if (!monster.hearts.every(h => h.rank >= monster.target)) {
+            fragment.firstElementChild.classList.add("not-best");
+        }
         const heart = monster.hearts.find(h => h.rank === monster.target);
         for (const radio of radios) {
             const elm = radio;
@@ -2045,6 +2066,7 @@ document.getElementById("add_heart_dialog")
     if (updated) {
         saveMonsterList(Trigger.UpdateStatus);
     }
+    updateChangedRankCount();
 });
 // ダウンロードボタンを押したときの処理
 document.getElementById("download")
@@ -2123,6 +2145,7 @@ document.getElementById("file_load_dialog")
         if (updated) {
             saveMonsterList(Trigger.UpdateStatus);
         }
+        updateChangedRankCount();
     }).catch(err => {
         dialogAlert(`${err}`);
     });
@@ -2673,6 +2696,7 @@ document.getElementById("calc_damages").addEventListener("click", () => {
         console.log(`page URL parameters: ${params}`);
     }
     if (params.has("expose")) {
+        // 非公開機能を利用
         if (DEBUG) {
             console.log("expose secrets");
         }
@@ -2682,6 +2706,7 @@ document.getElementById("calc_damages").addEventListener("click", () => {
         }
     }
     if (params.has("online")) {
+        // テスト用データのリストを使用、ローカルストレージの利用なし
         if (DEBUG) {
             console.log("load online data");
         }
@@ -2691,6 +2716,7 @@ document.getElementById("calc_damages").addEventListener("click", () => {
             .then(json => {
             if (isMonsterList(json)) {
                 addAllMonsterList(json);
+                updateChangedRankCount();
             }
         })
             .catch(err => {
@@ -2699,6 +2725,7 @@ document.getElementById("calc_damages").addEventListener("click", () => {
         });
     }
     else if (params.has("demo")) {
+        // デモ用データのリストを使用、ローカルストレージの利用なし
         if (DEBUG) {
             console.log("load demo data");
         }
@@ -2709,6 +2736,7 @@ document.getElementById("calc_damages").addEventListener("click", () => {
             if (isMonsterList(json)) {
                 convertToDummy(json);
                 addAllMonsterList(json);
+                updateChangedRankCount();
             }
         })
             .catch(err => {
@@ -2717,13 +2745,16 @@ document.getElementById("calc_damages").addEventListener("click", () => {
         });
     }
     else if (params.has("nostorage")) {
+        // 初期リストなし、ローカルストレージの利用もなし
         if (DEBUG) {
             console.log("no storage mode");
         }
         noStorage = true;
     }
     else {
+        // ローカルストレージのリストを利用
         loadMonsterList();
+        updateChangedRankCount();
     }
 })();
 // デバッグモードであることの確認
