@@ -249,14 +249,23 @@ td
     background-color: #ffeeee;
 }
 
-#status_distance_tbody > tr > td {
+#status_distance_tbody > tr > td
+{
     font-size: 0.5rem;
 }
 
-#status_distance_tbody > tr:hover {
+#status_distance_tbody > tr:hover
+{
     background-color: #eeffff;
 }
 
-.secret {
+.secret
+{
     display: none;
+}
+
+#reset_rank
+{
+    margin-left: 2em;
+    margin-right: 2em;
 }

@@ -244,6 +244,15 @@ function loadMonsterList(): void {
 }
 
 // 別のタブやウインドウでlocalStorageに変更があった場合に呼び出される
+//
+// TODO ストレージ変化検出、問題点あるかも。別タブで複数回の異なる操作(更新とランク変更)が同時にあると正しく検出できないかも
+//   例えば　『別タブ切り替え　⇒　ランク変更 ⇒　こころ追加・編集　⇒　ランク変更　⇒　元のタブを開く』
+//   の一連の操作で元タブに戻った時に最後のランク変更の通知のみ来るのであれば、芳しくないかも・・・？
+//
+// TODO こころリストのマージ、名前の競合による意図せぬデータの上書きがありうる・・・？
+//    開いてるタブそれぞれで同じ名前の異なるデータを追加（あるいは、こころの名前変更）などで
+//    データマージが失敗するかも
+//
 window.addEventListener("storage", e => {
     if (DEBUG) {
         console.log("updated storage");
@@ -2384,6 +2393,31 @@ document.getElementById("check_expression")!
     dialog.showModal();
 });
 
+// 全こころのランク変更のリセット
+document.getElementById("reset_rank")!
+.addEventListener("click", () => {
+    let count = 0;
+    for (const monster of monsterList) {
+        if (monster.target !== null) {
+            if (monster.hearts.every(h => h.rank >= monster.target!)) {
+                continue;
+            }
+        }
+        let bestRank = monster.hearts[0].rank;
+        for (const heart of monster.hearts) {
+            if (heart.rank < bestRank) {
+                bestRank = heart.rank;
+            }
+        }
+        monster.target = bestRank;
+        showUpdatedHeart(monster, false);
+        count++;
+    }
+    if (count > 0) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+});
 
 /////////////////////////////////////////////////////////////////////////////////////
 
