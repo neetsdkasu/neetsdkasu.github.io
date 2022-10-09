@@ -93,7 +93,9 @@ const JobPreset = [
     { id: 208, name: "まものマスター", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Rainbow, Color.Blue | Color.Purple, Color.Blue | Color.Purple] },
     { id: 301, name: "ゴッドハンド", powerUp: 1.3,
-        colors: [Color.Yellow | Color.Red, Color.Rainbow, Color.Red, Color.Yellow] }
+        colors: [Color.Yellow | Color.Red, Color.Rainbow, Color.Red, Color.Yellow] },
+    { id: 302, name: "大魔道士", powerUp: 1.3,
+        colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Purple] }
 ];
 const SingleColorInfoMap = (() => {
     const m = new Map();
