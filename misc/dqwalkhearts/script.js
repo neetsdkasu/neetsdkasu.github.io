@@ -225,6 +225,7 @@ window.addEventListener("storage", e => {
                 return;
             }
             if (data.trigger === Trigger.ChooseRank) {
+                // 他タブでのランクの変更は無視する
                 if (DEBUG) {
                     console.log("trigger is ChooseRank");
                 }
@@ -245,6 +246,7 @@ window.addEventListener("storage", e => {
             }
         }
         const updated = addAllMonsterList(tempList);
+        updateChangedRankCount();
         if (DEBUG) {
             if (updated) {
                 console.log("update monsterList");
