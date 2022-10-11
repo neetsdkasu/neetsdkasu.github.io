@@ -96,40 +96,45 @@ interface Heart extends Status {
 interface Job {
     id: number;
     name: string;
+    powerUp: number;
     colors: Color[];
 }
 
 const JobPreset: Job[] = [
-    { id: 101, name: "戦士",
+    { id: 101, name: "戦士", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.Omit] },
-    { id: 102, name: "魔法使い",
+    { id: 102, name: "魔法使い", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.Omit] },
-    { id: 103, name: "僧侶",
+    { id: 103, name: "僧侶", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Green, Color.Green, Color.Omit] },
-    { id: 104, name: "武闘家",
+    { id: 104, name: "武闘家", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Red, Color.Red, Color.Omit] },
-    { id: 105, name: "盗賊",
+    { id: 105, name: "盗賊", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.Omit] },
-    { id: 106, name: "踊り子",
+    { id: 106, name: "踊り子", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Blue, Color.Green, Color.Omit] },
-    { id: 107, name: "遊び人",
+    { id: 107, name: "遊び人", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.Omit] },
-    { id: 201, name: "バトルマスター",
+    { id: 201, name: "バトルマスター", powerUp: 1.2,
         colors: [Color.Yellow|Color.Red, Color.Rainbow, Color.Red, Color.Red] },
-    { id: 202, name: "賢者",
+    { id: 202, name: "賢者", powerUp: 1.2,
         colors: [Color.Green|Color.Purple, Color.Rainbow, Color.Green|Color.Purple, Color.Green|Color.Purple] },
-    { id: 203, name: "レンジャー",
+    { id: 203, name: "レンジャー", powerUp: 1.2,
         colors: [Color.Red|Color.Blue, Color.Rainbow, Color.Blue, Color.Blue] },
-    { id: 204, name: "魔法戦士",
+    { id: 204, name: "魔法戦士", powerUp: 1.2,
         colors: [Color.Yellow|Color.Purple, Color.Rainbow, Color.Yellow|Color.Purple, Color.Yellow|Color.Purple] },
-    { id: 205, name: "パラディン",
+    { id: 205, name: "パラディン", powerUp: 1.2,
         colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow, Color.Yellow] },
-    { id: 206, name: "スーパースター",
+    { id: 206, name: "スーパースター", powerUp: 1.2,
         colors: [Color.Blue|Color.Green, Color.Rainbow, Color.Blue, Color.Green] },
-    { id: 207, name: "海賊",
+    { id: 207, name: "海賊", powerUp: 1.2,
         colors: [Color.Yellow|Color.Blue, Color.Rainbow, Color.Yellow, Color.Blue] },
-    { id: 208, name: "まものマスター",
+    { id: 208, name: "まものマスター", powerUp: 1.2,
         colors: [Color.Rainbow, Color.Rainbow, Color.Blue|Color.Purple, Color.Blue|Color.Purple] },
+    { id: 301, name: "ゴッドハンド", powerUp: 1.3,
+        colors: [Color.Yellow|Color.Red, Color.Rainbow, Color.Red, Color.Yellow] },
+    { id: 302, name: "大魔道士", powerUp: 1.3,
+        colors: [Color.Yellow|Color.Purple, Color.Rainbow, Color.Yellow|Color.Purple, Color.Purple] }
 ];
 
 interface SingleColorInfo {
@@ -239,6 +244,15 @@ function loadMonsterList(): void {
 }
 
 // 別のタブやウインドウでlocalStorageに変更があった場合に呼び出される
+//
+// TODO ストレージ変化検出、問題点あるかも。別タブで複数回の異なる操作(更新とランク変更)が同時にあると正しく検出できないかも
+//   例えば　『別タブ切り替え　⇒　ランク変更 ⇒　こころ追加・編集　⇒　ランク変更　⇒　元のタブを開く』
+//   の一連の操作で元タブに戻った時に最後のランク変更の通知のみ来るのであれば、芳しくないかも・・・？
+//
+// TODO こころリストのマージ、名前の競合による意図せぬデータの上書きがありうる・・・？
+//    開いてるタブそれぞれで同じ名前の異なるデータを追加（あるいは、こころの名前変更）などで
+//    データマージが失敗するかも
+//
 window.addEventListener("storage", e => {
     if (DEBUG) {
         console.log("updated storage");
@@ -268,6 +282,7 @@ window.addEventListener("storage", e => {
                 return;
             }
             if (data.trigger === Trigger.ChooseRank) {
+                // 他タブでのランクの変更は無視する
                 if (DEBUG) {
                     console.log("trigger is ChooseRank");
                 }
@@ -287,6 +302,7 @@ window.addEventListener("storage", e => {
             }
         }
         const updated = addAllMonsterList(tempList);
+        updateChangedRankCount();
         if (DEBUG) {
             if (updated) {
                 console.log("update monsterList");
@@ -314,6 +330,23 @@ function isData(anyobj: Data | unknown): anyobj is Data {
     return true;
 }
 
+function updateChangedRankCount() {
+    let count = 0;
+    for (const monster of monsterList) {
+        if (monster.target === null) {
+            count++;
+            continue;
+        }
+        if (monster.hearts.length === 1) {
+            continue;
+        }
+        if (!monster.hearts.every(h => h.rank >= monster.target!)) {
+            count++;
+        }
+    }
+    document.getElementById("changed_rank_count")!.textContent = `${count}`;
+}
+
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
 function showNewHeart(monster: Monster): void {
     const template = document.getElementById("heart_list_item") as HTMLTemplateElement;
@@ -339,6 +372,7 @@ function showNewHeart(monster: Monster): void {
                 monster.target = null;
                 saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
+                updateChangedRankCount();
             });
         } else {
             const rank = Rank[elm.value as keyof typeof Rank];
@@ -347,6 +381,7 @@ function showNewHeart(monster: Monster): void {
                 monster.target = rank;
                 saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
+                updateChangedRankCount();
             });
         }
     }
@@ -369,6 +404,9 @@ function showNewHeart(monster: Monster): void {
         text(".monster-maximumcost", "-");
         text(".monster-effects", "-");
     } else {
+        if (!monster.hearts.every(h => h.rank >= monster.target!)) {
+            fragment.firstElementChild!.classList.add("not-best");
+        }
         const heart = monster.hearts.find(h => h.rank === monster.target)!;
         for (const radio of radios) {
             const elm = radio as HTMLInputElement;
@@ -461,6 +499,7 @@ function showUpdatedHeart(monster: Monster, reorder: boolean): void {
     classList.add(csi.colorName);
     const radios = item.querySelectorAll('input.monster-rank');
     if (monster.target === null) {
+        item.classList.remove("not-best");
         item.classList.add("omit");
         for (const radio of radios) {
             const elm = radio as HTMLInputElement;
@@ -483,6 +522,11 @@ function showUpdatedHeart(monster: Monster, reorder: boolean): void {
         text(".monster-effects", "-");
     } else {
         item.classList.remove("omit");
+        if (monster.hearts.every(h => h.rank >= monster.target!)) {
+            item.classList.remove("not-best");
+        } else {
+            item.classList.add("not-best");
+        }
         const heart = monster.hearts.find(h => h.rank === monster.target)!;
         for (const radio of radios) {
             const elm = radio as HTMLInputElement;
@@ -607,6 +651,7 @@ function setPreset(job: Job): void {
         elem("heart4_red");
         elem("heart4_blue");
     }
+    (document.getElementById("heart_power_up") as HTMLInputElement).value = `${job.powerUp}`;
 }
 
 // 読み込んだjsonファイルがMonster[]かどうかを確認する
@@ -813,6 +858,12 @@ function mergeMonsterList(list: Monster[]): boolean {
     return updated;
 }
 
+let powerUp = 1.2;
+
+function updatePowerUp() {
+    powerUp = parseFloat((document.getElementById("heart_power_up") as HTMLInputElement).value);
+}
+
 // こころの基本のパラメータだけ見るシンプルなスコア計算オブジェクトを生成する
 function makeSimpleScorer(param: keyof Status): Scorer {
     return {
@@ -822,7 +873,7 @@ function makeSimpleScorer(param: keyof Status): Scorer {
             }
             const heart = monster.hearts.find(h => h.rank === monster.target)!;
             if ((color & monster.color) !== 0) {
-                return Math.ceil(1.2 * heart[param]);
+                return Math.ceil(powerUp * heart[param]);
             } else {
                 return heart[param];
             }
@@ -1592,7 +1643,9 @@ function inferSetName(colors: Color[]): string {
     for (const job of JobPreset) {
         const jc = job.colors.slice().sort((a, b) => a - b);
         if (colors.every((v, i) => jc[i] === v)) {
-            return job.name;
+            if (`${job.powerUp}` === `${powerUp}`) {
+                return job.name;
+            }
         }
     }
     return "カスタム";
@@ -1600,6 +1653,7 @@ function inferSetName(colors: Color[]): string {
 
 // フォーム情報を解析する
 function parseTarget(elements: HTMLFormControlsCollection): Target {
+    updatePowerUp();
     const elem = (name: string) => elements.namedItem(name) as (HTMLInputElement | null);
     const target: Target = {
         setname: "",
@@ -1688,6 +1742,7 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
             e.textContent = "－";
         }
     }
+    document.getElementById("result_power_up")!.textContent = `${powerUp}`;
     document.getElementById("result_maximumcost")!.textContent = `${target.maximumCost}`;
     document.getElementById("result_goal")!.textContent = target.expr;
     return target;
@@ -1997,14 +2052,18 @@ function convertToDummy(list: Monster[]) {
                 .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)(斬|体|呪|R)/g, "$1属性$2")
                 .replace(/スキル(斬|体)/g, "スキルの$1")
                 .replace(/体D/g, "体技D")
+                .replace(/斬体R/g, "斬体技R")
                 .replace(/斬体/g, "斬・体")
                 .replace(/斬/g, "斬撃")
-                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人|虫|悪魔)/g, "$1系への")
+                .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人|虫|悪魔|？？？？)/g, "$1系への")
                 .replace(/回復\+(\d)/g, "回復効果+$1")
                 .replace(/P(\d+)回復/g, "Pを$1回復する")
                 .replace(/呪文/g, "じゅもん")
                 .replace(/全状態異常/g, "すべての状態異常")
                 .replace(/悪状態変化/g, "悪い状態変化")
+                .replace(/最大(HP|MP)/g, "さいだい$1")
+                .replace(/戦闘時/g, "戦闘時の")
+                .replace(/道具/g, "どうぐ")
                 .replace(/D/g, "ダメージ")
                 .replace(/R/g, "耐性");
         }
@@ -2126,6 +2185,7 @@ document.getElementById("add_heart_dialog")!
     if (updated) {
         saveMonsterList(Trigger.UpdateStatus);
     }
+    updateChangedRankCount();
 });
 
 // ダウンロードボタンを押したときの処理
@@ -2208,6 +2268,7 @@ document.getElementById("file_load_dialog")!
         if (updated) {
             saveMonsterList(Trigger.UpdateStatus);
         }
+        updateChangedRankCount();
     }).catch( err => {
         dialogAlert(`${err}`);
     });
@@ -2282,6 +2343,7 @@ document.getElementById("check_expression")!
     if (DEBUG) {
         console.log("click check_expression");
     }
+    updatePowerUp();
     const dialog = document.getElementById("score_list_dialog") as HTMLDialogElement;
     const exprSrc = (document.getElementById("expression") as HTMLInputElement).value;
     const msg = dialog.querySelector(".message")!;
@@ -2333,6 +2395,31 @@ document.getElementById("check_expression")!
     dialog.showModal();
 });
 
+// 全こころのランク変更のリセット
+document.getElementById("reset_rank")!
+.addEventListener("click", () => {
+    let count = 0;
+    for (const monster of monsterList) {
+        if (monster.target !== null) {
+            if (monster.hearts.every(h => h.rank >= monster.target!)) {
+                continue;
+            }
+        }
+        let bestRank = monster.hearts[0].rank;
+        for (const heart of monster.hearts) {
+            if (heart.rank < bestRank) {
+                bestRank = heart.rank;
+            }
+        }
+        monster.target = bestRank;
+        showUpdatedHeart(monster, false);
+        count++;
+    }
+    if (count > 0) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+});
 
 /////////////////////////////////////////////////////////////////////////////////////
 
@@ -2782,6 +2869,7 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
         console.log(`page URL parameters: ${params}`);
     }
     if (params.has("expose")) {
+        // 非公開機能を利用
         if (DEBUG) {
             console.log("expose secrets");
         }
@@ -2791,6 +2879,7 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
         }
     }
     if (params.has("online")) {
+        // テスト用データのリストを使用、ローカルストレージの利用なし
         if (DEBUG) {
             console.log("load online data");
         }
@@ -2800,6 +2889,7 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
         .then( json => {
             if (isMonsterList(json)) {
                 addAllMonsterList(json);
+                updateChangedRankCount();
             }
         })
         .catch(err => {
@@ -2807,6 +2897,7 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
             console.log(err);
         });
     } else if (params.has("demo")) {
+        // デモ用データのリストを使用、ローカルストレージの利用なし
         if (DEBUG) {
             console.log("load demo data");
         }
@@ -2817,6 +2908,7 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
             if (isMonsterList(json)) {
                 convertToDummy(json);
                 addAllMonsterList(json);
+                updateChangedRankCount();
             }
         })
         .catch(err => {
@@ -2824,12 +2916,15 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
             console.log(err);
         });
     } else if (params.has("nostorage")) {
+        // 初期リストなし、ローカルストレージの利用もなし
         if (DEBUG) {
             console.log("no storage mode");
         }
         noStorage = true;
     } else {
+        // ローカルストレージのリストを利用
         loadMonsterList();
+        updateChangedRankCount();
     }
 })();
 
