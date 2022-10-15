@@ -97,6 +97,29 @@ const JobPreset = [
     { id: 302, name: "大魔道士", powerUp: 1.3,
         colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Purple] }
 ];
+const JobPresetMaximumCost = [
+    { id: 105, maximumCostList: [
+            { level: 29, maximumCost: 126 }
+        ]
+    },
+    { id: 208, maximumCostList: [
+            { level: 57, maximumCost: 318 },
+            { level: 56, maximumCost: 314 },
+            { level: 55, maximumCost: 308 },
+            { level: 54, maximumCost: 304 },
+            { level: 53, maximumCost: 296 },
+            { level: 52, maximumCost: 292 },
+            { level: 51, maximumCost: 284 },
+            { level: 50, maximumCost: 280 },
+            { level: 49, maximumCost: 275 },
+            { level: 48, maximumCost: 269 },
+            { level: 47, maximumCost: 264 },
+            { level: 46, maximumCost: 259 },
+            { level: 45, maximumCost: 253 },
+            { level: 42, maximumCost: 238 }
+        ]
+    }
+];
 const SingleColorInfoMap = (() => {
     const m = new Map();
     m.set(Color.Yellow, { color: Color.Yellow, text: "黄(戦)", colorName: "yellow" });
@@ -600,6 +623,18 @@ function setPreset(job) {
         elem("heart4_blue");
     }
     document.getElementById("heart_power_up").value = `${job.powerUp}`;
+    const maximumCostList = document.getElementById("job_preset_maximum_cost_list");
+    maximumCostList.innerHTML = "";
+    for (const x of JobPresetMaximumCost) {
+        if (x.id !== job.id) {
+            continue;
+        }
+        for (const item of x.maximumCostList) {
+            const op = maximumCostList.appendChild(document.createElement("option"));
+            op.value = `${item.maximumCost}`;
+            op.textContent = ` Lv ${item.level}`;
+        }
+    }
 }
 // 読み込んだjsonファイルがMonster[]かどうかを確認する
 function isMonsterList(obj) {

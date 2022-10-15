@@ -49,6 +49,8 @@
       </form>
     </dialog>
 
+    <datalist id="job_preset_maximum_cost_list"></datalist>
+
     <datalist id="monster_name_list"></datalist>
 
     <!-- これ要らんかも(邪魔だし) -->
@@ -226,7 +228,7 @@
         </div>
         <div>
           <label for="heart_maximum_cost">こころ最大コスト:</label>
-          <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" min="0" max="1000" required />
+          <input type="number" name="heart_maximum_cost" id="heart_maximum_cost" min="0" max="1000" required list="job_preset_maximum_cost_list" />
           <span class="small">
             <input type="checkbox" name="as_limit_heart_cost" id="as_limit_heart_cost" />
             <label for="as_limit_heart_cost">上限コストとして扱う</label>
