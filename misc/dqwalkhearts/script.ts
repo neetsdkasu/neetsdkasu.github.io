@@ -134,7 +134,9 @@ const JobPreset: Job[] = [
     { id: 301, name: "ゴッドハンド", powerUp: 1.3,
         colors: [Color.Yellow|Color.Red, Color.Rainbow, Color.Red, Color.Yellow] },
     { id: 302, name: "大魔道士", powerUp: 1.3,
-        colors: [Color.Yellow|Color.Purple, Color.Rainbow, Color.Yellow|Color.Purple, Color.Purple] }
+        colors: [Color.Yellow|Color.Purple, Color.Rainbow, Color.Yellow|Color.Purple, Color.Purple] },
+    { id: 303, name: "大神官", powerUp: 1.3,
+        colors: [Color.Blue|Color.Green, Color.Rainbow, Color.Blue|Color.Green, Color.Green] }
 ];
 
 interface JobMaximumCostItem {
@@ -148,11 +150,26 @@ interface JobMaximumCost {
 }
 
 const JobPresetMaximumCost: JobMaximumCost[] = [
-    { id: 105, maximumCostList: [
-            { level: 29, maximumCost: 126 }
+    { id: 100, maximumCostList: [
+            { level: 50, maximumCost: 231 },
+
+            { level: 46, maximumCost: 211 },
+
+            { level: 35, maximumCost: 155 },
+
+            { level: 32, maximumCost: 140 },
+
+            { level: 29, maximumCost: 126 },
+
+            { level: 21, maximumCost: 89 },
+            { level: 20, maximumCost: 84 }
         ]
     },
-    { id: 208, maximumCostList: [
+    { id: 200, maximumCostList: [
+            { level: 61, maximumCost: 338 },
+            { level: 60, maximumCost: 334 },
+            { level: 59, maximumCost: 328 },
+
             { level: 57, maximumCost: 318 },
             { level: 56, maximumCost: 314 },
             { level: 55, maximumCost: 308 },
@@ -166,7 +183,22 @@ const JobPresetMaximumCost: JobMaximumCost[] = [
             { level: 47, maximumCost: 264 },
             { level: 46, maximumCost: 259 },
             { level: 45, maximumCost: 253 },
-            { level: 42, maximumCost: 238 }
+
+
+            { level: 42, maximumCost: 238 },
+
+
+            { level: 30, maximumCost: 174 },
+
+            { level: 28, maximumCost: 163 },
+            { level: 27, maximumCost: 158 },
+            { level: 26, maximumCost: 153 },
+            { level: 25, maximumCost: 147 },
+            { level: 24, maximumCost: 141 },
+            { level: 23, maximumCost: 137 },
+            { level: 22, maximumCost: 131 },
+            { level: 21, maximumCost: 126 },
+            { level: 20, maximumCost: 121 }
         ]
     }
 ];
@@ -689,7 +721,7 @@ function setPreset(job: Job): void {
     const maximumCostList = document.getElementById("job_preset_maximum_cost_list")!;
     maximumCostList.innerHTML = "";
     for (const x of JobPresetMaximumCost) {
-        if (x.id !== job.id) {
+        if (job.id < x.id || x.id + 100 <= job.id) {
             continue;
         }
         for (const item of x.maximumCostList) {
