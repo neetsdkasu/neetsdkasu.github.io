@@ -134,7 +134,83 @@ const JobPreset: Job[] = [
     { id: 301, name: "ゴッドハンド", powerUp: 1.3,
         colors: [Color.Yellow|Color.Red, Color.Rainbow, Color.Red, Color.Yellow] },
     { id: 302, name: "大魔道士", powerUp: 1.3,
-        colors: [Color.Yellow|Color.Purple, Color.Rainbow, Color.Yellow|Color.Purple, Color.Purple] }
+        colors: [Color.Yellow|Color.Purple, Color.Rainbow, Color.Yellow|Color.Purple, Color.Purple] },
+    { id: 303, name: "大神官", powerUp: 1.3,
+        colors: [Color.Blue|Color.Green, Color.Rainbow, Color.Blue|Color.Green, Color.Green] }
+];
+
+interface JobMaximumCostItem {
+    level: number;
+    maximumCost: number;
+}
+
+interface JobMaximumCost {
+    id: number;
+    maximumCostList: JobMaximumCostItem[];
+}
+
+const JobPresetMaximumCost: JobMaximumCost[] = [
+    { id: 100, maximumCostList: [
+            { level: 50, maximumCost: 231 },
+
+            { level: 47, maximumCost: 216 },
+            { level: 46, maximumCost: 211 },
+
+            { level: 38, maximumCost: 170 },
+            { level: 37, maximumCost: 165 },
+            { level: 36, maximumCost: 160 },
+            { level: 35, maximumCost: 155 },
+
+            { level: 33, maximumCost: 145 },
+            { level: 32, maximumCost: 140 },
+
+            { level: 30, maximumCost: 131 },
+            { level: 29, maximumCost: 126 },
+
+            { level: 25, maximumCost: 107 },
+            { level: 24, maximumCost: 103 },
+            { level: 23, maximumCost: 98 },
+
+            { level: 21, maximumCost: 89 },
+            { level: 20, maximumCost: 84 }
+        ]
+    },
+    { id: 200, maximumCostList: [
+            { level: 61, maximumCost: 338 },
+            { level: 60, maximumCost: 334 },
+            { level: 59, maximumCost: 328 },
+
+            { level: 57, maximumCost: 318 },
+            { level: 56, maximumCost: 314 },
+            { level: 55, maximumCost: 308 },
+            { level: 54, maximumCost: 304 },
+            { level: 53, maximumCost: 296 },
+            { level: 52, maximumCost: 292 },
+            { level: 51, maximumCost: 284 },
+            { level: 50, maximumCost: 280 },
+            { level: 49, maximumCost: 275 },
+            { level: 48, maximumCost: 269 },
+            { level: 47, maximumCost: 264 },
+            { level: 46, maximumCost: 259 },
+            { level: 45, maximumCost: 253 },
+
+
+            { level: 42, maximumCost: 238 },
+
+
+            { level: 30, maximumCost: 174 },
+            { level: 29, maximumCost: 169 },
+            { level: 28, maximumCost: 163 },
+            { level: 27, maximumCost: 158 },
+            { level: 26, maximumCost: 153 },
+            { level: 25, maximumCost: 147 },
+            { level: 24, maximumCost: 141 },
+            { level: 23, maximumCost: 137 },
+            { level: 22, maximumCost: 131 },
+            { level: 21, maximumCost: 126 },
+            { level: 20, maximumCost: 121 }
+        ]
+    }
 ];
 
 interface SingleColorInfo {
@@ -652,6 +728,18 @@ function setPreset(job: Job): void {
         elem("heart4_blue");
     }
     (document.getElementById("heart_power_up") as HTMLInputElement).value = `${job.powerUp}`;
+    const maximumCostList = document.getElementById("job_preset_maximum_cost_list")!;
+    maximumCostList.innerHTML = "";
+    for (const x of JobPresetMaximumCost) {
+        if (job.id < x.id || x.id + 100 <= job.id) {
+            continue;
+        }
+        for (const item of x.maximumCostList) {
+            const op = maximumCostList.appendChild(document.createElement("option"));
+            op.value = `${item.maximumCost}`;
+            op.textContent = ` Lv ${item.level}`;
+        }
+    }
 }
 
 // 読み込んだjsonファイルがMonster[]かどうかを確認する
@@ -919,12 +1007,18 @@ const DexterityScorer:     Scorer = makeSimpleScorer("dexterity");
 class ExprSyntaxError {
     pos: number;
     strs: string[];
-    constructor(p: number, ss: string[]) {
+    detail: string | null;
+    constructor(p: number, ss: string[], d: string | null) {
         this.pos = p;
         this.strs = ss;
+        this.detail = d;
     }
     getMessage(): string {
-        return `おそらく${this.pos}文字目付近に式の誤りがあります。 ${this.strs[0]} @@@ ${this.strs[1]} @@@ ${this.strs[2]}`;
+        if (this.detail === null) {
+            return `おそらく${this.pos}文字目付近に式の誤りがあります。 ${this.strs[0]} @@@ ${this.strs[1]} @@@ ${this.strs[2]}`;
+        } else {
+            return `おそらく${this.pos}文字目付近に式の誤りがあります(${this.detail})。 ${this.strs[0]} @@@ ${this.strs[1]} @@@ ${this.strs[2]}`;
+        }
     }
 }
 
@@ -932,11 +1026,13 @@ class ExprParser {
     pos: number;
     chars: string[];
     worderr: number[] | null;
+    errDetail: string | null;
 
     constructor(expr: string) {
         this.pos = 0;
         this.chars = [...expr];
         this.worderr = null;
+        this.errDetail = null;
     }
 
     isEOF(): boolean {
@@ -991,12 +1087,15 @@ class ExprParser {
     // MIN
     minScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "MINの開き括弧がない";
             return null;
         }
         const list: Scorer[] = [];
         for (;;) {
             const sc = this.parse();
             if (sc === null) {
+                // parse失敗
+                // エラーメッセージはparse内によって設定されている場合もある
                 return null;
             }
             list.push(sc);
@@ -1023,6 +1122,7 @@ class ExprParser {
             } else if (ch === ",") {
                 continue;
             } else {
+                this.errDetail = "MINの閉じ括弧がない";
                 return null;
             }
         }
@@ -1031,12 +1131,15 @@ class ExprParser {
     // MAX
     maxScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "MAXの開き括弧がない";
             return null;
         }
         const list: Scorer[] = [];
         for (;;) {
             const sc = this.parse();
             if (sc === null) {
+                // parse失敗
+                // エラーメッセージはparse内によって設定されている場合もある
                 return null;
             }
             list.push(sc);
@@ -1063,6 +1166,7 @@ class ExprParser {
             } else if (ch === ",") {
                 continue;
             } else {
+                this.errDetail = "MAXの閉じ括弧がない";
                 return null;
             }
         }
@@ -1071,12 +1175,15 @@ class ExprParser {
     // LESS
     lessScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "LESSの開き括弧がない";
             return null;
         }
         const list: Scorer[] = [];
         for (;;) {
             const sc = this.parse();
             if (sc === null) {
+                // parse失敗
+                // エラーメッセージはparse内によって設定されている場合もある
                 return null;
             }
             list.push(sc);
@@ -1108,6 +1215,7 @@ class ExprParser {
             } else if (ch === ",") {
                 continue;
             } else {
+                this.errDetail = "LESSの閉じ括弧がない";
                 return null;
             }
         }
@@ -1116,10 +1224,13 @@ class ExprParser {
     // ABS
     absScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "ABSの開き括弧がない";
             return null;
         }
         const sc = this.parse();
         if (sc === null) {
+            // parseに失敗
+            // エラーメッセージはparse内によって設定されている場合もある
             return null;
         }
         const ch = this.next();
@@ -1133,6 +1244,7 @@ class ExprParser {
                 }
             };
         } else {
+            this.errDetail = "ABSの閉じ括弧がない";
             return null;
         }
     }
@@ -1140,20 +1252,24 @@ class ExprParser {
     // NAME
     nameScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "NAMEの開き括弧がない";
             return null;
         }
         const pos0 = this.pos;
         const ch = this.next();
         if (ch === null) {
+            this.errDetail = "NAMEの引数がない";
             return null;
         }
         const wd = this.parseName(ch);
         if (wd === null) {
+            this.errDetail = "不正な文字";
             return null;
         }
         const pos1 = this.pos;
         if (monsterMap.has(wd)) {
             if (this.next() !== ")") {
+                this.errDetail = "NAMEの閉じ括弧がない";
                 return null;
             }
             return {
@@ -1166,6 +1282,9 @@ class ExprParser {
             };
         } else {
             this.worderr = [pos0, pos1];
+            // 編集距離で近い名前でも出す？　『もしかして○○○？』
+            // あぁ、無理か？全部の名前と編集距離を計算しなければならないか
+            this.errDetail = "名前が正しくない";
             return null;
         }
     }
@@ -1173,15 +1292,18 @@ class ExprParser {
     // COLOR
     colorScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "COLORの開き括弧がない";
             return null;
         }
         const pos0 = this.pos;
         const ch = this.next();
         if (ch === null) {
+            this.errDetail = "COLORの引数がない";
             return null;
         }
         const wd = this.parseName(ch);
         if (wd === null) {
+            this.errDetail = "不正な文字";
             return null;
         }
         const pos1 = this.pos;
@@ -1197,9 +1319,11 @@ class ExprParser {
         }
         if (color === null) {
             this.worderr = [pos0, pos1];
+            this.errDetail = "COLORで指定できない色";
             return null;
         }
         if (this.next() !== ")") {
+            this.errDetail = "COLORの閉じ括弧がない";
             return null;
         }
         return {
@@ -1215,19 +1339,23 @@ class ExprParser {
     // SKILL
     skillNameScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "SKILLの開き括弧がない";
             return null;
         }
         const pos0 = this.pos;
         const ch = this.next();
         if (ch === null) {
+            this.errDetail = "SKILLの引数がない";
             return null;
         }
         const wd = this.parseName(ch);
         if (wd === null) {
+            this.errDetail = "不正な文字";
             return null;
         }
         const pos1 = this.pos;
         if (this.next() !== ")") {
+            this.errDetail = "SKILLの閉じ括弧がない";
             return null;
         }
         return {
@@ -1247,19 +1375,23 @@ class ExprParser {
     // FIND
     partOfSkillNameScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "FINDの開き括弧がない";
             return null;
         }
         const pos0 = this.pos;
         const ch = this.next();
         if (ch === null) {
+            this.errDetail = "FINDの引数がない";
             return null;
         }
         const wd = this.parseName(ch);
         if (wd === null) {
+            this.errDetail = "不正な文字";
             return null;
         }
         const pos1 = this.pos;
         if (this.next() !== ")") {
+            this.errDetail = "FINDの閉じ括弧がない";
             return null;
         }
         return {
@@ -1278,19 +1410,23 @@ class ExprParser {
     // COUNT
     countOfPartOfSkillNameScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "COUNTの開き括弧がない";
             return null;
         }
         const pos0 = this.pos;
         const ch = this.next();
         if (ch === null) {
+            this.errDetail = "COUNTの引数がない";
             return null;
         }
         const wd = this.parseName(ch);
         if (wd === null) {
+            this.errDetail = "不正な文字";
             return null;
         }
         const pos1 = this.pos;
         if (this.next() !== ")") {
+            this.errDetail = "COUNTの閉じ括弧がない";
             return null;
         }
         return {
@@ -1310,24 +1446,29 @@ class ExprParser {
     // NUM
     pickNumberFromSkillScorer(): Scorer | null {
         if (this.next() !== "(") {
+            this.errDetail = "NUMの開き括弧がない";
             return null;
         }
         const pos0 = this.pos;
         const ch = this.next();
         if (ch === null) {
+            this.errDetail = "NUMの引数がない";
             return null;
         }
         const wd = this.parseName(ch);
         if (wd === null) {
+            this.errDetail = "不正な文字";
             return null;
         }
         const pos1 = this.pos;
         if (this.next() !== ")") {
+            this.errDetail = "NUMの閉じ括弧がない";
             return null;
         }
         const wds = wd.split("#");
         if (wds.length !== 2) {
             this.worderr = [pos0, pos1];
+            this.errDetail = "文字 # が1個ではない";
             return null;
         }
         if (DEBUG) {
@@ -1370,6 +1511,11 @@ class ExprParser {
             if (DEBUG) {
                 console.log(`unknown token ${ch1}`);
             }
+            // TODO
+            // エラー？: 不正な文字に遭遇
+            // 呼び出し元がどう処理してるのか覚えてないため
+            // エラーメッセージは保留
+            // this.errDetail = "不正な文字";
             return null;
         }
         if (DEBUG) {
@@ -1429,6 +1575,7 @@ class ExprParser {
                     console.log(`name ${name} is undefined`);
                 }
                 this.worderr = [pos0, this.pos];
+                this.errDetail = "不明なキーワード";
                 return null;
         }
     }
@@ -1436,6 +1583,9 @@ class ExprParser {
     // 数値リテラル
     parseInteger(ch1: string): Scorer | null {
         if (ch1.match(/^\D+$/)) {
+            // エラーではない: 数値に使えない文字が検出されてる
+            // 呼び出し元によっては許容されたりするかも
+            // おそらく、キーワード(parseWord)と同時呼び出しで成功したものを採用とか
             return null;
         }
         let v = parseInt(ch1);
@@ -1457,6 +1607,10 @@ class ExprParser {
     // 文字列のパース（引数の名前に使える文字）
     parseName(ch1: string): string | null {
         if (ch1.match(/^[\s\(\),]+$/)) {
+            // エラー？: 名前に使えない文字が検出されてる
+            // 呼び出し元によっては許容されたりするのか？覚えてない
+            // 念のため、エラーメッセージは書かないでおく？
+            // this.errDetail = "不正な文字";
             return null;
         }
         let w = ch1;
@@ -1473,6 +1627,9 @@ class ExprParser {
     // 文字列のパース（式に使える文字）
     parseWord(ch1: string): string | null {
         if (ch1.match(/^[\d\s\(\)\+\-\*,]+$/)) {
+            // エラーではない: 式に使えない文字が検出されてる
+            // 呼び出し元によっては許容されたりするかも
+            // おそらく、数値(parseInteger)と同時呼び出しで成功したものを採用とか
             return null;
         }
         let w = ch1;
@@ -1491,14 +1648,20 @@ class ExprParser {
         this.skipWhitespaces();
         const ch1 = this.next();
         if (ch1 === null) {
+            // エラー？: 文字が無い
+            // parseValuenの呼び出し側が値無しを許容するならエラーとは処理しないので
+            // ここでエラーメッセージは出さないほうがいい？
             return null;
         }
         if (ch1 === "(") {
             const sc1 = this.parse();
             if (sc1 === null) {
+                // parse失敗
+                // エラーメッセージはparse内によって設定されている場合もある
                 return null;
             }
             if (this.next() !== ")") {
+                this.errDetail = "閉じ括弧が不足";
                 return null;
             }
             return sc1;
@@ -1521,7 +1684,7 @@ class ExprParser {
         const str1 = this.chars.slice(0, pos1).join("");
         const str2 = this.chars.slice(pos1, pos2).join("");
         const str3 = this.chars.slice(pos2).join("");
-        return new ExprSyntaxError(this.pos, [str1, str2, str3]);
+        return new ExprSyntaxError(this.pos, [str1, str2, str3], this.errDetail);
     }
 
     // 部分式をパースする(再帰的実行されるので結果的に式全体をパースすることになる)
@@ -1532,6 +1695,8 @@ class ExprParser {
         for (;;) {
             let sc1 = this.parseValue();
             if (sc1 === null) {
+                // parseValue失敗
+                // エラーメッセージはparseValue内によって設定されている場合もある
                 return null;
             }
             if (minus) {
@@ -1609,6 +1774,7 @@ class ExprParser {
                 if (DEBUG) {
                     console.log(`unknown token ${ch2}`);
                 }
+                // this.errDetail = "不正な文字";
                 return null;
             }
         }
@@ -2274,12 +2440,52 @@ document.getElementById("file_load_dialog")!
     });
 });
 
+// 式フォームのバリデーション
+function checkExpressionValidity() {
+    const elem = document.getElementById("expression") as HTMLInputElement;
+    const v = elem.validity;
+    if (v.customError || v.valid) {
+        if (!elem.required) {
+            if (v.customError) {
+                elem.setCustomValidity("");
+                elem.checkValidity();
+            }
+            return;
+        }
+        try {
+            const expr = elem.value;
+            if (expr !== "") {
+                parseExpression(expr);
+            }
+            elem.setCustomValidity("");
+        } catch (err) {
+            if (err instanceof ExprSyntaxError) {
+                elem.setCustomValidity(err.getMessage());
+            } else {
+                console.log(`${err}`);
+                elem.setCustomValidity(`エラー: ${err}`);
+            }
+        } finally {
+            elem.checkValidity();
+        }
+    }
+}
+
+// 式フォームのバリデーションのトリガーをセット
+document.getElementById("expression")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    checkExpressionValidity();
+});
+
 // 最大化するオプションで式を選んだときと式から切り替えたときのフォーム見た目の処理
 (function () {
     const e = document.getElementById("expression") as HTMLInputElement;
     const ge = document.getElementById("goal_expression") as HTMLInputElement;
     const f = () => {
         e.required = ge.checked;
+        checkExpressionValidity();
     };
     const goals = document.querySelectorAll('#search_heart_dialog input[name="goal"]');
     for (const goal of goals) {
@@ -2343,9 +2549,13 @@ document.getElementById("check_expression")!
     if (DEBUG) {
         console.log("click check_expression");
     }
+    const exprElem = document.getElementById("expression") as HTMLInputElement;
+    if (!exprElem.reportValidity()) {
+        return;
+    }
     updatePowerUp();
     const dialog = document.getElementById("score_list_dialog") as HTMLDialogElement;
-    const exprSrc = (document.getElementById("expression") as HTMLInputElement).value;
+    const exprSrc = exprElem.value;
     const msg = dialog.querySelector(".message")!;
     const tbody = dialog.querySelector("tbody")!;
     msg.innerHTML = "";
