@@ -152,19 +152,24 @@ interface JobMaximumCost {
 const JobPresetMaximumCost: JobMaximumCost[] = [
     { id: 100, maximumCostList: [
             { level: 50, maximumCost: 231 },
-
+            { level: 49, maximumCost: 226 },
+            { level: 48, maximumCost: 221 },
             { level: 47, maximumCost: 216 },
             { level: 46, maximumCost: 211 },
 
+            { level: 43, maximumCost: 195 },
+            { level: 42, maximumCost: 190 },
+            { level: 41, maximumCost: 185 },
+            { level: 40, maximumCost: 180 },
             { level: 39, maximumCost: 175 },
             { level: 38, maximumCost: 170 },
             { level: 37, maximumCost: 165 },
             { level: 36, maximumCost: 160 },
             { level: 35, maximumCost: 155 },
-
+            { level: 34, maximumCost: 150 },
             { level: 33, maximumCost: 145 },
             { level: 32, maximumCost: 140 },
-
+            { level: 31, maximumCost: 136 },
             { level: 30, maximumCost: 131 },
             { level: 29, maximumCost: 126 },
             { level: 28, maximumCost: 121 },
@@ -173,12 +178,13 @@ const JobPresetMaximumCost: JobMaximumCost[] = [
             { level: 25, maximumCost: 107 },
             { level: 24, maximumCost: 103 },
             { level: 23, maximumCost: 98 },
-
+            { level: 22, maximumCost: 93 },
             { level: 21, maximumCost: 89 },
             { level: 20, maximumCost: 84 }
         ]
     },
     { id: 200, maximumCostList: [
+            { level: 62, maximumCost: 344 },
             { level: 61, maximumCost: 338 },
             { level: 60, maximumCost: 334 },
             { level: 59, maximumCost: 328 },
