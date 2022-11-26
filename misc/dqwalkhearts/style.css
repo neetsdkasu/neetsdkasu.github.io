@@ -259,6 +259,21 @@ td
     background-color: #eeffff;
 }
 
+#heart_require_skill + * + *
+{
+    display: none;
+}
+
+#heart_require_skill:checked + * + *
+{
+    display: block;
+}
+
+.dialog-buttons
+{
+    margin-top: 5px;
+}
+
 .secret
 {
     display: none;

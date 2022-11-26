@@ -1008,6 +1008,8 @@ interface Target {
     asLimitCost: boolean;
     scorer: Scorer;
     expr: string;
+    reqSkillScorer: Scorer | null;
+    reqSkillExpr: string;
 }
 
 const MaximumHPScorer:    Scorer = makeSimpleScorer("maximumHP");
@@ -1843,6 +1845,8 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         asLimitCost: false,
         scorer: MaximumHPScorer,
         expr: "",
+        reqSkillScorer: null,
+        reqSkillExpr: ""
     };
     for (let i = 1; i <= 4; i++) {
         let color: Color =
@@ -1903,6 +1907,11 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
     default:
         throw `Unknown Maximize Target (${elem("goal")!.value})`;
     }
+    if (elem("heart_require_skill")!.checked) {
+        const expr = elem("heart_require_skill_expression")!.value;
+        target.reqSkillScorer = parseExpression(expr);
+        target.reqSkillExpr = expr;
+    }
     document.getElementById("result_setname")!.textContent = target.setname;
     const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
     for (let i = 0; i < 4; i++) {
@@ -1951,6 +1960,7 @@ interface NumState {
 //      途中段階で異常な組み合わせ数が出る可能性を考慮したほうがいい
 //      メモリ不足回避のために
 function calcNumOfBestHeartSet(target: Target): number {
+    const HAS_REQSKILL = target.reqSkillScorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -1965,8 +1975,66 @@ function calcNumOfBestHeartSet(target: Target): number {
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, count: 1 };
+    if (HAS_REQSKILL) {
+        let hadSkills = 0;
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (!(target.reqSkillScorer!.calc(Color.Unset, monster) > 0)) {
+                continue;
+            }
+            hadSkills++;
+            const cost = getCost(monster);
+            const scores = target.colors.map(c => target.scorer.calc(c, monster));
+            for (let s = 0; s < SET_LEN; s++) {
+                for (let c = 0; c < COST_LEN; c++) {
+                    const state1 = dp1[s][c];
+                    if (state1 === null) {
+                        continue;
+                    }
+                    const state2 = dp2[s][c];
+                    if (state2 === null || state1.score > state2.score) {
+                        dp2[s][c] = state1;
+                    } else if (state1.score === state2.score) {
+                        state2.count += state1.count;
+                    }
+                    const c3 = c + cost;
+                    if (c3 >= COST_LEN) {
+                        continue;
+                    }
+                    for (let p = 0; p < COUNT; p++) {
+                        const s3 = s | (1 << p);
+                        if (s === s3) {
+                            continue;
+                        }
+                        const score3 = state1.score + scores[p];
+                        const state4 = dp2[s3][c3];
+                        if (state4 === null || score3 > state4.score) {
+                            dp2[s3][c3] = {
+                                score: score3,
+                                count: state1.count,
+                            };
+                        } else if (score3 === state4.score) {
+                            state4.count += state1.count;
+                        }
+                    }
+                }
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+        if (hadSkills > 0) {
+            dp1[0][OFFSET] = null;
+        }
+    }
     for (const monster of monsterList) {
         if (monster.target === null) {
+            continue;
+        }
+        if (HAS_REQSKILL && target.reqSkillScorer!.calc(Color.Unset, monster) > 0) {
             continue;
         }
         const cost = getCost(monster);
@@ -2043,6 +2111,7 @@ function extractHeartSet(stack: (Monster | null)[][], tmp: (Monster | null)[], h
 
 // ベストなこころ組み合わせを求めて表示する
 function searchHeartSet(target: Target): void {
+    const HAS_REQSKILL = target.reqSkillScorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -2057,8 +2126,77 @@ function searchHeartSet(target: Target): void {
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, sets: [] };
+    if (HAS_REQSKILL) {
+        let hadSkills = 0;
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (!(target.reqSkillScorer!.calc(Color.Unset, monster) > 0)) {
+                continue;
+            }
+            hadSkills++;
+            const cost = getCost(monster);
+            const scores = target.colors.map(c => target.scorer.calc(c, monster));
+            for (let s = 0; s < SET_LEN; s++) {
+                for (let c = 0; c < COST_LEN; c++) {
+                    const state1 = dp1[s][c];
+                    if (state1 === null) {
+                        continue;
+                    }
+                    const state2 = dp2[s][c];
+                    if (state2 === null || state1.score > state2.score) {
+                        dp2[s][c] = {
+                            score: state1.score,
+                            sets: state1.sets.slice(),
+                        };
+                    } else if (state1.score === state2.score) {
+                        state2.sets = state2.sets.concat(state1.sets);
+                    }
+                    const c3 = c + cost;
+                    if (c3 >= COST_LEN) {
+                        continue;
+                    }
+                    for (let p = 0; p < COUNT; p++) {
+                        const s3 = s | (1 << p);
+                        if (s === s3) {
+                            continue;
+                        }
+                        const score3 = state1.score + scores[p];
+                        const state4 = dp2[s3][c3];
+                        if (state4 === null || score3 > state4.score) {
+                            dp2[s3][c3] = {
+                                score: score3,
+                                sets: [{
+                                    pos: p,
+                                    monster: monster,
+                                    subsets: state1.sets.slice(),
+                                }],
+                            };
+                        } else if (score3 === state4.score) {
+                            state4.sets.push({
+                                pos: p,
+                                monster: monster,
+                                subsets: state1.sets.slice(),
+                            });
+                        }
+                    }
+                }
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+        if (hadSkills > 0) {
+            dp1[0][OFFSET] = null;
+        }
+    }
     for (const monster of monsterList) {
         if (monster.target === null) {
+            continue;
+        }
+        if (HAS_REQSKILL && target.reqSkillScorer!.calc(Color.Unset, monster) > 0) {
             continue;
         }
         const cost = getCost(monster);
@@ -2456,16 +2594,16 @@ document.getElementById("file_load_dialog")!
 });
 
 // 式フォームのバリデーション
-function checkExpressionValidity() {
-    const elem = document.getElementById("expression") as HTMLInputElement;
+function checkExpressionValidity(elemId: string): boolean {
+    const elem = document.getElementById(elemId) as HTMLInputElement;
     const v = elem.validity;
     if (v.customError || v.valid) {
         if (!elem.required) {
             if (v.customError) {
                 elem.setCustomValidity("");
-                elem.checkValidity();
+                return elem.checkValidity();
             }
-            return;
+            return true;
         }
         try {
             const expr = elem.value;
@@ -2481,17 +2619,35 @@ function checkExpressionValidity() {
                 elem.setCustomValidity(`エラー: ${err}`);
             }
         } finally {
-            elem.checkValidity();
+            return elem.checkValidity();
         }
     }
+    return false;
 }
+
+// 特別条件式フォームのバリデーションの有無の切り替え
+document.getElementById("heart_require_skill")!
+.addEventListener("change", () => {
+    (document.getElementById("heart_require_skill_expression") as HTMLInputElement)
+        .required = (document.getElementById("heart_require_skill") as HTMLInputElement).checked;
+    checkExpressionValidity("heart_require_skill_expression");
+});
+
+
+// 特別条件式フォームのバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression");
+});
 
 // 式フォームのバリデーションのトリガーをセット
 document.getElementById("expression")!
 // .addEventListener("blur", () => {
 // .addEventListener("focusout", () => {
 .addEventListener("input", () => {
-    checkExpressionValidity();
+    checkExpressionValidity("expression");
 });
 
 // 最大化するオプションで式を選んだときと式から切り替えたときのフォーム見た目の処理
@@ -2500,7 +2656,7 @@ document.getElementById("expression")!
     const ge = document.getElementById("goal_expression") as HTMLInputElement;
     const f = () => {
         e.required = ge.checked;
-        checkExpressionValidity();
+        checkExpressionValidity("expression");
     };
     const goals = document.querySelectorAll('#search_heart_dialog input[name="goal"]');
     for (const goal of goals) {
