@@ -1846,7 +1846,7 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         scorer: MaximumHPScorer,
         expr: "",
         reqSkillScorer: null,
-        reqSkillExpr: ""
+        reqSkillExpr: "なし"
     };
     for (let i = 1; i <= 4; i++) {
         let color: Color =
@@ -1933,8 +1933,10 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         }
     }
     document.getElementById("result_power_up")!.textContent = `${powerUp}`;
-    document.getElementById("result_maximumcost")!.textContent = `${target.maximumCost}`;
+    document.getElementById("result_maximumcost")!.textContent = `${target.maximumCost}`
+        + (target.asLimitCost ? " (上限コスト)" : "");
     document.getElementById("result_goal")!.textContent = target.expr;
+    document.getElementById("result_require_skill")!.textContent = target.reqSkillExpr;
     return target;
 }
 
@@ -2391,6 +2393,19 @@ function convertToDummy(list: Monster[]) {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+(function() {
+    // デフォルトの職業のこころ最大コストのリストを設定する
+    const sel = document.getElementById("preset_heartset") as HTMLSelectElement;
+    const value = parseInt(sel.value ?? "0");
+    for (const job of JobPreset) {
+        if (job.id === value) {
+            setPreset(job);
+            return;
+        }
+    }
+    dialogAlert(`Unknown ID: ${value}`);
+}());
+
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("preset_heartset")!
 .addEventListener("change", () => {
@@ -2714,7 +2729,7 @@ document.getElementById("search_heart")!
     dialog.showModal();
 });
 
-// 式の確認ボタンを押した時の処理
+// 最大化の式の確認ボタンを押した時の処理
 document.getElementById("check_expression")!
 .addEventListener("click", () => {
     if (DEBUG) {
@@ -2755,6 +2770,68 @@ document.getElementById("check_expression")!
                 tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(m.color, m)}`;
+            }
+        } catch (err) {
+            if (err instanceof ExprSyntaxError) {
+                msg.appendChild(document.createElement("span")).textContent = msg.textContent = `おそらく${err.pos+1}文字目付近に式の誤りがあります。 `;;
+                msg.appendChild(document.createElement("br"));
+                const code = msg.appendChild(document.createElement("code"));
+                code.classList.add("outline");
+                code.appendChild(document.createElement("span")).textContent = err.strs[0];
+                const span2 = code.appendChild(document.createElement("span"));
+                span2.classList.add("error-expression");
+                span2.textContent = err.strs[1];
+                code.appendChild(document.createElement("span")).textContent = err.strs[2];
+            } else {
+                msg.textContent = `${err}`;
+                console.log(err);
+            }
+        }
+    }
+    dialog.showModal();
+});
+
+// 特別条件の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill");
+    }
+    const exprElem = document.getElementById("heart_require_skill_expression") as HTMLInputElement;
+    if (!exprElem.reportValidity()) {
+        return;
+    }
+    updatePowerUp();
+    const dialog = document.getElementById("score_list_dialog") as HTMLDialogElement;
+    const exprSrc = exprElem.value;
+    const msg = dialog.querySelector(".message")!;
+    const tbody = dialog.querySelector("tbody")!;
+    msg.innerHTML = "";
+    tbody.innerHTML = "";
+    if (exprSrc.trim().length === 0) {
+        msg.textContent = "式がありません";
+    } else {
+        try {
+            const expr = parseExpression(exprSrc);
+            if (expr === null) {
+                throw "おそらく式に誤りがあります";
+            }
+            for (const m of monsterList) {
+                if (m.target === null) {
+                    continue;
+                }
+                const info = (m.color === Color.Rainbow)
+                           ? RainbowColorInfo
+                           : SingleColorInfoMap.get(m.color)!;
+                const tr = tbody.appendChild(document.createElement("tr"));
+                const c = tr.appendChild(document.createElement("td"));
+                c.classList.add(info.colorName);
+                c.textContent = info.text;
+                tr.appendChild(document.createElement("td")).textContent = `${m.cost}`;
+                tr.appendChild(document.createElement("td")).textContent = m.name;
+                tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
+                tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
+                tr.appendChild(document.createElement("td")).textContent = "-";
             }
         } catch (err) {
             if (err instanceof ExprSyntaxError) {
