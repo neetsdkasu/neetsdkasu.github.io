@@ -1,5 +1,5 @@
 const LAST_YEAR = 2022;
-const LAST_MONTH = 5;
+const LAST_MONTH = 10;
 
 function csvFileName(id, year, month) {
     return `${id}${year}${leadingZeros(2, month)}.csv`;
@@ -62,8 +62,8 @@ const dataSet = [
         unit: "degrees Celsius",
         start_year: 2021,
         start_month: 9,
-        end_year: LAST_YEAR,
-        end_month: LAST_MONTH,
+        end_year: 2022,
+        end_month: 9,
         omit: [],
     },
     {
@@ -72,8 +72,8 @@ const dataSet = [
         unit: "degrees Celsius",
         start_year: 2021,
         start_month: 9,
-        end_year: LAST_YEAR,
-        end_month: LAST_MONTH,
+        end_year: 2022,
+        end_month: 9,
         omit: [],
     },
     {
@@ -82,8 +82,8 @@ const dataSet = [
         unit: "degrees Celsius",
         start_year: 2021,
         start_month: 11,
-        end_year: LAST_YEAR,
-        end_month: LAST_MONTH,
+        end_year: 2022,
+        end_month: 9,
         omit: [],
     },
     {
