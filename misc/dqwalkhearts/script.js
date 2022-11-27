@@ -102,24 +102,40 @@ const JobPreset = [
 const JobPresetMaximumCost = [
     { id: 100, maximumCostList: [
             { level: 50, maximumCost: 231 },
+            { level: 49, maximumCost: 226 },
+            { level: 48, maximumCost: 221 },
             { level: 47, maximumCost: 216 },
             { level: 46, maximumCost: 211 },
+            { level: 45, maximumCost: 205 },
+            { level: 44, maximumCost: 200 },
+            { level: 43, maximumCost: 195 },
+            { level: 42, maximumCost: 190 },
+            { level: 41, maximumCost: 185 },
+            { level: 40, maximumCost: 180 },
+            { level: 39, maximumCost: 175 },
             { level: 38, maximumCost: 170 },
             { level: 37, maximumCost: 165 },
             { level: 36, maximumCost: 160 },
             { level: 35, maximumCost: 155 },
+            { level: 34, maximumCost: 150 },
             { level: 33, maximumCost: 145 },
             { level: 32, maximumCost: 140 },
+            { level: 31, maximumCost: 136 },
             { level: 30, maximumCost: 131 },
             { level: 29, maximumCost: 126 },
+            { level: 28, maximumCost: 121 },
+            { level: 27, maximumCost: 117 },
+            { level: 26, maximumCost: 112 },
             { level: 25, maximumCost: 107 },
             { level: 24, maximumCost: 103 },
             { level: 23, maximumCost: 98 },
+            { level: 22, maximumCost: 93 },
             { level: 21, maximumCost: 89 },
             { level: 20, maximumCost: 84 }
         ]
     },
     { id: 200, maximumCostList: [
+            { level: 62, maximumCost: 344 },
             { level: 61, maximumCost: 338 },
             { level: 60, maximumCost: 334 },
             { level: 59, maximumCost: 328 },
@@ -137,6 +153,11 @@ const JobPresetMaximumCost = [
             { level: 46, maximumCost: 259 },
             { level: 45, maximumCost: 253 },
             { level: 42, maximumCost: 238 },
+            { level: 35, maximumCost: 200 },
+            { level: 34, maximumCost: 195 },
+            { level: 33, maximumCost: 190 },
+            { level: 32, maximumCost: 184 },
+            { level: 31, maximumCost: 179 },
             { level: 30, maximumCost: 174 },
             { level: 29, maximumCost: 169 },
             { level: 28, maximumCost: 163 },
@@ -1719,6 +1740,8 @@ function parseTarget(elements) {
         asLimitCost: false,
         scorer: MaximumHPScorer,
         expr: "",
+        reqSkillScorer: null,
+        reqSkillExpr: "なし"
     };
     for (let i = 1; i <= 4; i++) {
         let color = (elem(`heart${i}_yellow`).checked ? Color.Yellow : Color.Unset) |
@@ -1778,6 +1801,11 @@ function parseTarget(elements) {
         default:
             throw `Unknown Maximize Target (${elem("goal").value})`;
     }
+    if (elem("heart_require_skill").checked) {
+        const expr = elem("heart_require_skill_expression").value;
+        target.reqSkillScorer = parseExpression(expr);
+        target.reqSkillExpr = expr;
+    }
     document.getElementById("result_setname").textContent = target.setname;
     const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
     for (let i = 0; i < 4; i++) {
@@ -1800,8 +1828,10 @@ function parseTarget(elements) {
         }
     }
     document.getElementById("result_power_up").textContent = `${powerUp}`;
-    document.getElementById("result_maximumcost").textContent = `${target.maximumCost}`;
+    document.getElementById("result_maximumcost").textContent = `${target.maximumCost}`
+        + (target.asLimitCost ? " (上限コスト)" : "");
     document.getElementById("result_goal").textContent = target.expr;
+    document.getElementById("result_require_skill").textContent = target.reqSkillExpr;
     return target;
 }
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
@@ -1810,6 +1840,7 @@ function parseTarget(elements) {
 //      途中段階で異常な組み合わせ数が出る可能性を考慮したほうがいい
 //      メモリ不足回避のために
 function calcNumOfBestHeartSet(target) {
+    const HAS_REQSKILL = target.reqSkillScorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -1824,8 +1855,68 @@ function calcNumOfBestHeartSet(target) {
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, count: 1 };
+    if (HAS_REQSKILL) {
+        let hadSkills = 0;
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
+                continue;
+            }
+            hadSkills++;
+            const cost = getCost(monster);
+            const scores = target.colors.map(c => target.scorer.calc(c, monster));
+            for (let s = 0; s < SET_LEN; s++) {
+                for (let c = 0; c < COST_LEN; c++) {
+                    const state1 = dp1[s][c];
+                    if (state1 === null) {
+                        continue;
+                    }
+                    const state2 = dp2[s][c];
+                    if (state2 === null || state1.score > state2.score) {
+                        dp2[s][c] = state1;
+                    }
+                    else if (state1.score === state2.score) {
+                        state2.count += state1.count;
+                    }
+                    const c3 = c + cost;
+                    if (c3 >= COST_LEN) {
+                        continue;
+                    }
+                    for (let p = 0; p < COUNT; p++) {
+                        const s3 = s | (1 << p);
+                        if (s === s3) {
+                            continue;
+                        }
+                        const score3 = state1.score + scores[p];
+                        const state4 = dp2[s3][c3];
+                        if (state4 === null || score3 > state4.score) {
+                            dp2[s3][c3] = {
+                                score: score3,
+                                count: state1.count,
+                            };
+                        }
+                        else if (score3 === state4.score) {
+                            state4.count += state1.count;
+                        }
+                    }
+                }
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+        if (hadSkills > 0) {
+            dp1[0][OFFSET] = null;
+        }
+    }
     for (const monster of monsterList) {
         if (monster.target === null) {
+            continue;
+        }
+        if (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0) {
             continue;
         }
         const cost = getCost(monster);
@@ -1904,6 +1995,7 @@ function extractHeartSet(stack, tmp, heartSet) {
 }
 // ベストなこころ組み合わせを求めて表示する
 function searchHeartSet(target) {
+    const HAS_REQSKILL = target.reqSkillScorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -1918,8 +2010,79 @@ function searchHeartSet(target) {
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, sets: [] };
+    if (HAS_REQSKILL) {
+        let hadSkills = 0;
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
+                continue;
+            }
+            hadSkills++;
+            const cost = getCost(monster);
+            const scores = target.colors.map(c => target.scorer.calc(c, monster));
+            for (let s = 0; s < SET_LEN; s++) {
+                for (let c = 0; c < COST_LEN; c++) {
+                    const state1 = dp1[s][c];
+                    if (state1 === null) {
+                        continue;
+                    }
+                    const state2 = dp2[s][c];
+                    if (state2 === null || state1.score > state2.score) {
+                        dp2[s][c] = {
+                            score: state1.score,
+                            sets: state1.sets.slice(),
+                        };
+                    }
+                    else if (state1.score === state2.score) {
+                        state2.sets = state2.sets.concat(state1.sets);
+                    }
+                    const c3 = c + cost;
+                    if (c3 >= COST_LEN) {
+                        continue;
+                    }
+                    for (let p = 0; p < COUNT; p++) {
+                        const s3 = s | (1 << p);
+                        if (s === s3) {
+                            continue;
+                        }
+                        const score3 = state1.score + scores[p];
+                        const state4 = dp2[s3][c3];
+                        if (state4 === null || score3 > state4.score) {
+                            dp2[s3][c3] = {
+                                score: score3,
+                                sets: [{
+                                        pos: p,
+                                        monster: monster,
+                                        subsets: state1.sets.slice(),
+                                    }],
+                            };
+                        }
+                        else if (score3 === state4.score) {
+                            state4.sets.push({
+                                pos: p,
+                                monster: monster,
+                                subsets: state1.sets.slice(),
+                            });
+                        }
+                    }
+                }
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+        if (hadSkills > 0) {
+            dp1[0][OFFSET] = null;
+        }
+    }
     for (const monster of monsterList) {
         if (monster.target === null) {
+            continue;
+        }
+        if (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0) {
             continue;
         }
         const cost = getCost(monster);
@@ -2114,6 +2277,18 @@ function convertToDummy(list) {
     }
 }
 /////////////////////////////////////////////////////////////////////////////////////
+(function () {
+    // デフォルトの職業のこころ最大コストのリストを設定する
+    const sel = document.getElementById("preset_heartset");
+    const value = parseInt(sel.value ?? "0");
+    for (const job of JobPreset) {
+        if (job.id === value) {
+            setPreset(job);
+            return;
+        }
+    }
+    dialogAlert(`Unknown ID: ${value}`);
+}());
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("preset_heartset")
     .addEventListener("change", () => {
@@ -2307,16 +2482,16 @@ document.getElementById("file_load_dialog")
     });
 });
 // 式フォームのバリデーション
-function checkExpressionValidity() {
-    const elem = document.getElementById("expression");
+function checkExpressionValidity(elemId) {
+    const elem = document.getElementById(elemId);
     const v = elem.validity;
     if (v.customError || v.valid) {
         if (!elem.required) {
             if (v.customError) {
                 elem.setCustomValidity("");
-                elem.checkValidity();
+                return elem.checkValidity();
             }
-            return;
+            return true;
         }
         try {
             const expr = elem.value;
@@ -2335,16 +2510,31 @@ function checkExpressionValidity() {
             }
         }
         finally {
-            elem.checkValidity();
+            return elem.checkValidity();
         }
     }
+    return false;
 }
+// 特別条件式フォームのバリデーションの有無の切り替え
+document.getElementById("heart_require_skill")
+    .addEventListener("change", () => {
+    document.getElementById("heart_require_skill_expression")
+        .required = document.getElementById("heart_require_skill").checked;
+    checkExpressionValidity("heart_require_skill_expression");
+});
+// 特別条件式フォームのバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression");
+});
 // 式フォームのバリデーションのトリガーをセット
 document.getElementById("expression")
     // .addEventListener("blur", () => {
     // .addEventListener("focusout", () => {
     .addEventListener("input", () => {
-    checkExpressionValidity();
+    checkExpressionValidity("expression");
 });
 // 最大化するオプションで式を選んだときと式から切り替えたときのフォーム見た目の処理
 (function () {
@@ -2352,7 +2542,7 @@ document.getElementById("expression")
     const ge = document.getElementById("goal_expression");
     const f = () => {
         e.required = ge.checked;
-        checkExpressionValidity();
+        checkExpressionValidity("expression");
     };
     const goals = document.querySelectorAll('#search_heart_dialog input[name="goal"]');
     for (const goal of goals) {
@@ -2408,7 +2598,7 @@ document.getElementById("search_heart")
     const dialog = document.getElementById("search_heart_dialog");
     dialog.showModal();
 });
-// 式の確認ボタンを押した時の処理
+// 最大化の式の確認ボタンを押した時の処理
 document.getElementById("check_expression")
     .addEventListener("click", () => {
     if (DEBUG) {
@@ -2450,6 +2640,71 @@ document.getElementById("check_expression")
                 tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(m.color, m)}`;
+            }
+        }
+        catch (err) {
+            if (err instanceof ExprSyntaxError) {
+                msg.appendChild(document.createElement("span")).textContent = msg.textContent = `おそらく${err.pos + 1}文字目付近に式の誤りがあります。 `;
+                ;
+                msg.appendChild(document.createElement("br"));
+                const code = msg.appendChild(document.createElement("code"));
+                code.classList.add("outline");
+                code.appendChild(document.createElement("span")).textContent = err.strs[0];
+                const span2 = code.appendChild(document.createElement("span"));
+                span2.classList.add("error-expression");
+                span2.textContent = err.strs[1];
+                code.appendChild(document.createElement("span")).textContent = err.strs[2];
+            }
+            else {
+                msg.textContent = `${err}`;
+                console.log(err);
+            }
+        }
+    }
+    dialog.showModal();
+});
+// 特別条件の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill");
+    }
+    const exprElem = document.getElementById("heart_require_skill_expression");
+    if (!exprElem.reportValidity()) {
+        return;
+    }
+    updatePowerUp();
+    const dialog = document.getElementById("score_list_dialog");
+    const exprSrc = exprElem.value;
+    const msg = dialog.querySelector(".message");
+    const tbody = dialog.querySelector("tbody");
+    msg.innerHTML = "";
+    tbody.innerHTML = "";
+    if (exprSrc.trim().length === 0) {
+        msg.textContent = "式がありません";
+    }
+    else {
+        try {
+            const expr = parseExpression(exprSrc);
+            if (expr === null) {
+                throw "おそらく式に誤りがあります";
+            }
+            for (const m of monsterList) {
+                if (m.target === null) {
+                    continue;
+                }
+                const info = (m.color === Color.Rainbow)
+                    ? RainbowColorInfo
+                    : SingleColorInfoMap.get(m.color);
+                const tr = tbody.appendChild(document.createElement("tr"));
+                const c = tr.appendChild(document.createElement("td"));
+                c.classList.add(info.colorName);
+                c.textContent = info.text;
+                tr.appendChild(document.createElement("td")).textContent = `${m.cost}`;
+                tr.appendChild(document.createElement("td")).textContent = m.name;
+                tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
+                tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
+                tr.appendChild(document.createElement("td")).textContent = "-";
             }
         }
         catch (err) {

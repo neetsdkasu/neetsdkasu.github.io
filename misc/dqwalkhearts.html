@@ -133,9 +133,9 @@
           </div>
         </fieldset>
         <hr />
-        <div>
-          <button type="button" value="cancel">キャンセル</button>
+        <div class="dialog-buttons">
           <button type="submit" value="add"   >追加する</button>
+          <button type="button" value="cancel">キャンセル</button>
         </div>
       </form>
     </dialog>
@@ -454,8 +454,22 @@
           </div>
         </div>
         <div>
-          <button type="button" value="cancel">キャンセル</button>
+            <input type="checkbox" name="heart_require_skill" id="heart_require_skill">
+            <label for="heart_require_skill">特別な条件</label>
+            <fieldset>
+              <div class="small">
+                ここで指定した式でスコアが1以上になるこころを1つ以上含めるようにセットを検索する<br />
+                該当するこころが1つも無い場合は通常のこころセット検索と同等になる<br />
+                ※ここで使う式は最大化の項目の式と同じ書式
+              </div>
+              <input type="text" name="heart_require_skill_expression" id="heart_require_skill_expression" placeholder="SKILL(きあいため)+SKILL(ちからため)" maxlength="300" size="60" />
+              <hr />
+              <button type="button" value="check" id="check_require_skill">式の確認</button>
+            </fieldset>
+        </div>
+        <div class="dialog-buttons">
           <button type="submit" value="start">探索開始</button>
+          <button type="button" value="cancel">キャンセル</button>
         </div>
       </form>
     </dialog>
@@ -477,6 +491,7 @@
           <div><span>色適合時の変化:</span> <span id="result_power_up"></span>倍</div>
           <div><span>こころ最大コスト:</span> <span id="result_maximumcost"></span></div>
           <div><span>最大化:</span> <span id="result_goal"></span></div>
+          <div><span>特別な条件:</span> <span id="result_require_skill"></span></div>
         </div>
         <hr />
         <div id="result"></div>
