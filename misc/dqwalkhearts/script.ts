@@ -82,13 +82,14 @@ interface Monster {
     id: number;
     name: string;
     color: Color;
-    cost: number;
+    curCost: number; // 現在のtargetもしくは最後に選択されていたtargetのこころコスト
     hearts: Heart[];
     target: Rank | null;
 }
 
 interface Heart extends Status {
     rank: Rank;
+    cost: number;
     maximumCost: number;
     effects: string;
 }
@@ -448,7 +449,7 @@ function showNewHeart(monster: Monster): void {
         return e;
     };
     text(".monster-name", monster.name);
-    text(".monster-cost", monster.cost);
+    text(".monster-cost", monster.curCost);
     const csi = (monster.color === Color.Rainbow)
               ? RainbowColorInfo
               : SingleColorInfoMap.get(monster.color)!;
@@ -470,8 +471,19 @@ function showNewHeart(monster: Monster): void {
             elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
             elm.addEventListener("change", () => {
                 monster.target = rank;
+                let reorder = false;
+                const newCurCost = monster.hearts.find(h => h.rank === rank)!.cost;
+                if (monster.curCost !== newCurCost) {
+                    if (DEBUG) {
+                        console.log("reorder");
+                    }
+                    dialogAlert(`コストが ${monster.curCost} から ${newCurCost} に変わりリスト内での位置が変わります`);
+                    monster.curCost = newCurCost
+                    monsterList.sort((a, b) => b.curCost - a.curCost);
+                    reorder = true;
+                }
                 saveMonsterList(Trigger.ChooseRank);
-                showUpdatedHeart(monster, false);
+                showUpdatedHeart(monster, reorder);
                 updateChangedRankCount();
             });
         }
@@ -529,7 +541,7 @@ function showNewHeart(monster: Monster): void {
             (elements.namedItem(name) as HTMLInputElement).value = value;
         };
         elem("add_monster_name", monster.name);
-        elem("add_cost", `${monster.cost}`);
+        elem("add_cost", `${monster.curCost}`);
         rad("add_color", `${Color[monster.color]}`);
         if (monster.target !== null) {
             rad("add_rank", `${Rank[monster.target]}`);
@@ -559,6 +571,7 @@ function showNewHeart(monster: Monster): void {
 }
 
 // 表示済みのモンスターのこころの情報を最新情報で表示しなおす
+// reorder: こころリストの順番を修正したい場合はtrueにする
 function showUpdatedHeart(monster: Monster, reorder: boolean): void {
     const item = document.getElementById(`monster-${monster.id}`)!;
     if (reorder) {
@@ -578,7 +591,7 @@ function showUpdatedHeart(monster: Monster, reorder: boolean): void {
         return e;
     };
     text(".monster-name", monster.name);
-    text(".monster-cost", monster.cost);
+    text(".monster-cost", monster.curCost);
     const csi = (monster.color === Color.Rainbow)
               ? RainbowColorInfo
               : SingleColorInfoMap.get(monster.color)!;
@@ -688,21 +701,25 @@ function addHeart(newMonster: Monster): boolean {
             monster.color = newMonster.color;
             updated = true;
         }
-        if (monster.cost === newMonster.cost) {
+        let newCurCost = newMonster.curCost;
+        if (monster.target !== null) {
+            newCurCost = monster.hearts.find(h => h.rank === monster.target!)!.cost;
+        }
+        if (monster.curCost === newCurCost) {
             if (!updated) {
                 return false;
             }
             showUpdatedHeart(monster, false);
         } else {
-            monster.cost = newMonster.cost;
-            monsterList.sort((a, b) => b.cost - a.cost);
+            monster.curCost = newCurCost;
+            monsterList.sort((a, b) => b.curCost - a.curCost);
             showUpdatedHeart(monster, true);
         }
     } else {
         addMonsterNameList(newMonster.name);
         newMonster.id = monsterList.length;
         monsterMap.set(newMonster.name, newMonster);
-        insert(monsterList, newMonster, (n, e) => n.cost > e.cost);
+        insert(monsterList, newMonster, (n, e) => n.curCost > e.curCost);
         showNewHeart(newMonster);
     }
     return true;
@@ -785,7 +802,7 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         id: 0,
         name: "str",
         color: Color.Red,
-        cost: 1,
+        curCost: 1,
         hearts: [{
             maximumHP: 1,
             maximumMP: 1,
@@ -796,6 +813,7 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
             speed: 1,
             dexterity: 1,
             rank: Rank.S_plus,
+            cost: 1,
             maximumCost: 1,
             effects: "str",
         }],
@@ -805,15 +823,22 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         id: 0,
         name: "str",
         color: Color.Red,
-        cost: 1,
+        curCost: 1,
         hearts: [],
         target: null,
     };
+    let isOldFormat = false;
     for (const param in monster1) {
         if (param in obj === false) {
-            console.log(`パラメータが無い ${param}`);
-            console.log(obj);
-            return false;
+            if (param === "curCost" && ("cost" in obj)) {
+                obj["curCost"] = obj["cost"];
+                delete obj["cost"];
+                isOldFormat = true;
+            } else {
+                console.log(`パラメータが無い ${param}`);
+                console.log(obj);
+                return false;
+            }
         }
         const x = typeof monster1[param as keyof Monster];
         const y = monster2[param as keyof Monster];
@@ -854,6 +879,8 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
                 if (param === "dexterity" && ("deftness" in h)) {
                     h["dexterity"] = h["deftness"];
                     delete h["deftness"];
+                } else if (isOldFormat && param === "cost") {
+                    h["cost"] = m.curCost;
                 } else {
                     console.log(`パラメータが存在しない ${param}`);
                     console.log(h);
@@ -948,7 +975,7 @@ function mergeMonsterList(list: Monster[]): boolean {
                 continue;
             }
             monster.color = orig.color;
-            monster.cost = orig.cost;
+            monster.curCost = orig.curCost;
             monster.target = orig.target;
         }
         if (addHeart(monster)) {
@@ -1574,7 +1601,7 @@ class ExprParser {
                 return this.lessScorer();
             case "COST":
                 return { calc: (c: Color, m: Monster) => {
-                    return (m.target === null) ? 0 : m.cost;
+                    return (m.target === null) ? 0 : m.curCost;
                 }};
             case "COLOR":
                 return this.colorScorer();
@@ -1968,8 +1995,8 @@ function calcNumOfBestHeartSet(target: Target): number {
     const SET_LEN = 1 << COUNT;
     const COST_LEN = target.maximumCost + 1 + OFFSET;
     const getCost: (m: Monster) => number = target.asLimitCost
-        ? (m => m.cost)
-        : (m => m.cost - m.hearts.find(h => h.rank === m.target)!.maximumCost);
+        ? (m => m.curCost)
+        : (m => m.curCost - m.hearts.find(h => h.rank === m.target)!.maximumCost);
     let dp1: (NumState | null)[][] = new Array(SET_LEN);
     let dp2: (NumState | null)[][] = new Array(SET_LEN);
     for (let i = 0; i < SET_LEN; i++) {
@@ -2119,8 +2146,8 @@ function searchHeartSet(target: Target): void {
     const SET_LEN = 1 << COUNT;
     const COST_LEN = target.maximumCost + 1 + OFFSET;
     const getCost: (m: Monster) => number = target.asLimitCost
-        ? (m => m.cost)
-        : (m => m.cost - m.hearts.find(h => h.rank === m.target)!.maximumCost);
+        ? (m => m.curCost)
+        : (m => m.curCost - m.hearts.find(h => h.rank === m.target)!.maximumCost);
     let dp1: (State | null)[][] = new Array(SET_LEN);
     let dp2: (State | null)[][] = new Array(SET_LEN);
     for (let i = 0; i < SET_LEN; i++) {
@@ -2308,7 +2335,7 @@ function searchHeartSet(target: Target): void {
             st.recoverMagic += RecoverMagicScorer.calc(c, m);
             st.speed += SpeedScorer.calc(c, m);
             st.dexterity += DexterityScorer.calc(c, m);
-            st.cost += m.cost;
+            st.cost += m.curCost;
             st.maximumCost += m.hearts.find(h => h.rank === m.target)!.maximumCost;
         }
         const key = JSON.stringify({ status: st, hearts: heartSet.map(h => h?.id ?? -1).sort() });
@@ -2346,7 +2373,7 @@ function searchHeartSet(target: Target): void {
             const colorSpan = h.appendChild(document.createElement("span"));
             colorSpan.classList.add(info.colorName);
             colorSpan.textContent = info.text;
-            h.appendChild(document.createElement("span")).textContent = `${m.cost}`;
+            h.appendChild(document.createElement("span")).textContent = `${m.curCost}`;
             h.appendChild(document.createElement("span")).textContent = m.name;
             h.appendChild(document.createElement("span")).textContent = Rank[m.target!].replace("_plus", "+");
             const hsc = h.appendChild(document.createElement("span"));
@@ -2459,7 +2486,7 @@ document.getElementById("add_monster_name")!
         const monster = monsterMap.get(name)!;
         const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
         const elements = (dialog.querySelector("form") as HTMLFormElement).elements;
-        (elements.namedItem("add_cost") as HTMLInputElement).value = `${monster.cost}`;
+        (elements.namedItem("add_cost") as HTMLInputElement).value = `${monster.curCost}`;
         (elements.namedItem("add_color") as RadioNodeList).value = `${Color[monster.color]}`;
     }
 });
@@ -2491,11 +2518,12 @@ document.getElementById("add_heart_dialog")!
     const noNaN = (v: number) => isNaN(v) ? 0 : v;
     const num = (name: string) => noNaN(parseInt(str(name)));
     const rank = Rank[rad("add_rank") as keyof typeof Rank];
+    const cost = num("add_cost");
     const monster: Monster = {
         id: 0,
         name: str("add_monster_name").trim(),
         color: Color[rad("add_color") as keyof typeof Color],
-        cost: num("add_cost"),
+        curCost: cost,
         hearts: [{
             maximumHP: num("add_maximumhp"),
             maximumMP: num("add_maximummp"),
@@ -2506,6 +2534,7 @@ document.getElementById("add_heart_dialog")!
             speed: num("add_speed"),
             dexterity: num("add_dexterity"),
             rank: rank,
+            cost: cost,
             maximumCost: num("add_maximumcost"),
             effects: str("add_effects").trim(),
         }],
@@ -2765,7 +2794,7 @@ document.getElementById("check_expression")!
                 const c = tr.appendChild(document.createElement("td"));
                 c.classList.add(info.colorName);
                 c.textContent = info.text;
-                tr.appendChild(document.createElement("td")).textContent = `${m.cost}`;
+                tr.appendChild(document.createElement("td")).textContent = `${m.curCost}`;
                 tr.appendChild(document.createElement("td")).textContent = m.name;
                 tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
@@ -2827,7 +2856,7 @@ document.getElementById("check_require_skill")!
                 const c = tr.appendChild(document.createElement("td"));
                 c.classList.add(info.colorName);
                 c.textContent = info.text;
-                tr.appendChild(document.createElement("td")).textContent = `${m.cost}`;
+                tr.appendChild(document.createElement("td")).textContent = `${m.curCost}`;
                 tr.appendChild(document.createElement("td")).textContent = m.name;
                 tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
@@ -2870,7 +2899,14 @@ document.getElementById("reset_rank")!
             }
         }
         monster.target = bestRank;
-        showUpdatedHeart(monster, false);
+        let reorder = false;
+        const newCurCost = monster.hearts.find(h => h.rank === monster.target)!.cost;
+        if (monster.curCost !== newCurCost) {
+            monster.curCost = newCurCost;
+            monsterList.sort((a, b) => b.curCost - a.curCost);
+            reorder = true;
+        }
+        showUpdatedHeart(monster, reorder);
         count++;
     }
     if (count > 0) {
@@ -2959,7 +2995,7 @@ document.getElementById("calc_status_distance")!.addEventListener("click", () =>
             let ed = euclidean(h1, h2);
             let md = manhattan(h1, h2);
             if (isUpward(h1, h2)) {
-                const cd = (m2.cost - h2.maximumCost) - (m1.cost - h1.maximumCost);
+                const cd = (m2.curCost - h2.maximumCost) - (m1.curCost - h1.maximumCost);
                 if (cd < upwardMinCost.distance) {
                     upwardMinCost.monster = m2;
                     upwardMinCost.distance = cd;
@@ -3001,7 +3037,7 @@ document.getElementById("calc_status_distance")!.addEventListener("click", () =>
         targetSpan.classList.add(targetInfo.colorName);
         targetSpan.textContent = targetInfo.text;
         targetTd.appendChild(document.createElement("span")).textContent =
-            `${m1.cost} ${m1.name} ${Rank[m1.target]}`;
+            `${m1.curCost} ${m1.name} ${Rank[m1.target]}`;
         function append(ds: DistStatus) {
             const td = tr.appendChild(document.createElement("td"));
             if (ds.monster === null) {
@@ -3015,7 +3051,7 @@ document.getElementById("calc_status_distance")!.addEventListener("click", () =>
             span.classList.add(info.colorName);
             span.textContent = info.text;
             td.appendChild(document.createElement("span")).textContent =
-                `${ds.monster.cost} ${ds.monster.name} ${Rank[ds.monster.target!]} (${Math.ceil(ds.distance)})`;
+                `${ds.monster.curCost} ${ds.monster.name} ${Rank[ds.monster.target!]} (${Math.ceil(ds.distance)})`;
         }
         append(upwardMinCost);
         append(upwardEuclidean);
