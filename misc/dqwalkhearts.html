@@ -43,8 +43,8 @@
         </fieldset>
         <hr />
         <div>
-          <button type="button" value="cancel">キャンセル</button>
           <button type="submit" value="load"  >読み込む</button>
+          <button type="button" value="cancel">キャンセル</button>
         </div>
       </form>
     </dialog>
@@ -71,7 +71,6 @@
           <br />
           <label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" required />
         </div>
-        <div><label for="add_cost">コスト:</label><input type="number" name="add_cost" id="add_cost" required /></div>
         <div>
           <span>色:</span>
           <input type="radio" name="add_color" id="add_color_yellow"  value="Yellow"  required /><label for="add_color_yellow"  >黄(戦)</label>
@@ -82,6 +81,7 @@
           <input type="radio" name="add_color" id="add_color_rainbow" value="Rainbow" required /><label for="add_color_rainbow" >虹(？)</label>
         </div>
         <fieldset>
+          <div><label for="add_cost">コスト:</label><input type="number" name="add_cost" id="add_cost" required /></div>
           <div>
             <span>ランク:</span>
             <input type="radio" name="add_rank" id="add_rank_s_plus" value="S_plus" required><label for="add_rank_s_plus">S+</label>
