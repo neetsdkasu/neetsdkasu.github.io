@@ -1782,7 +1782,7 @@ function parseTarget(elements) {
         expr: "",
         reqSkillScorer: null,
         reqSkillExpr: "なし",
-        reqSkillCount: 1,
+        reqSkillCount: 0
     };
     for (let i = 1; i <= 4; i++) {
         let color = (elem(`heart${i}_yellow`).checked ? Color.Yellow : Color.Unset) |
@@ -1873,7 +1873,8 @@ function parseTarget(elements) {
     document.getElementById("result_maximumcost").textContent = `${target.maximumCost}`
         + (target.asLimitCost ? " (上限コスト)" : "");
     document.getElementById("result_goal").textContent = target.expr;
-    document.getElementById("result_require_skill").textContent = target.reqSkillExpr;
+    document.getElementById("result_require_skill").textContent = target.reqSkillExpr
+        + ((target.reqSkillCount > 0) ? ` [${target.reqSkillCount}個以上含める]` : "");
     return target;
 }
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
