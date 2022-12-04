@@ -1889,7 +1889,6 @@ function calcNumOfBestHeartSet(target) {
     }
     dp1[0][OFFSET] = { score: 0, count: 1 };
     if (HAS_REQSKILL) {
-        let hadSkills = 0;
         for (const monster of monsterList) {
             if (monster.target === null) {
                 continue;
@@ -1897,7 +1896,6 @@ function calcNumOfBestHeartSet(target) {
             if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
                 continue;
             }
-            hadSkills++;
             const cost = getCost(monster);
             const scores = target.colors.map(c => target.scorer.calc(c, monster));
             for (let s = 0; s < SET_LEN; s++) {
@@ -1941,9 +1939,7 @@ function calcNumOfBestHeartSet(target) {
             dp2 = dp3;
             dp2.forEach(a => a.fill(null));
         }
-        if (hadSkills > 0) {
-            dp1[0][OFFSET] = null;
-        }
+        dp1[0][OFFSET] = null;
     }
     for (const monster of monsterList) {
         if (monster.target === null) {
@@ -2044,7 +2040,6 @@ function searchHeartSet(target) {
     }
     dp1[0][OFFSET] = { score: 0, sets: [] };
     if (HAS_REQSKILL) {
-        let hadSkills = 0;
         for (const monster of monsterList) {
             if (monster.target === null) {
                 continue;
@@ -2052,7 +2047,6 @@ function searchHeartSet(target) {
             if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
                 continue;
             }
-            hadSkills++;
             const cost = getCost(monster);
             const scores = target.colors.map(c => target.scorer.calc(c, monster));
             for (let s = 0; s < SET_LEN; s++) {
@@ -2107,9 +2101,7 @@ function searchHeartSet(target) {
             dp2 = dp3;
             dp2.forEach(a => a.fill(null));
         }
-        if (hadSkills > 0) {
-            dp1[0][OFFSET] = null;
-        }
+        dp1[0][OFFSET] = null;
     }
     for (const monster of monsterList) {
         if (monster.target === null) {
