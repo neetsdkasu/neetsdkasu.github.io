@@ -1887,7 +1887,7 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         expr: "",
         reqSkillScorer: null,
         reqSkillExpr: "なし",
-        reqSkillCount: 1,
+        reqSkillCount: 0
     };
     for (let i = 1; i <= 4; i++) {
         let color: Color =
@@ -1978,7 +1978,8 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
     document.getElementById("result_maximumcost")!.textContent = `${target.maximumCost}`
         + (target.asLimitCost ? " (上限コスト)" : "");
     document.getElementById("result_goal")!.textContent = target.expr;
-    document.getElementById("result_require_skill")!.textContent = target.reqSkillExpr;
+    document.getElementById("result_require_skill")!.textContent = target.reqSkillExpr
+        + ((target.reqSkillCount > 0) ? ` [${target.reqSkillCount}個以上含める]` : "");
     return target;
 }
 
