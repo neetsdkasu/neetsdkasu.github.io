@@ -23,6 +23,14 @@ function dialogAlert(msg: string): void {
     dialog.showModal();
 }
 
+function popCount(value: number): number {
+    value = (value & 0x55555555) + ((value >>> 1) & 0x55555555);
+    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
+    value = (value & 0x0F0F0F0F) + ((value >>> 4) & 0x0F0F0F0F);
+    value = (value & 0x00FF00FF) + ((value >>> 8) & 0x00FF00FF);
+    return (value & 0x0000FFFF) + ((value >>> 16) & 0x0000FFFF);
+}
+
 function binarySearch<T>(arr: Array<T>, value: T, less: (value: T, than: T) => boolean): number {
     // バイナリサーチほしいか否か？
     // 多くて数百個程度のデータからfindIndexするわけだが
@@ -1041,6 +1049,7 @@ interface Target {
     expr: string;
     reqSkillScorer: Scorer | null;
     reqSkillExpr: string;
+    reqSkillCount: number;
 }
 
 const MaximumHPScorer:    Scorer = makeSimpleScorer("maximumHP");
@@ -1877,7 +1886,8 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         scorer: MaximumHPScorer,
         expr: "",
         reqSkillScorer: null,
-        reqSkillExpr: "なし"
+        reqSkillExpr: "なし",
+        reqSkillCount: 1,
     };
     for (let i = 1; i <= 4; i++) {
         let color: Color =
@@ -1942,6 +1952,7 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         const expr = elem("heart_require_skill_expression")!.value;
         target.reqSkillScorer = parseExpression(expr);
         target.reqSkillExpr = expr;
+        target.reqSkillCount = parseInt(elem("heart_require_skill_expression_count")!.value);
     }
     document.getElementById("result_setname")!.textContent = target.setname;
     const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
@@ -2057,7 +2068,11 @@ function calcNumOfBestHeartSet(target: Target): number {
             dp2 = dp3;
             dp2.forEach(a => a.fill(null));
         }
-        dp1[0][OFFSET] = null;
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
     }
     for (const monster of monsterList) {
         if (monster.target === null) {
@@ -2215,7 +2230,11 @@ function searchHeartSet(target: Target): void {
             dp2 = dp3;
             dp2.forEach(a => a.fill(null));
         }
-        dp1[0][OFFSET] = null;
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
     }
     for (const monster of monsterList) {
         if (monster.target === null) {

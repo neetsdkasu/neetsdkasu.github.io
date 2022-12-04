@@ -458,7 +458,12 @@
             <label for="heart_require_skill">特別な条件</label>
             <fieldset>
               <div class="small">
-                ここで指定した式でスコアが1以上になるこころを1つ以上含めるようにセットを検索する<br />
+                ここで指定した式でスコアが1以上になるこころを<select name="heart_require_skill_expression_count" id="heart_require_skill_expression_count">
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>個以上含めるようにセットを検索する<br />
                 ※ここで使う式は最大化の項目の式と同じ書式
               </div>
               <input type="text" name="heart_require_skill_expression" id="heart_require_skill_expression" placeholder="SKILL(きあいため)+SKILL(ちからため)" maxlength="300" size="60" />

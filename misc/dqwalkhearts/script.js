@@ -18,6 +18,13 @@ function dialogAlert(msg) {
     const dialog = document.getElementById("alert_dialog");
     dialog.showModal();
 }
+function popCount(value) {
+    value = (value & 0x55555555) + ((value >>> 1) & 0x55555555);
+    value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
+    value = (value & 0x0F0F0F0F) + ((value >>> 4) & 0x0F0F0F0F);
+    value = (value & 0x00FF00FF) + ((value >>> 8) & 0x00FF00FF);
+    return (value & 0x0000FFFF) + ((value >>> 16) & 0x0000FFFF);
+}
 function binarySearch(arr, value, less) {
     // バイナリサーチほしいか否か？
     // 多くて数百個程度のデータからfindIndexするわけだが
@@ -1774,7 +1781,8 @@ function parseTarget(elements) {
         scorer: MaximumHPScorer,
         expr: "",
         reqSkillScorer: null,
-        reqSkillExpr: "なし"
+        reqSkillExpr: "なし",
+        reqSkillCount: 1,
     };
     for (let i = 1; i <= 4; i++) {
         let color = (elem(`heart${i}_yellow`).checked ? Color.Yellow : Color.Unset) |
@@ -1838,6 +1846,7 @@ function parseTarget(elements) {
         const expr = elem("heart_require_skill_expression").value;
         target.reqSkillScorer = parseExpression(expr);
         target.reqSkillExpr = expr;
+        target.reqSkillCount = parseInt(elem("heart_require_skill_expression_count").value);
     }
     document.getElementById("result_setname").textContent = target.setname;
     const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
@@ -1939,7 +1948,11 @@ function calcNumOfBestHeartSet(target) {
             dp2 = dp3;
             dp2.forEach(a => a.fill(null));
         }
-        dp1[0][OFFSET] = null;
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
     }
     for (const monster of monsterList) {
         if (monster.target === null) {
@@ -2101,7 +2114,11 @@ function searchHeartSet(target) {
             dp2 = dp3;
             dp2.forEach(a => a.fill(null));
         }
-        dp1[0][OFFSET] = null;
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
     }
     for (const monster of monsterList) {
         if (monster.target === null) {
