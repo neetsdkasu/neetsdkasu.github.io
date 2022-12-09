@@ -454,7 +454,15 @@
           </div>
         </div>
         <div>
-            <input type="checkbox" name="heart_require_skill" id="heart_require_skill">
+          <input type="checkbox" name="heart_with_s_plus" id="heart_with_s_plus" />
+          <label for="heart_with_s_plus">
+            <span>同一こころのS+とS以下の同時検索</span>
+            <span class="small"> ※特別な条件との同時利用はできません</span><br />
+          </label>
+          <span class="small"> ※S+のあるこころごとに同時検索するかの設定が必要です</span>
+        </div>
+        <div>
+            <input type="checkbox" name="heart_require_skill" id="heart_require_skill" />
             <label for="heart_require_skill">特別な条件</label>
             <fieldset>
               <div class="small">
@@ -727,13 +735,13 @@
             </span>
             <span class="monster-name"></span>
             <span>
-              <label><input type="radio" class="monster-rank" value="S_plus"><span>S+</span></label>
-              <label><input type="radio" class="monster-rank" value="S"     ><span>S</span></label>
-              <label><input type="radio" class="monster-rank" value="A"     ><span>A</span></label>
-              <label><input type="radio" class="monster-rank" value="B"     ><span>B</span></label>
-              <label><input type="radio" class="monster-rank" value="C"     ><span>C</span></label>
-              <label><input type="radio" class="monster-rank" value="D"     ><span>D</span></label>
-              <label><input type="radio" class="monster-rank" value="omit"  ><span>－</span></label>
+              <label><input type="radio" class="monster-rank" value="S_plus" /><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"       /><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"       /><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"       /><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"       /><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"       /><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"    /><span>－</span></label>
             </span>
           </summary>
           <div><span>HP:</span> <span class="monster-maximumhp"></span></div>
@@ -746,7 +754,16 @@
           <div><span>器用:</span> <span class="monster-dexterity"></span></div>
           <div><span>こころ最大コスト:</span> <span class="monster-maximumcost"></span></div>
           <div><span>スキル・特殊効果:</span> <span class="monster-effects"></span></div>
-          <div><button type="button">追加・編集</button></div>
+          <div>
+            <button type="button">追加・編集</button>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" class="monster-with-s_plus" checked disabled />
+              <span>S+の同時検索</span>
+              <span class="small">※同一こころのS+とS以下の同時検索が有効時に反映</span>
+            </label>
+          </div>
         </details>
       </fieldset>
     </template>

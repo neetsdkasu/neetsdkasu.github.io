@@ -126,6 +126,12 @@ fieldset > details > summary
     margin: 1rem;
 }
 
+.monster-rank-with-s_plus
+{
+    font-weight: bold;
+    color: purple;
+}
+
 .monster-rank:checked + span,
 input[name$="_rank"]:checked + label
 {
@@ -259,7 +265,8 @@ td
     background-color: #eeffff;
 }
 
-#heart_require_skill + * + *
+#heart_require_skill + * + *,
+#heart_with_s_plus + * + *
 {
     display: none;
 }
@@ -267,6 +274,11 @@ td
 #heart_require_skill:checked + * + *
 {
     display: block;
+}
+
+#heart_with_s_plus:checked + * + *
+{
+    display: inline;
 }
 
 .dialog-buttons

@@ -367,6 +367,10 @@ function updateChangedRankCount() {
             count++;
             continue;
         }
+        // if (!monster.withSplus) { // 保留
+        //    count++;
+        //    continue;
+        // }
         if (monster.hearts.length === 1) {
             continue;
         }
@@ -391,13 +395,15 @@ function showNewHeart(monster) {
         ? RainbowColorInfo
         : SingleColorInfoMap.get(monster.color);
     text(".monster-color", csi.text).classList.add(csi.colorName);
-    const radios = fragment.querySelectorAll('input.monster-rank');
+    const radios = fragment.querySelectorAll("input.monster-rank");
     const monsterRankRadioName = `monster_${monster.id}_rank`;
     for (const radio of radios) {
         const elm = radio;
         elm.name = monsterRankRadioName;
         if (elm.value === "omit") {
+            // こころのランク切り替え (不使用設定)
             elm.addEventListener("change", () => {
+                // type="radio"はONに変更された場合だけchangeイベントが発行される
                 monster.target = null;
                 saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
@@ -406,8 +412,10 @@ function showNewHeart(monster) {
         }
         else {
             const rank = Rank[elm.value];
-            elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+            elm.disabled = !monster.hearts.some(h => h.rank === rank);
+            // こころのランク切り替え (ランク設定)
             elm.addEventListener("change", () => {
+                // type="radio"はONに変更された場合だけchangeイベントが発行される
                 monster.target = rank;
                 let reorder = false;
                 const newCurCost = monster.hearts.find(h => h.rank === rank).cost;
@@ -426,6 +434,15 @@ function showNewHeart(monster) {
             });
         }
     }
+    const withSplusElem = fragment.querySelector(".monster-with-s_plus");
+    withSplusElem.checked = monster.withSplus;
+    withSplusElem.addEventListener("change", () => {
+        // type="checkboxk"はON/OFFの切り替えでchangeイベントが発行される
+        monster.withSplus = !monster.withSplus;
+        saveMonsterList(Trigger.ChooseRank);
+        showUpdatedHeart(monster, false);
+        updateChangedRankCount();
+    });
     if (monster.target === null) {
         fragment.firstElementChild.classList.add("omit");
         for (const radio of radios) {
@@ -467,6 +484,11 @@ function showNewHeart(monster) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
+        if (monster.target !== Rank.S_plus) {
+            if (monster.hearts.some(h => h.rank === Rank.S_plus)) {
+                withSplusElem.disabled = false;
+            }
+        }
     }
     fragment.querySelector("button").addEventListener("click", () => {
         const dialog = document.getElementById("add_heart_dialog");
@@ -498,6 +520,12 @@ function showNewHeart(monster) {
         }
         dialog.showModal();
     });
+    const withSplus = monster.withSplus
+        && monster.target !== Rank.S_plus
+        && monster.hearts.some(h => h.rank === monster.target);
+    if (withSplus) {
+        fragment.querySelector("input.monster-rank + span").classList.add("monster-rank-with-s_plus");
+    }
     fragment.firstElementChild.id = `monster-${monster.id}`;
     const holder = document.getElementById("heart_list");
     const index = monsterList.findIndex(m => m.id === monster.id);
@@ -541,7 +569,9 @@ function showUpdatedHeart(monster, reorder) {
     });
     classList.remove(RainbowColorInfo.colorName);
     classList.add(csi.colorName);
-    const radios = item.querySelectorAll('input.monster-rank');
+    item.querySelector(".monster-with-s_plus")
+        .checked = monster.withSplus;
+    const radios = item.querySelectorAll("input.monster-rank");
     if (monster.target === null) {
         item.classList.remove("not-best");
         item.classList.add("omit");
@@ -549,7 +579,7 @@ function showUpdatedHeart(monster, reorder) {
             const elm = radio;
             if (elm.value !== "omit") {
                 const rank = Rank[elm.value];
-                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+                elm.disabled = !monster.hearts.some(h => h.rank === rank);
             }
             else {
                 elm.checked = true;
@@ -565,6 +595,8 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-dexterity", "-");
         text(".monster-maximumcost", "-");
         text(".monster-effects", "-");
+        item.querySelector(".monster-with-s_plus")
+            .disabled = true;
     }
     else {
         item.classList.remove("omit");
@@ -579,7 +611,7 @@ function showUpdatedHeart(monster, reorder) {
             const elm = radio;
             if (elm.value !== "omit") {
                 const rank = Rank[elm.value];
-                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+                elm.disabled = !monster.hearts.some(h => h.rank === rank);
                 elm.checked = rank === heart.rank;
             }
         }
@@ -593,6 +625,18 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
+        item.querySelector(".monster-with-s_plus")
+            .disabled = monster.target === Rank.S_plus
+            || !monster.hearts.some(h => h.rank === Rank.S_plus);
+    }
+    const withSplus = monster.withSplus
+        && monster.target !== Rank.S_plus
+        && monster.hearts.some(h => h.rank === monster.target);
+    if (withSplus) {
+        item.querySelector("input.monster-rank + span").classList.add("monster-rank-with-s_plus");
+    }
+    else {
+        item.querySelector("input.monster-rank + span").classList.remove("monster-rank-with-s_plus");
     }
 }
 // モンスター名リストに新しいモンスター名を追加する
@@ -759,6 +803,7 @@ function isMonster(anyobj) {
                 effects: "str",
             }],
         target: Rank.S_plus,
+        withSplus: true,
     };
     const monster2 = {
         id: 0,
@@ -767,11 +812,15 @@ function isMonster(anyobj) {
         curCost: 1,
         hearts: [],
         target: null,
+        withSplus: true,
     };
-    let isOldFormat = false;
+    let isOldFormat = false; // コスト情報の保持方法が古いフォーマットか否か
     for (const param in monster1) {
         if (param in obj === false) {
-            if (param === "curCost" && ("cost" in obj)) {
+            if (param === "withSplus") {
+                obj["withSplus"] = true;
+            }
+            else if (param === "curCost" && ("cost" in obj)) {
                 obj["curCost"] = obj["cost"];
                 delete obj["cost"];
                 isOldFormat = true;
@@ -1782,7 +1831,8 @@ function parseTarget(elements) {
         expr: "",
         reqSkillScorer: null,
         reqSkillExpr: "なし",
-        reqSkillCount: 0
+        reqSkillCount: 0,
+        withSplus: false,
     };
     for (let i = 1; i <= 4; i++) {
         let color = (elem(`heart${i}_yellow`).checked ? Color.Yellow : Color.Unset) |
@@ -1801,6 +1851,7 @@ function parseTarget(elements) {
     target.setname = inferSetName(target.colors);
     target.maximumCost = parseInt(elem("heart_maximum_cost").value);
     target.asLimitCost = elem("as_limit_heart_cost").checked;
+    target.withSplus = elem("heart_with_s_plus").checked;
     switch (elem("goal").value) {
         case "maximumhp":
             target.scorer = MaximumHPScorer;
@@ -1898,72 +1949,7 @@ function calcNumOfBestHeartSet(target) {
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, count: 1 };
-    if (HAS_REQSKILL) {
-        for (const monster of monsterList) {
-            if (monster.target === null) {
-                continue;
-            }
-            if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
-                continue;
-            }
-            const cost = getCost(monster);
-            const scores = target.colors.map(c => target.scorer.calc(c, monster));
-            for (let s = 0; s < SET_LEN; s++) {
-                for (let c = 0; c < COST_LEN; c++) {
-                    const state1 = dp1[s][c];
-                    if (state1 === null) {
-                        continue;
-                    }
-                    const state2 = dp2[s][c];
-                    if (state2 === null || state1.score > state2.score) {
-                        dp2[s][c] = state1;
-                    }
-                    else if (state1.score === state2.score) {
-                        state2.count += state1.count;
-                    }
-                    const c3 = c + cost;
-                    if (c3 >= COST_LEN) {
-                        continue;
-                    }
-                    for (let p = 0; p < COUNT; p++) {
-                        const s3 = s | (1 << p);
-                        if (s === s3) {
-                            continue;
-                        }
-                        const score3 = state1.score + scores[p];
-                        const state4 = dp2[s3][c3];
-                        if (state4 === null || score3 > state4.score) {
-                            dp2[s3][c3] = {
-                                score: score3,
-                                count: state1.count,
-                            };
-                        }
-                        else if (score3 === state4.score) {
-                            state4.count += state1.count;
-                        }
-                    }
-                }
-            }
-            const dp3 = dp1;
-            dp1 = dp2;
-            dp2 = dp3;
-            dp2.forEach(a => a.fill(null));
-        }
-        for (let s = 0; s < SET_LEN; s++) {
-            if (popCount(s) < target.reqSkillCount) {
-                dp1[s].fill(null);
-            }
-        }
-    }
-    for (const monster of monsterList) {
-        if (monster.target === null) {
-            continue;
-        }
-        if (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0) {
-            continue;
-        }
-        const cost = getCost(monster);
-        const scores = target.colors.map(c => target.scorer.calc(c, monster));
+    function dpSubProc(monster, cost, scores) {
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
                 const state1 = dp1[s][c];
@@ -2000,11 +1986,49 @@ function calcNumOfBestHeartSet(target) {
                 }
             }
         }
-        const dp3 = dp1;
-        dp1 = dp2;
-        dp2 = dp3;
-        dp2.forEach(a => a.fill(null));
     }
+    function dpProc(skipFunc) {
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (skipFunc(monster)) {
+                continue;
+            }
+            let cost = getCost(monster);
+            let scores = target.colors.map(c => target.scorer.calc(c, monster));
+            dpSubProc(monster, cost, scores);
+            const withSplus = target.withSplus
+                && monster.withSplus
+                && monster.target !== Rank.S_plus
+                && monster.hearts.some(h => h.rank === Rank.S_plus);
+            if (withSplus) {
+                const heart = monster.hearts.find(h => h.rank === Rank.S_plus);
+                const tmpCurCost = monster.curCost;
+                const tmpTarget = monster.target;
+                monster.curCost = heart.cost;
+                monster.target = Rank.S_plus;
+                cost = getCost(monster);
+                scores = target.colors.map(c => target.scorer.calc(c, monster));
+                dpSubProc(monster, cost, scores);
+                monster.curCost = tmpCurCost;
+                monster.target = tmpTarget;
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+    }
+    if (HAS_REQSKILL) {
+        dpProc(monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
+    }
+    dpProc(monster => HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0);
     let bestScore = 0;
     let bestCount = 0;
     for (const line of dp1) {
@@ -2025,7 +2049,7 @@ function calcNumOfBestHeartSet(target) {
 }
 // ツリー上になってるこころセットの組み合わせを展開する
 function extractHeartSet(stack, tmp, heartSet) {
-    tmp[heartSet.pos] = heartSet.monster;
+    tmp[heartSet.pos] = heartSet;
     if (heartSet.subsets.length === 0) {
         stack.push(tmp.slice());
     }
@@ -2053,83 +2077,7 @@ function searchHeartSet(target) {
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, sets: [] };
-    if (HAS_REQSKILL) {
-        for (const monster of monsterList) {
-            if (monster.target === null) {
-                continue;
-            }
-            if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
-                continue;
-            }
-            const cost = getCost(monster);
-            const scores = target.colors.map(c => target.scorer.calc(c, monster));
-            for (let s = 0; s < SET_LEN; s++) {
-                for (let c = 0; c < COST_LEN; c++) {
-                    const state1 = dp1[s][c];
-                    if (state1 === null) {
-                        continue;
-                    }
-                    const state2 = dp2[s][c];
-                    if (state2 === null || state1.score > state2.score) {
-                        dp2[s][c] = {
-                            score: state1.score,
-                            sets: state1.sets.slice(),
-                        };
-                    }
-                    else if (state1.score === state2.score) {
-                        state2.sets = state2.sets.concat(state1.sets);
-                    }
-                    const c3 = c + cost;
-                    if (c3 >= COST_LEN) {
-                        continue;
-                    }
-                    for (let p = 0; p < COUNT; p++) {
-                        const s3 = s | (1 << p);
-                        if (s === s3) {
-                            continue;
-                        }
-                        const score3 = state1.score + scores[p];
-                        const state4 = dp2[s3][c3];
-                        if (state4 === null || score3 > state4.score) {
-                            dp2[s3][c3] = {
-                                score: score3,
-                                sets: [{
-                                        pos: p,
-                                        monster: monster,
-                                        subsets: state1.sets.slice(),
-                                    }],
-                            };
-                        }
-                        else if (score3 === state4.score) {
-                            state4.sets.push({
-                                pos: p,
-                                monster: monster,
-                                subsets: state1.sets.slice(),
-                            });
-                        }
-                    }
-                }
-            }
-            const dp3 = dp1;
-            dp1 = dp2;
-            dp2 = dp3;
-            dp2.forEach(a => a.fill(null));
-        }
-        for (let s = 0; s < SET_LEN; s++) {
-            if (popCount(s) < target.reqSkillCount) {
-                dp1[s].fill(null);
-            }
-        }
-    }
-    for (const monster of monsterList) {
-        if (monster.target === null) {
-            continue;
-        }
-        if (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0) {
-            continue;
-        }
-        const cost = getCost(monster);
-        const scores = target.colors.map(c => target.scorer.calc(c, monster));
+    function dpSubProc(monster, cost, scores) {
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
                 const state1 = dp1[s][c];
@@ -2163,6 +2111,7 @@ function searchHeartSet(target) {
                             sets: [{
                                     pos: p,
                                     monster: monster,
+                                    rank: monster.target,
                                     subsets: state1.sets.slice(),
                                 }],
                         };
@@ -2171,17 +2120,56 @@ function searchHeartSet(target) {
                         state4.sets.push({
                             pos: p,
                             monster: monster,
+                            rank: monster.target,
                             subsets: state1.sets.slice(),
                         });
                     }
                 }
             }
         }
-        const dp3 = dp1;
-        dp1 = dp2;
-        dp2 = dp3;
-        dp2.forEach(a => a.fill(null));
     }
+    function dpProc(skipFunc) {
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (skipFunc(monster)) {
+                continue;
+            }
+            let cost = getCost(monster);
+            let scores = target.colors.map(c => target.scorer.calc(c, monster));
+            dpSubProc(monster, cost, scores);
+            const withSplus = target.withSplus
+                && monster.withSplus
+                && monster.target !== Rank.S_plus
+                && monster.hearts.some(h => h.rank === Rank.S_plus);
+            if (withSplus) {
+                const heart = monster.hearts.find(h => h.rank === Rank.S_plus);
+                const tmpCurCost = monster.curCost;
+                const tmpTarget = monster.target;
+                monster.curCost = heart.cost;
+                monster.target = Rank.S_plus;
+                cost = getCost(monster);
+                scores = target.colors.map(c => target.scorer.calc(c, monster));
+                dpSubProc(monster, cost, scores);
+                monster.curCost = tmpCurCost;
+                monster.target = tmpTarget;
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+    }
+    if (HAS_REQSKILL) {
+        dpProc(monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
+    }
+    dpProc(monster => HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0);
     let best = null;
     for (const line of dp1) {
         for (const state of line) {
@@ -2225,10 +2213,15 @@ function searchHeartSet(target) {
         };
         for (let p = 0; p < COUNT; p++) {
             const c = target.colors[p];
-            const m = heartSet[p];
-            if (m === null) {
+            const hs = heartSet[p];
+            if (hs === null) {
                 continue;
             }
+            const m = hs.monster;
+            const tmpTarget = m.target;
+            const tmpCurCost = m.curCost;
+            m.target = hs.rank;
+            m.curCost = m.hearts.find(h => h.rank === hs.rank).cost;
             st.score += target.scorer.calc(c, m);
             st.maximumHP += MaximumHPScorer.calc(c, m);
             st.maximumMP += MaximumMPScorer.calc(c, m);
@@ -2240,8 +2233,10 @@ function searchHeartSet(target) {
             st.dexterity += DexterityScorer.calc(c, m);
             st.cost += m.curCost;
             st.maximumCost += m.hearts.find(h => h.rank === m.target).maximumCost;
+            m.curCost = tmpCurCost;
+            m.target = tmpTarget;
         }
-        const key = JSON.stringify({ status: st, hearts: heartSet.map(h => h?.id ?? -1).sort() });
+        const key = JSON.stringify({ status: st, hearts: heartSet.map(h => `${h?.monster.id ?? -1} ${h?.monster.target}`).sort() });
         if (omitDuplicate.has(key)) {
             continue;
         }
@@ -2265,10 +2260,15 @@ function searchHeartSet(target) {
         text(".result-item-dexterity", `${st.dexterity}`);
         for (let p = 0; p < COUNT; p++) {
             const c = target.colors[p];
-            const m = heartSet[p];
-            if (m === null) {
+            const hs = heartSet[p];
+            if (hs === null) {
                 continue;
             }
+            const m = hs.monster;
+            const tmpTarget = m.target;
+            const tmpCurCost = m.curCost;
+            m.target = hs.rank;
+            m.curCost = m.hearts.find(h => h.rank === hs.rank).cost;
             const h = fragment.querySelector(`.result-item-heart${p + 1}`);
             const info = (m.color === Color.Rainbow)
                 ? RainbowColorInfo
@@ -2284,6 +2284,8 @@ function searchHeartSet(target) {
             hsc.textContent = `( スコア: ${target.scorer.calc(c, m)} )`;
             fragment.querySelector(`.result-item-effects${p + 1}`)
                 .textContent = m.hearts.find(h => h.rank === m.target).effects;
+            m.target = tmpTarget;
+            m.curCost = tmpCurCost;
         }
         result.appendChild(fragment);
     }
@@ -2387,7 +2389,7 @@ document.getElementById("add_monster_name")
     }
 });
 // こころ追加フォームでキャンセルしたとき
-document.querySelector('#add_heart_dialog button[value="cancel"]')
+document.querySelector(`#add_heart_dialog button[value="cancel"]`)
     .addEventListener("click", () => {
     if (DEBUG) {
         console.log("click add_heart_dialog CANCEL button");
@@ -2433,6 +2435,7 @@ document.getElementById("add_heart_dialog")
                 effects: str("add_effects").trim(),
             }],
         target: rank,
+        withSplus: true,
     };
     const updated = addHeart(monster);
     if (DEBUG) {
@@ -2467,7 +2470,7 @@ document.getElementById("download")
     reader.readAsDataURL(new Blob([json]));
 });
 // ファイル読込フォームのキャンセル
-document.querySelector('#file_load_dialog button[value="cancel"]')
+document.querySelector(`#file_load_dialog button[value="cancel"]`)
     .addEventListener("click", () => {
     if (DEBUG) {
         console.log("click file_load_dialog CANCEL button");
@@ -2563,9 +2566,12 @@ function checkExpressionValidity(elemId) {
 // 特別条件式フォームのバリデーションの有無の切り替え
 document.getElementById("heart_require_skill")
     .addEventListener("change", () => {
+    const checked = document.getElementById("heart_require_skill").checked;
     document.getElementById("heart_require_skill_expression")
-        .required = document.getElementById("heart_require_skill").checked;
+        .required = checked;
     checkExpressionValidity("heart_require_skill_expression");
+    document.getElementById("heart_with_s_plus")
+        .disabled = checked;
 });
 // 特別条件式フォームのバリデーションのトリガーをセット
 document.getElementById("heart_require_skill_expression")
@@ -2589,13 +2595,20 @@ document.getElementById("expression")
         e.required = ge.checked;
         checkExpressionValidity("expression");
     };
-    const goals = document.querySelectorAll('#search_heart_dialog input[name="goal"]');
+    const goals = document.querySelectorAll(`#search_heart_dialog input[name="goal"]`);
     for (const goal of goals) {
         goal.addEventListener("change", f);
     }
 })();
+// 覚醒同時検索の有無の切り替え
+document.getElementById("heart_with_s_plus")
+    .addEventListener("change", () => {
+    const checked = document.getElementById("heart_with_s_plus").checked;
+    document.getElementById("heart_require_skill")
+        .disabled = checked;
+});
 // こころセット探索対象の設定フォームのキャンセル
-document.querySelector('#search_heart_dialog button[value="cancel"]')
+document.querySelector(`#search_heart_dialog button[value="cancel"]`)
     .addEventListener("click", () => {
     if (DEBUG) {
         console.log("click search_heart_dialog CANCEL button");
