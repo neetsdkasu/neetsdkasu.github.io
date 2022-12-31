@@ -2923,6 +2923,10 @@ document.getElementById("reset_rank")!
 .addEventListener("click", () => {
     let count = 0;
     for (const monster of monsterList) {
+        if (!monster.withSplus) {
+            monster.withSplus = true;
+            count++;
+        }
         if (monster.target !== null) {
             if (monster.hearts.every(h => h.rank >= monster.target!)) {
                 continue;
