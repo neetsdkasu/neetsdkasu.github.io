@@ -94,6 +94,8 @@ interface Monster {
     hearts: Heart[];
     target: Rank | null;
     withSplus: boolean;
+    defaultTarget: Rank | null;
+    defaultWithSplus: boolean;
 }
 
 interface Heart extends Status {
@@ -213,7 +215,7 @@ const JobPresetMaximumCost: JobMaximumCost[] = [
             { level: 47, maximumCost: 264 },
             { level: 46, maximumCost: 259 },
             { level: 45, maximumCost: 253 },
-
+            { level: 44, maximumCost: 248 },
             { level: 43, maximumCost: 243 },
             { level: 42, maximumCost: 238 },
             { level: 41, maximumCost: 232 },
@@ -418,6 +420,7 @@ window.addEventListener("storage", e => {
     }
 });
 
+// Dataインターフェースかを判定する
 function isData(anyobj: Data | unknown): anyobj is Data {
     if (typeof anyobj !== "object" || anyobj === null) {
         return false;
@@ -435,16 +438,24 @@ function isData(anyobj: Data | unknown): anyobj is Data {
     return true;
 }
 
+// ランクの変更箇所を数えて表示する
 function updateChangedRankCount() {
+    let defaultCount = 0;
     let count = 0;
     for (const monster of monsterList) {
+        if (monster.target !== monster.defaultTarget || monster.withSplus !== monster.defaultWithSplus) {
+            defaultCount++;
+        }
         if (monster.target === null) {
             count++;
             continue;
         }
-        // if (!monster.withSplus) { // 保留
-        //    count++;
-        //    continue;
+        // if (!monster.withSplus) {
+        //     // S+の情報が登録されている場合でS以下も登録されているときのみにwithSplusの変更が可能であり
+        //     // 現在がS+のとき、withSplusの情報に意味がなく(セット検索時では不要情報で、また、ランク変更時には変更が自明となるため)
+        //     // 現在がS+以外のときも、withSplusの情報に意味がない(ランク自体が変更されていることが自明となるため)
+        //     count++;
+        //     continue;
         // }
         if (monster.hearts.length === 1) {
             continue;
@@ -454,6 +465,7 @@ function updateChangedRankCount() {
         }
     }
     document.getElementById("changed_rank_count")!.textContent = `${count}`;
+    document.getElementById("changed_default_count")!.textContent = `${defaultCount}`;
 }
 
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
@@ -734,7 +746,7 @@ function equalHearts(h1: Heart, h2: Heart): boolean {
     return true;
 }
 
-// 新しいこころを追加する（情報は上書きされる）
+// 新しいこころを追加する (※データを上書きする)
 function addHeart(newMonster: Monster): boolean {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name)!;
@@ -755,6 +767,18 @@ function addHeart(newMonster: Monster): boolean {
         }
         if (monster.color !== newMonster.color) {
             monster.color = newMonster.color;
+            updated = true;
+        }
+        if (monster.withSplus !== newMonster.withSplus) {
+            monster.withSplus = newMonster.withSplus;
+            updated = true;
+        }
+        if (monster.defaultTarget !== newMonster.defaultTarget) {
+            monster.defaultTarget = newMonster.defaultTarget;
+            updated = true;
+        }
+        if (monster.defaultWithSplus !== newMonster.defaultWithSplus) {
+            monster.defaultWithSplus = newMonster.defaultWithSplus;
             updated = true;
         }
         let newCurCost = newMonster.curCost;
@@ -875,6 +899,8 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         }],
         target: Rank.S_plus,
         withSplus: true,
+        defaultTarget: Rank.S_plus,
+        defaultWithSplus: true,
     };
     const monster2: Monster = {
         id: 0,
@@ -883,17 +909,26 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         curCost: 1,
         hearts: [],
         target: null,
-        withSplus: true,
+        withSplus: false,
+        defaultTarget: null,
+        defaultWithSplus: false,
     };
-    let isOldFormat = false; // コスト情報の保持方法が古いフォーマットか否か
+    let isOldFormatCost = false; // コスト情報の保持方法が古いフォーマットか否か
+    let nothingDefault = false; // デフォルト情報がない古いフォーマットか否か
     for (const param in monster1) {
         if (param in obj === false) {
-            if (param === "withSplus") {
+            if (param === "defaultTarget") {
+                nothingDefault = true;
+                obj["defaultTarget"] = null;
+            } else if (param === "defaultWithSplus") {
+                nothingDefault = true;
+                obj["defaultWithSplus"] = true;
+            } else if (param === "withSplus") {
                 obj["withSplus"] = true;
             } else if (param === "curCost" && ("cost" in obj)) {
                 obj["curCost"] = obj["cost"];
                 delete obj["cost"];
-                isOldFormat = true;
+                isOldFormatCost = true;
             } else {
                 console.log(`パラメータが無い ${param}`);
                 console.log(obj);
@@ -921,6 +956,10 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         console.log(obj);
         return false;
     }
+    if (nothingDefault) {
+        m.defaultTarget = m.target;
+        m.defaultWithSplus = m.withSplus;
+    }
     if (!Array.isArray(m.hearts)) {
         console.log("こころの配列がない")
         console.log(obj);
@@ -939,7 +978,7 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
                 if (param === "dexterity" && ("deftness" in h)) {
                     h["dexterity"] = h["deftness"];
                     delete h["deftness"];
-                } else if (isOldFormat && param === "cost") {
+                } else if (isOldFormatCost && param === "cost") {
                     h["cost"] = m.curCost;
                 } else {
                     console.log(`パラメータが存在しない ${param}`);
@@ -1037,6 +1076,9 @@ function mergeMonsterList(list: Monster[]): boolean {
             monster.color = orig.color;
             monster.curCost = orig.curCost;
             monster.target = orig.target;
+            monster.withSplus = orig.withSplus;
+            monster.defaultTarget = orig.defaultTarget;
+            monster.defaultWithSplus = orig.defaultWithSplus;
         }
         if (addHeart(monster)) {
             updated = true;
@@ -2563,7 +2605,15 @@ document.getElementById("add_heart_dialog")!
         }],
         target: rank,
         withSplus: true,
+        defaultTarget: rank,
+        defaultWithSplus: true,
     };
+    if (monsterMap.has(monster.name)) {
+        const orig = monsterMap.get(monster.name)!;
+        monster.withSplus = orig.withSplus;
+        monster.defaultTarget = orig.defaultTarget;
+        monster.defaultWithSplus = orig.defaultWithSplus;
+    }
     const updated: boolean = addHeart(monster);
     if (DEBUG) {
         console.log(`add heart: updated: ${updated}`);
@@ -2918,20 +2968,20 @@ document.getElementById("check_require_skill")!
     dialog.showModal();
 });
 
-// 全こころのランク変更のリセット
+// 全こころのランク変更のクリア
 document.getElementById("reset_rank")!
 .addEventListener("click", () => {
     let count = 0;
     for (const monster of monsterList) {
-        if (!monster.withSplus) {
-            monster.withSplus = true;
-            count++;
-        }
         if (monster.target !== null) {
             if (monster.hearts.every(h => h.rank >= monster.target!)) {
-                continue;
+                if (monster.withSplus) {
+                    // ランク変更がないのでスキップ
+                    continue;
+                }
             }
         }
+        monster.withSplus = true;
         let bestRank = monster.hearts[0].rank;
         for (const heart of monster.hearts) {
             if (heart.rank < bestRank) {
@@ -2953,6 +3003,61 @@ document.getElementById("reset_rank")!
         saveMonsterList(Trigger.ChooseRank);
         updateChangedRankCount();
     }
+});
+
+// 全こころのランク変更を規定に戻す
+document.getElementById("return_default_rank")!
+.addEventListener("click", () => {
+    let count = 0;
+    for (const monster of monsterList) {
+        let changed = false;
+        if (monster.target !== monster.defaultTarget) {
+            monster.target = monster.defaultTarget;
+            changed = true;
+        }
+        if (monster.withSplus !== monster.defaultWithSplus) {
+            monster.withSplus = monster.defaultWithSplus;
+            changed = true;
+        }
+        if (!changed) {
+            // ランク変更がないのでスキップ
+            continue;
+        }
+        let reorder = false;
+        const newCurCost = monster.hearts.find(h => h.rank === monster.target)!.cost;
+        if (monster.curCost !== newCurCost) {
+            monster.curCost = newCurCost;
+            monsterList.sort((a, b) => b.curCost - a.curCost);
+            reorder = true;
+        }
+        showUpdatedHeart(monster, reorder);
+        count++;
+    }
+    if (count > 0) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+});
+
+// 現在の全こころのランク変更を規定にする
+document.getElementById("set_default_rank")!
+.addEventListener("click", () => {
+    let count = 0;
+    for (const monster of monsterList) {
+        if (monster.target !== monster.defaultTarget) {
+            monster.defaultTarget = monster.target;
+            count++;
+        }
+        if (monster.withSplus !== monster.defaultWithSplus) {
+            monster.defaultWithSplus = monster.withSplus;
+            count++;
+        }
+    }
+    if (count > 0) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+    dialogAlert("規定として登録しました");
 });
 
 /////////////////////////////////////////////////////////////////////////////////////

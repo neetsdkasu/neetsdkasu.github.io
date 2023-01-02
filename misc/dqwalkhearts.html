@@ -525,9 +525,12 @@
         <hr />
         <div id="heart_list"></div>
         <hr />
-        <div class="small">
-          <span>ランク変更箇所: <span id="changed_rank_count">0</span></span>
-          <span><button type="button" id="reset_rank">ランクのリセット</button></span>
+        <div class="small changed-rank-info">
+          <span>ランク変更: <span id="changed_rank_count">0</span></span>
+          <span>規定からの変更: <span id="changed_default_count">0</span></span>
+          <span><button type="button" id="reset_rank">ランク変更をクリアする</button></span>
+          <span><button type="button" id="return_default_rank">ランク変更を規定に戻す</button></span>
+          <span><button type="button" id="set_default_rank">現在のランク変更を規定とする</button></span>
         </div>
       </section>
 
