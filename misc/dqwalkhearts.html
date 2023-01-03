@@ -69,7 +69,7 @@
         <div>
           <span class="very-small">※同名の別種こころは登録できません(名前変えて登録して頂戴)</span>
           <br />
-          <label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" required />
+          <label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" pattern="[^\(\)\s]+" title="半角丸括弧や空白文字は使用できません" required />
         </div>
         <div>
           <span>色:</span>
@@ -129,7 +129,7 @@
           </div>
           <div>
             <label for="add_effects">スキル・特殊効果:</label>
-            <input type="text" name="add_effects" id="add_effects" placeholder="ギラ 毒耐性+3% メラ呪文ダメージ+5% など" />
+            <input type="text" name="add_effects" id="add_effects" placeholder="ギラ 毒耐性+3% メラ呪文ダメージ+5% など" pattern="[^\(\)]+" title="半角丸括弧は使用できません" />
           </div>
         </fieldset>
         <hr />
