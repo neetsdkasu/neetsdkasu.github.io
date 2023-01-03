@@ -527,10 +527,10 @@
         <hr />
         <div class="small changed-rank-info">
           <span>ランク変更: <span id="changed_rank_count">0</span></span>
-          <span>規定からの変更: <span id="changed_default_count">0</span></span>
+          <span>既定からの変更: <span id="changed_default_count">0</span></span>
           <span><button type="button" id="reset_rank">ランク変更をクリアする</button></span>
-          <span><button type="button" id="return_default_rank">ランク変更を規定に戻す</button></span>
-          <span><button type="button" id="set_default_rank">現在のランク変更を規定とする</button></span>
+          <span><button type="button" id="return_default_rank">ランク変更を既定に戻す</button></span>
+          <span><button type="button" id="set_default_rank">現在のランク変更を既定とする</button></span>
         </div>
       </section>
 
@@ -580,6 +580,24 @@
       <section class="secret damagetool">
         <h5>ダメージの目安の計算(雑)</h5>
         <details>
+          <div>
+            <dl>
+              <dt>属性</dt><dd>メラ属性とかヒャド属性とか</dd>
+              <dt>系統</dt><dd>スライム系とかドラゴン系とか</dd>
+            </dl>
+          </div>
+          <div class="outline">
+            <div class="small">こころ由来</div>
+            <div><button type="button" id="add_damage_heartset">追加</div>
+            <div id="damage_heartset_list"></div>
+          </div>
+          <hr />
+          <div class="outline">
+            <div class="small">スキル</div>
+            <div><button type="button" id="add_damage_skill">スキル追加</div>
+            <div id="damage_skill_list"></div>
+          </div>
+          <hr />
           <div class="outline" id="damage_nonheart">
             <div class="small">こころ以外</div>
             <div>
@@ -616,18 +634,6 @@
               <label>系統Y:<input type="number" min="0" max="999" name="damage_nonheart_monster_y" /></label>
               <label>系統Z:<input type="number" min="0" max="999" name="damage_nonheart_monster_z" /></label>
             </div>
-          </div>
-          <hr />
-          <div class="outline">
-            <div class="small">こころ由来</div>
-            <div><button type="button" id="add_damage_heartset">追加</div>
-            <div id="damage_heartset_list"></div>
-          </div>
-          <hr />
-          <div class="outline">
-            <div class="small">スキル</div>
-            <div><button type="button" id="add_damage_skill">スキル追加</div>
-            <div id="damage_skill_list"></div>
           </div>
           <hr />
           <div class="outline">

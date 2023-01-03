@@ -2487,6 +2487,7 @@ document.getElementById("add_heart_dialog")
     if (monsterMap.has(monster.name)) {
         const orig = monsterMap.get(monster.name);
         monster.withSplus = orig.withSplus;
+        // 単一のこころ追加においては既定は変更しない方針
         monster.defaultTarget = orig.defaultTarget;
         monster.defaultWithSplus = orig.defaultWithSplus;
     }
@@ -2875,7 +2876,7 @@ document.getElementById("reset_rank")
         updateChangedRankCount();
     }
 });
-// 全こころのランク変更を規定に戻す
+// 全こころのランク変更を既定に戻す
 document.getElementById("return_default_rank")
     .addEventListener("click", () => {
     let count = 0;
@@ -2908,7 +2909,7 @@ document.getElementById("return_default_rank")
         updateChangedRankCount();
     }
 });
-// 現在の全こころのランク変更を規定にする
+// 現在の全こころのランク変更を既定にする
 document.getElementById("set_default_rank")
     .addEventListener("click", () => {
     let count = 0;
@@ -2926,7 +2927,7 @@ document.getElementById("set_default_rank")
         saveMonsterList(Trigger.ChooseRank);
         updateChangedRankCount();
     }
-    dialogAlert("規定として登録しました");
+    dialogAlert("既定として登録しました");
 });
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス近距離を求める
@@ -3253,7 +3254,9 @@ document.getElementById("add_damage_heartset").addEventListener("click", () => {
     const fragment = template.content.cloneNode(true);
     const name = fragment.querySelector(`input[name="damage_heart_name"]`);
     name.value = `こころセット${damageToolUtil.nextHeartsetCount()}`;
-    document.getElementById("damage_heartset_list").appendChild(fragment);
+    const list = document.getElementById("damage_heartset_list");
+    list.appendChild(fragment);
+    // list.insertBefore(fragment, list.firstChild);
 });
 // ダメージ計算のスキル追加
 document.getElementById("add_damage_skill").addEventListener("click", () => {
@@ -3261,7 +3264,9 @@ document.getElementById("add_damage_skill").addEventListener("click", () => {
     const fragment = template.content.cloneNode(true);
     const name = fragment.querySelector(`input[name="damage_skill_name"]`);
     name.value = `スキル${damageToolUtil.nextSkillCount()}`;
-    document.getElementById("damage_skill_list").appendChild(fragment);
+    const list = document.getElementById("damage_skill_list");
+    list.appendChild(fragment);
+    // list.insertBefore(fragment, list.firstChild);
 });
 // ダメージ計算
 document.getElementById("calc_damages").addEventListener("click", () => {
