@@ -266,12 +266,14 @@ td
 }
 
 #heart_require_skill + * + *,
+#heart_require_skill_2 + * + *,
 #heart_with_s_plus + * + *
 {
     display: none;
 }
 
-#heart_require_skill:checked + * + *
+#heart_require_skill:checked + * + *,
+#heart_require_skill_2:checked + * + *
 {
     display: block;
 }

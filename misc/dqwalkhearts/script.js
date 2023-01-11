@@ -1877,6 +1877,8 @@ function parseTarget(elements) {
         reqSkillScorer: null,
         reqSkillExpr: "なし",
         reqSkillCount: 0,
+        reqSkill2Scorer: null,
+        reqSkill2Expr: "なし",
         withSplus: false,
     };
     for (let i = 1; i <= 4; i++) {
@@ -1943,6 +1945,11 @@ function parseTarget(elements) {
         target.reqSkillScorer = parseExpression(expr);
         target.reqSkillExpr = expr;
         target.reqSkillCount = parseInt(elem("heart_require_skill_expression_count").value);
+        if (elem("heart_require_skill_2").checked) {
+            const expr = elem("heart_require_skill_expression_2").value;
+            target.reqSkill2Scorer = parseExpression(expr);
+            target.reqSkill2Expr = expr;
+        }
     }
     document.getElementById("result_setname").textContent = target.setname;
     const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
@@ -1971,6 +1978,7 @@ function parseTarget(elements) {
     document.getElementById("result_goal").textContent = target.expr;
     document.getElementById("result_require_skill").textContent = target.reqSkillExpr
         + ((target.reqSkillCount > 0) ? ` [${target.reqSkillCount}個以上含める]` : "");
+    document.getElementById("result_require_skill_2").textContent = target.reqSkill2Expr;
     return target;
 }
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
@@ -1980,6 +1988,7 @@ function parseTarget(elements) {
 //      メモリ不足回避のために
 function calcNumOfBestHeartSet(target) {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
+    const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -1989,14 +1998,40 @@ function calcNumOfBestHeartSet(target) {
         : (m => m.curCost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
+    let baseTable = [];
     for (let i = 0; i < SET_LEN; i++) {
         dp1[i] = new Array(COST_LEN).fill(null);
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, count: 1 };
-    function dpSubProc(monster, cost, scores) {
+    function dpSubProc(useBaseTable, monster, cost, scores) {
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
+                if (useBaseTable) {
+                    const stateBT1 = baseTable[s][c];
+                    if (stateBT1 !== null) {
+                        const cBT3 = c + cost;
+                        if (cBT3 < COST_LEN) {
+                            for (let p = 0; p < COUNT; p++) {
+                                const sBT3 = s | (1 << p);
+                                if (s === sBT3) {
+                                    continue;
+                                }
+                                const scoreBT3 = stateBT1.score + scores[p];
+                                const stateBT4 = dp2[sBT3][cBT3];
+                                if (stateBT4 === null || scoreBT3 > stateBT4.score) {
+                                    dp2[sBT3][cBT3] = {
+                                        score: scoreBT3,
+                                        count: stateBT1.count,
+                                    };
+                                }
+                                else if (scoreBT3 === stateBT4.score) {
+                                    stateBT4.count += stateBT1.count;
+                                }
+                            }
+                        }
+                    }
+                }
                 const state1 = dp1[s][c];
                 if (state1 === null) {
                     continue;
@@ -2032,7 +2067,7 @@ function calcNumOfBestHeartSet(target) {
             }
         }
     }
-    function dpProc(skipFunc) {
+    function dpProc(useBaseTable, skipFunc) {
         for (const monster of monsterList) {
             if (monster.target === null) {
                 continue;
@@ -2042,7 +2077,7 @@ function calcNumOfBestHeartSet(target) {
             }
             let cost = getCost(monster);
             let scores = target.colors.map(c => target.scorer.calc(c, monster));
-            dpSubProc(monster, cost, scores);
+            dpSubProc(useBaseTable, monster, cost, scores);
             const withSplus = target.withSplus
                 && monster.withSplus
                 && monster.target !== Rank.S_plus
@@ -2055,7 +2090,7 @@ function calcNumOfBestHeartSet(target) {
                 monster.target = Rank.S_plus;
                 cost = getCost(monster);
                 scores = target.colors.map(c => target.scorer.calc(c, monster));
-                dpSubProc(monster, cost, scores);
+                dpSubProc(false, monster, cost, scores);
                 monster.curCost = tmpCurCost;
                 monster.target = tmpTarget;
             }
@@ -2066,14 +2101,26 @@ function calcNumOfBestHeartSet(target) {
         }
     }
     if (HAS_REQSKILL) {
-        dpProc(monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
+        dpProc(false, monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
         for (let s = 0; s < SET_LEN; s++) {
             if (popCount(s) < target.reqSkillCount) {
                 dp1[s].fill(null);
             }
         }
     }
-    dpProc(monster => HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0);
+    if (HAS_REQSKILL_2) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill2Scorer.calc(Color.Unset, monster) > 0));
+    }
+    dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_2 && target.reqSkill2Scorer.calc(Color.Unset, monster) > 0));
     let bestScore = 0;
     let bestCount = 0;
     for (const line of dp1) {
@@ -2108,6 +2155,7 @@ function extractHeartSet(stack, tmp, heartSet) {
 // ベストなこころ組み合わせを求めて表示する
 function searchHeartSet(target) {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
+    const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -2117,14 +2165,50 @@ function searchHeartSet(target) {
         : (m => m.curCost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
+    let baseTable = [];
     for (let i = 0; i < SET_LEN; i++) {
         dp1[i] = new Array(COST_LEN).fill(null);
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, sets: [] };
-    function dpSubProc(monster, cost, scores) {
+    function dpSubProc(useBaseTable, monster, cost, scores) {
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
+                if (useBaseTable) {
+                    const stateBT1 = baseTable[s][c];
+                    if (stateBT1 !== null) {
+                        const cBT3 = c + cost;
+                        if (cBT3 < COST_LEN) {
+                            for (let p = 0; p < COUNT; p++) {
+                                const sBT3 = s | (1 << p);
+                                if (s === sBT3) {
+                                    continue;
+                                }
+                                const scoreBT3 = stateBT1.score + scores[p];
+                                const stateBT4 = dp2[sBT3][cBT3];
+                                if (stateBT4 === null || scoreBT3 > stateBT4.score) {
+                                    dp2[sBT3][cBT3] = {
+                                        score: scoreBT3,
+                                        sets: [{
+                                                pos: p,
+                                                monster: monster,
+                                                rank: monster.target,
+                                                subsets: stateBT1.sets.slice(),
+                                            }],
+                                    };
+                                }
+                                else if (scoreBT3 === stateBT4.score) {
+                                    stateBT4.sets.push({
+                                        pos: p,
+                                        monster: monster,
+                                        rank: monster.target,
+                                        subsets: stateBT1.sets.slice(),
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
                 const state1 = dp1[s][c];
                 if (state1 === null) {
                     continue;
@@ -2173,7 +2257,7 @@ function searchHeartSet(target) {
             }
         }
     }
-    function dpProc(skipFunc) {
+    function dpProc(useBaseTable, skipFunc) {
         for (const monster of monsterList) {
             if (monster.target === null) {
                 continue;
@@ -2183,7 +2267,7 @@ function searchHeartSet(target) {
             }
             let cost = getCost(monster);
             let scores = target.colors.map(c => target.scorer.calc(c, monster));
-            dpSubProc(monster, cost, scores);
+            dpSubProc(useBaseTable, monster, cost, scores);
             const withSplus = target.withSplus
                 && monster.withSplus
                 && monster.target !== Rank.S_plus
@@ -2196,7 +2280,7 @@ function searchHeartSet(target) {
                 monster.target = Rank.S_plus;
                 cost = getCost(monster);
                 scores = target.colors.map(c => target.scorer.calc(c, monster));
-                dpSubProc(monster, cost, scores);
+                dpSubProc(false, monster, cost, scores);
                 monster.curCost = tmpCurCost;
                 monster.target = tmpTarget;
             }
@@ -2207,14 +2291,26 @@ function searchHeartSet(target) {
         }
     }
     if (HAS_REQSKILL) {
-        dpProc(monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
+        dpProc(false, monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
         for (let s = 0; s < SET_LEN; s++) {
             if (popCount(s) < target.reqSkillCount) {
                 dp1[s].fill(null);
             }
         }
     }
-    dpProc(monster => HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0);
+    if (HAS_REQSKILL_2) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill2Scorer.calc(Color.Unset, monster) > 0));
+    }
+    dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_2 && target.reqSkill2Scorer.calc(Color.Unset, monster) > 0));
     let best = null;
     for (const line of dp1) {
         for (const state of line) {
@@ -2617,7 +2713,7 @@ function checkExpressionValidity(elemId) {
     }
     return false;
 }
-// 特別条件式フォームのバリデーションの有無の切り替え
+// 特別条件式フォームの条件1のバリデーションの有無の切り替え
 document.getElementById("heart_require_skill")
     .addEventListener("change", () => {
     const checked = document.getElementById("heart_require_skill").checked;
@@ -2626,13 +2722,32 @@ document.getElementById("heart_require_skill")
     checkExpressionValidity("heart_require_skill_expression");
     document.getElementById("heart_with_s_plus")
         .disabled = checked;
+    const checked2 = checked && document.getElementById("heart_require_skill_2").checked;
+    document.getElementById("heart_require_skill_expression_2")
+        .required = checked2;
+    checkExpressionValidity("heart_require_skill_expression_2");
 });
-// 特別条件式フォームのバリデーションのトリガーをセット
+// 特別条件式フォームの条件2バリデーションの有無の切り替え
+document.getElementById("heart_require_skill_2")
+    .addEventListener("change", () => {
+    const checked = document.getElementById("heart_require_skill_2").checked;
+    document.getElementById("heart_require_skill_expression_2")
+        .required = checked;
+    checkExpressionValidity("heart_require_skill_expression_2");
+});
+// 特別条件式フォームの条件1のバリデーションのトリガーをセット
 document.getElementById("heart_require_skill_expression")
     // .addEventListener("blur", () => {
     // .addEventListener("focusout", () => {
     .addEventListener("input", () => {
     checkExpressionValidity("heart_require_skill_expression");
+});
+// 特別条件式フォームの条件2のバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression_2")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression_2");
 });
 // 式フォームのバリデーションのトリガーをセット
 document.getElementById("expression")
@@ -2775,13 +2890,8 @@ document.getElementById("check_expression")
     }
     dialog.showModal();
 });
-// 特別条件の式の確認ボタンを押した時の処理
-document.getElementById("check_require_skill")
-    .addEventListener("click", () => {
-    if (DEBUG) {
-        console.log("click check_require_skill");
-    }
-    const exprElem = document.getElementById("heart_require_skill_expression");
+function checkRequireSkillExpression(exprElemId) {
+    const exprElem = document.getElementById(exprElemId);
     if (!exprElem.reportValidity()) {
         return;
     }
@@ -2839,6 +2949,22 @@ document.getElementById("check_require_skill")
         }
     }
     dialog.showModal();
+}
+// 特別条件の条件1の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression");
+});
+// 特別条件の条件2の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill_2")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill_2");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression_2");
 });
 // 全こころのランク変更のクリア
 document.getElementById("reset_rank")
