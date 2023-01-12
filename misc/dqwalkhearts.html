@@ -481,12 +481,12 @@
               <button type="button" value="check" id="check_require_skill">式の確認</button>
             </fieldset>
             <input type="checkbox" name="heart_require_skill_2" id="heart_require_skill_2" />
-            <label for="heart_require_skill_2">条件2の使用</label>
+            <label for="heart_require_skill_2">条件2を追加 <span class="small">(条件2のこころもセットに含める)</span></label>
             <div>
               <fieldset>
                 <legend>条件2</legend>
                 <div class="small">
-                  条件1でスコアが0になるこころのうち<br />
+                  条件1でスコアが0以下になるこころのうち<br />
                   ここで指定した式でスコアが1以上になるこころを1個以上含めるようにセットを検索する<br />
                   ※ここで使う式は最大化の項目の式と同じ書式
                 </div>
@@ -494,6 +494,21 @@
                 <hr />
                 <button type="button" value="check" id="check_require_skill_2">式の確認</button>
               </fieldset>
+              <input type="checkbox" name="heart_require_skill_3" id="heart_require_skill_3" />
+              <label for="heart_require_skill_3">条件3を追加 <span class="small">(条件3のこころもセットに含める)</span></label>
+              <div>
+                <fieldset>
+                  <legend>条件3</legend>
+                  <div class="small">
+                    条件1と条件2でスコアが0以下になるこころのうち<br />
+                    ここで指定した式でスコアが1以上になるこころを1個以上含めるようにセットを検索する<br />
+                    ※ここで使う式は最大化の項目の式と同じ書式
+                  </div>
+                  <input type="text" name="heart_require_skill_expression_3" id="heart_require_skill_expression_3" placeholder="SKILL(ルカニ)+SKILL(かぶとわり)" maxlength="300" size="60" />
+                  <hr />
+                  <button type="button" value="check" id="check_require_skill_3">式の確認</button>
+                </fieldset>
+              </div>
             </div>
           </div>
         </div>
@@ -523,6 +538,7 @@
           <div><span>最大化:</span> <span id="result_goal"></span></div>
           <div><span>特別な条件(条件1):</span> <span id="result_require_skill"></span></div>
           <div><span>特別な条件(条件2):</span> <span id="result_require_skill_2"></span></div>
+          <div><span>特別な条件(条件3):</span> <span id="result_require_skill_3"></span></div>
         </div>
         <hr />
         <div id="result"><span class="small">ここに検索結果が表示されます</small></div>

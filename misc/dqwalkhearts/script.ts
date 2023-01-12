@@ -1142,6 +1142,8 @@ interface Target {
     reqSkillCount: number;
     reqSkill2Scorer: Scorer | null;
     reqSkill2Expr: string;
+    reqSkill3Scorer: Scorer | null;
+    reqSkill3Expr: string;
     withSplus: boolean;
 }
 
@@ -1983,6 +1985,8 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         reqSkillCount: 0,
         reqSkill2Scorer: null,
         reqSkill2Expr: "なし",
+        reqSkill3Scorer: null,
+        reqSkill3Expr: "なし",
         withSplus: false,
     };
     for (let i = 1; i <= 4; i++) {
@@ -2046,14 +2050,19 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
         throw `Unknown Maximize Target (${elem("goal")!.value})`;
     }
     if (elem("heart_require_skill")!.checked) {
-        const expr = elem("heart_require_skill_expression")!.value;
-        target.reqSkillScorer = parseExpression(expr);
-        target.reqSkillExpr = expr;
+        const expr1 = elem("heart_require_skill_expression")!.value;
+        target.reqSkillScorer = parseExpression(expr1);
+        target.reqSkillExpr = expr1;
         target.reqSkillCount = parseInt(elem("heart_require_skill_expression_count")!.value);
         if (elem("heart_require_skill_2")!.checked) {
-            const expr = elem("heart_require_skill_expression_2")!.value;
-            target.reqSkill2Scorer = parseExpression(expr);
-            target.reqSkill2Expr = expr;
+            const expr2 = elem("heart_require_skill_expression_2")!.value;
+            target.reqSkill2Scorer = parseExpression(expr2);
+            target.reqSkill2Expr = expr2;
+            if (elem("heart_require_skill_3")!.checked) {
+                const expr3 = elem("heart_require_skill_expression_3")!.value;
+                target.reqSkill3Scorer = parseExpression(expr3);
+                target.reqSkill3Expr = expr3;
+            }
         }
     }
     document.getElementById("result_setname")!.textContent = target.setname;
@@ -2083,6 +2092,7 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
     document.getElementById("result_require_skill")!.textContent = target.reqSkillExpr
         + ((target.reqSkillCount > 0) ? ` [${target.reqSkillCount}個以上含める]` : "");
     document.getElementById("result_require_skill_2")!.textContent = target.reqSkill2Expr;
+    document.getElementById("result_require_skill_3")!.textContent = target.reqSkill3Expr;
     return target;
 }
 
@@ -2111,6 +2121,7 @@ interface NumState {
 function calcNumOfBestHeartSet(target: Target): number {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
     const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
+    const HAS_REQSKILL_3 = target.reqSkill3Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -2238,8 +2249,21 @@ function calcNumOfBestHeartSet(target: Target): number {
         dpProc(true, monster => (target.reqSkillScorer!.calc(Color.Unset, monster) > 0)
             || !(target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0));
     }
+    if (HAS_REQSKILL_3) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer!.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill3Scorer!.calc(Color.Unset, monster) > 0));
+    }
     dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer!.calc(Color.Unset, monster) > 0)
-        || (HAS_REQSKILL_2 && target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0));
+        || (HAS_REQSKILL_2 && target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_3 && target.reqSkill3Scorer!.calc(Color.Unset, monster) > 0));
     let bestScore = 0;
     let bestCount = 0;
     for (const line of dp1) {
@@ -2275,6 +2299,7 @@ function extractHeartSet(stack: (HeartSet | null)[][], tmp: (HeartSet | null)[],
 function searchHeartSet(target: Target): void {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
     const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
+    const HAS_REQSKILL_3 = target.reqSkill3Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -2425,8 +2450,21 @@ function searchHeartSet(target: Target): void {
         dpProc(true, monster => (target.reqSkillScorer!.calc(Color.Unset, monster) > 0)
             || !(target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0));
     }
+    if (HAS_REQSKILL_3) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer!.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill3Scorer!.calc(Color.Unset, monster) > 0));
+    }
     dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer!.calc(Color.Unset, monster) > 0)
-        || (HAS_REQSKILL_2 && target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0));
+        || (HAS_REQSKILL_2 && target.reqSkill2Scorer!.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_3 && target.reqSkill3Scorer!.calc(Color.Unset, monster) > 0));
     let best: State | null = null;
     for (const line of dp1) {
         for (const state of line) {
@@ -2443,7 +2481,7 @@ function searchHeartSet(target: Target): void {
     const result = document.getElementById("result")!;
     result.innerHTML = "";
     if (best === null || best.sets.length === 0) {
-        result.textContent = "見つかりませんでした";
+        result.appendChild(document.createElement("b")).textContent = "見つかりませんでした";
         return;
     }
     const heartSets: (HeartSet | null)[][] = [];
@@ -2851,10 +2889,17 @@ document.getElementById("heart_require_skill")!
     (document.getElementById("heart_with_s_plus") as HTMLInputElement)
         .disabled = checked;
 
+    // 条件2
     const checked2 = checked && (document.getElementById("heart_require_skill_2") as HTMLInputElement).checked;
     (document.getElementById("heart_require_skill_expression_2") as HTMLInputElement)
         .required = checked2;
     checkExpressionValidity("heart_require_skill_expression_2");
+
+    // 条件3
+    const checked3 = checked2 && (document.getElementById("heart_require_skill_3") as HTMLInputElement).checked;
+    (document.getElementById("heart_require_skill_expression_3") as HTMLInputElement)
+        .required = checked3;
+    checkExpressionValidity("heart_require_skill_expression_3");
 });
 
 // 特別条件式フォームの条件2バリデーションの有無の切り替え
@@ -2864,6 +2909,21 @@ document.getElementById("heart_require_skill_2")!
     (document.getElementById("heart_require_skill_expression_2") as HTMLInputElement)
         .required = checked;
     checkExpressionValidity("heart_require_skill_expression_2");
+
+    // 条件3
+    const checked3 = checked && (document.getElementById("heart_require_skill_3") as HTMLInputElement).checked;
+    (document.getElementById("heart_require_skill_expression_3") as HTMLInputElement)
+        .required = checked3;
+    checkExpressionValidity("heart_require_skill_expression_3");
+});
+
+// 特別条件式フォームの条件3バリデーションの有無の切り替え
+document.getElementById("heart_require_skill_3")!
+.addEventListener("change", () => {
+    const checked = (document.getElementById("heart_require_skill_3") as HTMLInputElement).checked;
+    (document.getElementById("heart_require_skill_expression_3") as HTMLInputElement)
+        .required = checked;
+    checkExpressionValidity("heart_require_skill_expression_3");
 });
 
 // 特別条件式フォームの条件1のバリデーションのトリガーをセット
@@ -2880,6 +2940,14 @@ document.getElementById("heart_require_skill_expression_2")!
 // .addEventListener("focusout", () => {
 .addEventListener("input", () => {
     checkExpressionValidity("heart_require_skill_expression_2");
+});
+
+// 特別条件式フォームの条件3のバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression_3")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression_3");
 });
 
 // 式フォームのバリデーションのトリガーをセット
@@ -3098,6 +3166,15 @@ document.getElementById("check_require_skill_2")!
         console.log("click check_require_skill_2");
     }
     checkRequireSkillExpression("heart_require_skill_expression_2");
+});
+
+// 特別条件の条件3の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill_3")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill_3");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression_3");
 });
 
 // 全こころのランク変更のクリア
