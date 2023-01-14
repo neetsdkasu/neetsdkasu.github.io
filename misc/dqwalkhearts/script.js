@@ -1881,6 +1881,8 @@ function parseTarget(elements) {
         reqSkill2Expr: "なし",
         reqSkill3Scorer: null,
         reqSkill3Expr: "なし",
+        reqSkill4Scorer: null,
+        reqSkill4Expr: "なし",
         withSplus: false,
     };
     for (let i = 1; i <= 4; i++) {
@@ -1955,6 +1957,11 @@ function parseTarget(elements) {
                 const expr3 = elem("heart_require_skill_expression_3").value;
                 target.reqSkill3Scorer = parseExpression(expr3);
                 target.reqSkill3Expr = expr3;
+                if (elem("heart_require_skill_4").checked) {
+                    const expr4 = elem("heart_require_skill_expression_4").value;
+                    target.reqSkill4Scorer = parseExpression(expr4);
+                    target.reqSkill4Expr = expr4;
+                }
             }
         }
     }
@@ -1987,6 +1994,7 @@ function parseTarget(elements) {
         + ((target.reqSkillCount > 0) ? ` [${target.reqSkillCount}個以上含める]` : "");
     document.getElementById("result_require_skill_2").textContent = target.reqSkill2Expr;
     document.getElementById("result_require_skill_3").textContent = target.reqSkill3Expr;
+    document.getElementById("result_require_skill_4").textContent = target.reqSkill4Expr;
     return target;
 }
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
@@ -1998,6 +2006,7 @@ function calcNumOfBestHeartSet(target) {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
     const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
     const HAS_REQSKILL_3 = target.reqSkill3Scorer !== null;
+    const HAS_REQSKILL_4 = target.reqSkill4Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -2140,9 +2149,23 @@ function calcNumOfBestHeartSet(target) {
             || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
             || !(target.reqSkill3Scorer.calc(Color.Unset, monster) > 0));
     }
+    if (HAS_REQSKILL_4) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
+    }
     dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0)
         || (HAS_REQSKILL_2 && target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
-        || (HAS_REQSKILL_3 && target.reqSkill3Scorer.calc(Color.Unset, monster) > 0));
+        || (HAS_REQSKILL_3 && target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_4 && target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
     let bestScore = 0;
     let bestCount = 0;
     for (const line of dp1) {
@@ -2179,6 +2202,7 @@ function searchHeartSet(target) {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
     const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
     const HAS_REQSKILL_3 = target.reqSkill3Scorer !== null;
+    const HAS_REQSKILL_4 = target.reqSkill4Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -2344,9 +2368,23 @@ function searchHeartSet(target) {
             || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
             || !(target.reqSkill3Scorer.calc(Color.Unset, monster) > 0));
     }
+    if (HAS_REQSKILL_4) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
+    }
     dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0)
         || (HAS_REQSKILL_2 && target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
-        || (HAS_REQSKILL_3 && target.reqSkill3Scorer.calc(Color.Unset, monster) > 0));
+        || (HAS_REQSKILL_3 && target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_4 && target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
     let best = null;
     for (const line of dp1) {
         for (const state of line) {
@@ -2768,6 +2806,11 @@ document.getElementById("heart_require_skill")
     document.getElementById("heart_require_skill_expression_3")
         .required = checked3;
     checkExpressionValidity("heart_require_skill_expression_3");
+    // 条件4
+    const checked4 = checked3 && document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked4;
+    checkExpressionValidity("heart_require_skill_expression_4");
 });
 // 特別条件式フォームの条件2バリデーションの有無の切り替え
 document.getElementById("heart_require_skill_2")
@@ -2781,6 +2824,11 @@ document.getElementById("heart_require_skill_2")
     document.getElementById("heart_require_skill_expression_3")
         .required = checked3;
     checkExpressionValidity("heart_require_skill_expression_3");
+    // 条件4
+    const checked4 = checked3 && document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked4;
+    checkExpressionValidity("heart_require_skill_expression_4");
 });
 // 特別条件式フォームの条件3バリデーションの有無の切り替え
 document.getElementById("heart_require_skill_3")
@@ -2789,6 +2837,19 @@ document.getElementById("heart_require_skill_3")
     document.getElementById("heart_require_skill_expression_3")
         .required = checked;
     checkExpressionValidity("heart_require_skill_expression_3");
+    // 条件4
+    const checked4 = checked && document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked4;
+    checkExpressionValidity("heart_require_skill_expression_4");
+});
+// 特別条件式フォームの条件4バリデーションの有無の切り替え
+document.getElementById("heart_require_skill_3")
+    .addEventListener("change", () => {
+    const checked = document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked;
+    checkExpressionValidity("heart_require_skill_expression_4");
 });
 // 特別条件式フォームの条件1のバリデーションのトリガーをセット
 document.getElementById("heart_require_skill_expression")
@@ -2810,6 +2871,13 @@ document.getElementById("heart_require_skill_expression_3")
     // .addEventListener("focusout", () => {
     .addEventListener("input", () => {
     checkExpressionValidity("heart_require_skill_expression_3");
+});
+// 特別条件式フォームの条件4のバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression_4")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression_4");
 });
 // 式フォームのバリデーションのトリガーをセット
 document.getElementById("expression")
@@ -3035,6 +3103,14 @@ document.getElementById("check_require_skill_3")
         console.log("click check_require_skill_3");
     }
     checkRequireSkillExpression("heart_require_skill_expression_3");
+});
+// 特別条件の条件4の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill_4")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill_4");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression_4");
 });
 // 全こころのランク変更のクリア
 document.getElementById("reset_rank")

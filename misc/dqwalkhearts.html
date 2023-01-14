@@ -508,6 +508,21 @@
                   <hr />
                   <button type="button" value="check" id="check_require_skill_3">式の確認</button>
                 </fieldset>
+                <input type="checkbox" name="heart_require_skill_4" id="heart_require_skill_4" />
+                <label for="heart_require_skill_4">条件4を追加 <span class="small">(条件4のこころもセットに含める)</span></label>
+                <div>
+                  <fieldset>
+                    <legend>条件4</legend>
+                    <div class="small">
+                      条件1と条件2と条件3でスコアが0以下になるこころのうち<br />
+                      ここで指定した式でスコアが1以上になるこころを1個含めるようにセットを検索する<br />
+                      ※ここで使う式は最大化の項目の式と同じ書式
+                    </div>
+                    <input type="text" name="heart_require_skill_expression_4" id="heart_require_skill_expression_4" placeholder="SKILL(メラ)+SKILL(ヒャド)" maxlength="300" size="60" />
+                    <hr />
+                    <button type="button" value="check" id="check_require_skill_4">式の確認</button>
+                  </fieldset>
+                </div>
               </div>
             </div>
           </div>
@@ -539,6 +554,7 @@
           <div><span>特別な条件(条件1):</span> <span id="result_require_skill"></span></div>
           <div><span>特別な条件(条件2):</span> <span id="result_require_skill_2"></span></div>
           <div><span>特別な条件(条件3):</span> <span id="result_require_skill_3"></span></div>
+          <div><span>特別な条件(条件4):</span> <span id="result_require_skill_4"></span></div>
         </div>
         <hr />
         <div id="result"><span class="small">ここに検索結果が表示されます</small></div>

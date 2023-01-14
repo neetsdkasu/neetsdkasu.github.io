@@ -268,6 +268,7 @@ td
 #heart_require_skill + * + *,
 #heart_require_skill_2 + * + *,
 #heart_require_skill_3 + * + *,
+#heart_require_skill_4 + * + *,
 #heart_with_s_plus + * + *
 {
     display: none;
@@ -275,7 +276,8 @@ td
 
 #heart_require_skill:checked + * + *,
 #heart_require_skill_2:checked + * + *,
-#heart_require_skill_3:checked + * + *
+#heart_require_skill_3:checked + * + *,
+#heart_require_skill_4:checked + * + *
 {
     display: block;
 }
