@@ -69,7 +69,7 @@
         <div>
           <span class="very-small">※同名の別種こころは登録できません(名前変えて登録して頂戴)</span>
           <br />
-          <label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" required />
+          <label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" pattern="[^\(\)\s]+" title="半角丸括弧や空白文字は使用できません" required />
         </div>
         <div>
           <span>色:</span>
@@ -129,7 +129,7 @@
           </div>
           <div>
             <label for="add_effects">スキル・特殊効果:</label>
-            <input type="text" name="add_effects" id="add_effects" placeholder="ギラ 毒耐性+3% メラ呪文ダメージ+5% など" />
+            <input type="text" name="add_effects" id="add_effects" placeholder="ギラ 毒耐性+3% メラ呪文ダメージ+5% など" pattern="[^\(\)]+" title="半角丸括弧は使用できません" />
           </div>
         </fieldset>
         <hr />
@@ -454,9 +454,19 @@
           </div>
         </div>
         <div>
-            <input type="checkbox" name="heart_require_skill" id="heart_require_skill">
-            <label for="heart_require_skill">特別な条件</label>
+          <input type="checkbox" name="heart_with_s_plus" id="heart_with_s_plus" />
+          <label for="heart_with_s_plus">
+            <span>同一こころのS+とS以下の同時検索</span>
+            <span class="small"> ※特別な条件との同時利用はできません</span><br />
+          </label>
+          <span class="small"> ※S+のあるこころごとに同時検索するかの設定が必要です</span>
+        </div>
+        <div>
+          <input type="checkbox" name="heart_require_skill" id="heart_require_skill" />
+          <label for="heart_require_skill">特別な条件</label>
+          <div>
             <fieldset>
+              <legend>条件1</legend>
               <div class="small">
                 ここで指定した式でスコアが1以上になるこころを<select name="heart_require_skill_expression_count" id="heart_require_skill_expression_count">
                   <option value="1">1</option>
@@ -470,6 +480,52 @@
               <hr />
               <button type="button" value="check" id="check_require_skill">式の確認</button>
             </fieldset>
+            <input type="checkbox" name="heart_require_skill_2" id="heart_require_skill_2" />
+            <label for="heart_require_skill_2">条件2を追加 <span class="small">(条件2のこころもセットに含める)</span></label>
+            <div>
+              <fieldset>
+                <legend>条件2</legend>
+                <div class="small">
+                  条件1でスコアが0以下になるこころのうち<br />
+                  ここで指定した式でスコアが1以上になるこころを1個以上含めるようにセットを検索する<br />
+                  ※ここで使う式は最大化の項目の式と同じ書式
+                </div>
+                <input type="text" name="heart_require_skill_expression_2" id="heart_require_skill_expression_2" placeholder="SKILL(ベホイミ)+SKILL(ホイミ)" maxlength="300" size="60" />
+                <hr />
+                <button type="button" value="check" id="check_require_skill_2">式の確認</button>
+              </fieldset>
+              <input type="checkbox" name="heart_require_skill_3" id="heart_require_skill_3" />
+              <label for="heart_require_skill_3">条件3を追加 <span class="small">(条件3のこころもセットに含める)</span></label>
+              <div>
+                <fieldset>
+                  <legend>条件3</legend>
+                  <div class="small">
+                    条件1と条件2でスコアが0以下になるこころのうち<br />
+                    ここで指定した式でスコアが1以上になるこころを1個以上含めるようにセットを検索する<br />
+                    ※ここで使う式は最大化の項目の式と同じ書式
+                  </div>
+                  <input type="text" name="heart_require_skill_expression_3" id="heart_require_skill_expression_3" placeholder="SKILL(ルカニ)+SKILL(かぶとわり)" maxlength="300" size="60" />
+                  <hr />
+                  <button type="button" value="check" id="check_require_skill_3">式の確認</button>
+                </fieldset>
+                <input type="checkbox" name="heart_require_skill_4" id="heart_require_skill_4" />
+                <label for="heart_require_skill_4">条件4を追加 <span class="small">(条件4のこころもセットに含める)</span></label>
+                <div>
+                  <fieldset>
+                    <legend>条件4</legend>
+                    <div class="small">
+                      条件1と条件2と条件3でスコアが0以下になるこころのうち<br />
+                      ここで指定した式でスコアが1以上になるこころを1個含めるようにセットを検索する<br />
+                      ※ここで使う式は最大化の項目の式と同じ書式
+                    </div>
+                    <input type="text" name="heart_require_skill_expression_4" id="heart_require_skill_expression_4" placeholder="SKILL(メラ)+SKILL(ヒャド)" maxlength="300" size="60" />
+                    <hr />
+                    <button type="button" value="check" id="check_require_skill_4">式の確認</button>
+                  </fieldset>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
         <div class="dialog-buttons">
           <button type="submit" value="start">探索開始</button>
@@ -495,7 +551,10 @@
           <div><span>色適合時の変化:</span> <span id="result_power_up"></span>倍</div>
           <div><span>こころ最大コスト:</span> <span id="result_maximumcost"></span></div>
           <div><span>最大化:</span> <span id="result_goal"></span></div>
-          <div><span>特別な条件:</span> <span id="result_require_skill"></span></div>
+          <div><span>特別な条件(条件1):</span> <span id="result_require_skill"></span></div>
+          <div><span>特別な条件(条件2):</span> <span id="result_require_skill_2"></span></div>
+          <div><span>特別な条件(条件3):</span> <span id="result_require_skill_3"></span></div>
+          <div><span>特別な条件(条件4):</span> <span id="result_require_skill_4"></span></div>
         </div>
         <hr />
         <div id="result"><span class="small">ここに検索結果が表示されます</small></div>
@@ -517,9 +576,12 @@
         <hr />
         <div id="heart_list"></div>
         <hr />
-        <div class="small">
-          <span>ランク変更箇所: <span id="changed_rank_count">0</span></span>
-          <span><button type="button" id="reset_rank">ランクのリセット</button></span>
+        <div class="small changed-rank-info">
+          <span>ランク変更: <span id="changed_rank_count">0</span></span>
+          <span>既定からの変更: <span id="changed_default_count">0</span></span>
+          <span><button type="button" id="reset_rank">ランク変更をクリアする</button></span>
+          <span><button type="button" id="return_default_rank">ランク変更を既定に戻す</button></span>
+          <span><button type="button" id="set_default_rank">現在のランク変更を既定とする</button></span>
         </div>
       </section>
 
@@ -569,6 +631,24 @@
       <section class="secret damagetool">
         <h5>ダメージの目安の計算(雑)</h5>
         <details>
+          <div>
+            <dl>
+              <dt>属性</dt><dd>メラ属性とかヒャド属性とか</dd>
+              <dt>系統</dt><dd>スライム系とかドラゴン系とか</dd>
+            </dl>
+          </div>
+          <div class="outline">
+            <div class="small">こころ由来</div>
+            <div><button type="button" id="add_damage_heartset">追加</div>
+            <div id="damage_heartset_list"></div>
+          </div>
+          <hr />
+          <div class="outline">
+            <div class="small">スキル</div>
+            <div><button type="button" id="add_damage_skill">スキル追加</div>
+            <div id="damage_skill_list"></div>
+          </div>
+          <hr />
           <div class="outline" id="damage_nonheart">
             <div class="small">こころ以外</div>
             <div>
@@ -605,18 +685,6 @@
               <label>系統Y:<input type="number" min="0" max="999" name="damage_nonheart_monster_y" /></label>
               <label>系統Z:<input type="number" min="0" max="999" name="damage_nonheart_monster_z" /></label>
             </div>
-          </div>
-          <hr />
-          <div class="outline">
-            <div class="small">こころ由来</div>
-            <div><button type="button" id="add_damage_heartset">追加</div>
-            <div id="damage_heartset_list"></div>
-          </div>
-          <hr />
-          <div class="outline">
-            <div class="small">スキル</div>
-            <div><button type="button" id="add_damage_skill">スキル追加</div>
-            <div id="damage_skill_list"></div>
           </div>
           <hr />
           <div class="outline">
@@ -727,13 +795,13 @@
             </span>
             <span class="monster-name"></span>
             <span>
-              <label><input type="radio" class="monster-rank" value="S_plus"><span>S+</span></label>
-              <label><input type="radio" class="monster-rank" value="S"     ><span>S</span></label>
-              <label><input type="radio" class="monster-rank" value="A"     ><span>A</span></label>
-              <label><input type="radio" class="monster-rank" value="B"     ><span>B</span></label>
-              <label><input type="radio" class="monster-rank" value="C"     ><span>C</span></label>
-              <label><input type="radio" class="monster-rank" value="D"     ><span>D</span></label>
-              <label><input type="radio" class="monster-rank" value="omit"  ><span>－</span></label>
+              <label><input type="radio" class="monster-rank" value="S_plus" /><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"       /><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"       /><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"       /><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"       /><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"       /><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"    /><span>－</span></label>
             </span>
           </summary>
           <div><span>HP:</span> <span class="monster-maximumhp"></span></div>
@@ -746,7 +814,16 @@
           <div><span>器用:</span> <span class="monster-dexterity"></span></div>
           <div><span>こころ最大コスト:</span> <span class="monster-maximumcost"></span></div>
           <div><span>スキル・特殊効果:</span> <span class="monster-effects"></span></div>
-          <div><button type="button">追加・編集</button></div>
+          <div>
+            <button type="button">追加・編集</button>
+          </div>
+          <div>
+            <label>
+              <input type="checkbox" class="monster-with-s_plus" checked disabled />
+              <span>S+の同時検索</span>
+              <span class="small">※同一こころのS+とS以下の同時検索が有効時に反映</span>
+            </label>
+          </div>
         </details>
       </fieldset>
     </template>

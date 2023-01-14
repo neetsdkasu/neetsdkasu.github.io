@@ -126,6 +126,12 @@ fieldset > details > summary
     margin: 1rem;
 }
 
+.monster-rank-with-s_plus
+{
+    font-weight: bold;
+    color: purple;
+}
+
 .monster-rank:checked + span,
 input[name$="_rank"]:checked + label
 {
@@ -259,14 +265,26 @@ td
     background-color: #eeffff;
 }
 
-#heart_require_skill + * + *
+#heart_require_skill + * + *,
+#heart_require_skill_2 + * + *,
+#heart_require_skill_3 + * + *,
+#heart_require_skill_4 + * + *,
+#heart_with_s_plus + * + *
 {
     display: none;
 }
 
-#heart_require_skill:checked + * + *
+#heart_require_skill:checked + * + *,
+#heart_require_skill_2:checked + * + *,
+#heart_require_skill_3:checked + * + *,
+#heart_require_skill_4:checked + * + *
 {
     display: block;
+}
+
+#heart_with_s_plus:checked + * + *
+{
+    display: inline;
 }
 
 .dialog-buttons
@@ -279,8 +297,7 @@ td
     display: none;
 }
 
-#reset_rank
+.changed-rank-info > span
 {
     margin-left: 2em;
-    margin-right: 2em;
 }

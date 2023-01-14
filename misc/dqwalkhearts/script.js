@@ -159,7 +159,10 @@ const JobPresetMaximumCost = [
             { level: 47, maximumCost: 264 },
             { level: 46, maximumCost: 259 },
             { level: 45, maximumCost: 253 },
+            { level: 44, maximumCost: 248 },
+            { level: 43, maximumCost: 243 },
             { level: 42, maximumCost: 238 },
+            { level: 41, maximumCost: 232 },
             { level: 40, maximumCost: 227 },
             { level: 39, maximumCost: 222 },
             { level: 38, maximumCost: 216 },
@@ -344,6 +347,7 @@ window.addEventListener("storage", e => {
         }
     }
 });
+// Dataインターフェースかを判定する
 function isData(anyobj) {
     if (typeof anyobj !== "object" || anyobj === null) {
         return false;
@@ -360,13 +364,25 @@ function isData(anyobj) {
     }
     return true;
 }
+// ランクの変更箇所を数えて表示する
 function updateChangedRankCount() {
+    let defaultCount = 0;
     let count = 0;
     for (const monster of monsterList) {
+        if (monster.target !== monster.defaultTarget || monster.withSplus !== monster.defaultWithSplus) {
+            defaultCount++;
+        }
         if (monster.target === null) {
             count++;
             continue;
         }
+        // if (!monster.withSplus) {
+        //     // S+の情報が登録されている場合でS以下も登録されているときのみにwithSplusの変更が可能であり
+        //     // 現在がS+のとき、withSplusの情報に意味がなく(セット検索時では不要情報で、また、ランク変更時には変更が自明となるため)
+        //     // 現在がS+以外のときも、withSplusの情報に意味がない(ランク自体が変更されていることが自明となるため)
+        //     count++;
+        //     continue;
+        // }
         if (monster.hearts.length === 1) {
             continue;
         }
@@ -375,6 +391,7 @@ function updateChangedRankCount() {
         }
     }
     document.getElementById("changed_rank_count").textContent = `${count}`;
+    document.getElementById("changed_default_count").textContent = `${defaultCount}`;
 }
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
 function showNewHeart(monster) {
@@ -391,13 +408,15 @@ function showNewHeart(monster) {
         ? RainbowColorInfo
         : SingleColorInfoMap.get(monster.color);
     text(".monster-color", csi.text).classList.add(csi.colorName);
-    const radios = fragment.querySelectorAll('input.monster-rank');
+    const radios = fragment.querySelectorAll("input.monster-rank");
     const monsterRankRadioName = `monster_${monster.id}_rank`;
     for (const radio of radios) {
         const elm = radio;
         elm.name = monsterRankRadioName;
         if (elm.value === "omit") {
+            // こころのランク切り替え (不使用設定)
             elm.addEventListener("change", () => {
+                // type="radio"はONに変更された場合だけchangeイベントが発行される
                 monster.target = null;
                 saveMonsterList(Trigger.ChooseRank);
                 showUpdatedHeart(monster, false);
@@ -406,8 +425,10 @@ function showNewHeart(monster) {
         }
         else {
             const rank = Rank[elm.value];
-            elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+            elm.disabled = !monster.hearts.some(h => h.rank === rank);
+            // こころのランク切り替え (ランク設定)
             elm.addEventListener("change", () => {
+                // type="radio"はONに変更された場合だけchangeイベントが発行される
                 monster.target = rank;
                 let reorder = false;
                 const newCurCost = monster.hearts.find(h => h.rank === rank).cost;
@@ -426,6 +447,15 @@ function showNewHeart(monster) {
             });
         }
     }
+    const withSplusElem = fragment.querySelector(".monster-with-s_plus");
+    withSplusElem.checked = monster.withSplus;
+    withSplusElem.addEventListener("change", () => {
+        // type="checkboxk"はON/OFFの切り替えでchangeイベントが発行される
+        monster.withSplus = !monster.withSplus;
+        saveMonsterList(Trigger.ChooseRank);
+        showUpdatedHeart(monster, false);
+        updateChangedRankCount();
+    });
     if (monster.target === null) {
         fragment.firstElementChild.classList.add("omit");
         for (const radio of radios) {
@@ -467,6 +497,11 @@ function showNewHeart(monster) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
+        if (monster.target !== Rank.S_plus) {
+            if (monster.hearts.some(h => h.rank === Rank.S_plus)) {
+                withSplusElem.disabled = false;
+            }
+        }
     }
     fragment.querySelector("button").addEventListener("click", () => {
         const dialog = document.getElementById("add_heart_dialog");
@@ -498,6 +533,12 @@ function showNewHeart(monster) {
         }
         dialog.showModal();
     });
+    const withSplus = monster.withSplus
+        && monster.target !== Rank.S_plus
+        && monster.hearts.some(h => h.rank === monster.target);
+    if (withSplus) {
+        fragment.querySelector("input.monster-rank + span").classList.add("monster-rank-with-s_plus");
+    }
     fragment.firstElementChild.id = `monster-${monster.id}`;
     const holder = document.getElementById("heart_list");
     const index = monsterList.findIndex(m => m.id === monster.id);
@@ -541,7 +582,9 @@ function showUpdatedHeart(monster, reorder) {
     });
     classList.remove(RainbowColorInfo.colorName);
     classList.add(csi.colorName);
-    const radios = item.querySelectorAll('input.monster-rank');
+    item.querySelector(".monster-with-s_plus")
+        .checked = monster.withSplus;
+    const radios = item.querySelectorAll("input.monster-rank");
     if (monster.target === null) {
         item.classList.remove("not-best");
         item.classList.add("omit");
@@ -549,7 +592,7 @@ function showUpdatedHeart(monster, reorder) {
             const elm = radio;
             if (elm.value !== "omit") {
                 const rank = Rank[elm.value];
-                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+                elm.disabled = !monster.hearts.some(h => h.rank === rank);
             }
             else {
                 elm.checked = true;
@@ -565,6 +608,8 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-dexterity", "-");
         text(".monster-maximumcost", "-");
         text(".monster-effects", "-");
+        item.querySelector(".monster-with-s_plus")
+            .disabled = true;
     }
     else {
         item.classList.remove("omit");
@@ -579,7 +624,7 @@ function showUpdatedHeart(monster, reorder) {
             const elm = radio;
             if (elm.value !== "omit") {
                 const rank = Rank[elm.value];
-                elm.disabled = monster.hearts.findIndex(h => h.rank === rank) < 0;
+                elm.disabled = !monster.hearts.some(h => h.rank === rank);
                 elm.checked = rank === heart.rank;
             }
         }
@@ -593,6 +638,18 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
+        item.querySelector(".monster-with-s_plus")
+            .disabled = monster.target === Rank.S_plus
+            || !monster.hearts.some(h => h.rank === Rank.S_plus);
+    }
+    const withSplus = monster.withSplus
+        && monster.target !== Rank.S_plus
+        && monster.hearts.some(h => h.rank === monster.target);
+    if (withSplus) {
+        item.querySelector("input.monster-rank + span").classList.add("monster-rank-with-s_plus");
+    }
+    else {
+        item.querySelector("input.monster-rank + span").classList.remove("monster-rank-with-s_plus");
     }
 }
 // モンスター名リストに新しいモンスター名を追加する
@@ -619,7 +676,7 @@ function equalHearts(h1, h2) {
     }
     return true;
 }
-// 新しいこころを追加する（情報は上書きされる）
+// 新しいこころを追加する (※データを上書きする)
 function addHeart(newMonster) {
     if (monsterMap.has(newMonster.name)) {
         const monster = monsterMap.get(newMonster.name);
@@ -641,6 +698,18 @@ function addHeart(newMonster) {
         }
         if (monster.color !== newMonster.color) {
             monster.color = newMonster.color;
+            updated = true;
+        }
+        if (monster.withSplus !== newMonster.withSplus) {
+            monster.withSplus = newMonster.withSplus;
+            updated = true;
+        }
+        if (monster.defaultTarget !== newMonster.defaultTarget) {
+            monster.defaultTarget = newMonster.defaultTarget;
+            updated = true;
+        }
+        if (monster.defaultWithSplus !== newMonster.defaultWithSplus) {
+            monster.defaultWithSplus = newMonster.defaultWithSplus;
             updated = true;
         }
         let newCurCost = newMonster.curCost;
@@ -759,6 +828,9 @@ function isMonster(anyobj) {
                 effects: "str",
             }],
         target: Rank.S_plus,
+        withSplus: true,
+        defaultTarget: Rank.S_plus,
+        defaultWithSplus: true,
     };
     const monster2 = {
         id: 0,
@@ -767,14 +839,29 @@ function isMonster(anyobj) {
         curCost: 1,
         hearts: [],
         target: null,
+        withSplus: false,
+        defaultTarget: null,
+        defaultWithSplus: false,
     };
-    let isOldFormat = false;
+    let isOldFormatCost = false; // コスト情報の保持方法が古いフォーマットか否か
+    let nothingDefault = false; // デフォルト情報がない古いフォーマットか否か
     for (const param in monster1) {
         if (param in obj === false) {
-            if (param === "curCost" && ("cost" in obj)) {
+            if (param === "defaultTarget") {
+                nothingDefault = true;
+                obj["defaultTarget"] = null;
+            }
+            else if (param === "defaultWithSplus") {
+                nothingDefault = true;
+                obj["defaultWithSplus"] = true;
+            }
+            else if (param === "withSplus") {
+                obj["withSplus"] = true;
+            }
+            else if (param === "curCost" && ("cost" in obj)) {
                 obj["curCost"] = obj["cost"];
                 delete obj["cost"];
-                isOldFormat = true;
+                isOldFormatCost = true;
             }
             else {
                 console.log(`パラメータが無い ${param}`);
@@ -803,6 +890,10 @@ function isMonster(anyobj) {
         console.log(obj);
         return false;
     }
+    if (nothingDefault) {
+        m.defaultTarget = m.target;
+        m.defaultWithSplus = m.withSplus;
+    }
     if (!Array.isArray(m.hearts)) {
         console.log("こころの配列がない");
         console.log(obj);
@@ -822,7 +913,7 @@ function isMonster(anyobj) {
                     h["dexterity"] = h["deftness"];
                     delete h["deftness"];
                 }
-                else if (isOldFormat && param === "cost") {
+                else if (isOldFormatCost && param === "cost") {
                     h["cost"] = m.curCost;
                 }
                 else {
@@ -918,6 +1009,9 @@ function mergeMonsterList(list) {
             monster.color = orig.color;
             monster.curCost = orig.curCost;
             monster.target = orig.target;
+            monster.withSplus = orig.withSplus;
+            monster.defaultTarget = orig.defaultTarget;
+            monster.defaultWithSplus = orig.defaultWithSplus;
         }
         if (addHeart(monster)) {
             updated = true;
@@ -1782,7 +1876,14 @@ function parseTarget(elements) {
         expr: "",
         reqSkillScorer: null,
         reqSkillExpr: "なし",
-        reqSkillCount: 0
+        reqSkillCount: 0,
+        reqSkill2Scorer: null,
+        reqSkill2Expr: "なし",
+        reqSkill3Scorer: null,
+        reqSkill3Expr: "なし",
+        reqSkill4Scorer: null,
+        reqSkill4Expr: "なし",
+        withSplus: false,
     };
     for (let i = 1; i <= 4; i++) {
         let color = (elem(`heart${i}_yellow`).checked ? Color.Yellow : Color.Unset) |
@@ -1801,6 +1902,7 @@ function parseTarget(elements) {
     target.setname = inferSetName(target.colors);
     target.maximumCost = parseInt(elem("heart_maximum_cost").value);
     target.asLimitCost = elem("as_limit_heart_cost").checked;
+    target.withSplus = elem("heart_with_s_plus").checked;
     switch (elem("goal").value) {
         case "maximumhp":
             target.scorer = MaximumHPScorer;
@@ -1843,10 +1945,25 @@ function parseTarget(elements) {
             throw `Unknown Maximize Target (${elem("goal").value})`;
     }
     if (elem("heart_require_skill").checked) {
-        const expr = elem("heart_require_skill_expression").value;
-        target.reqSkillScorer = parseExpression(expr);
-        target.reqSkillExpr = expr;
+        const expr1 = elem("heart_require_skill_expression").value;
+        target.reqSkillScorer = parseExpression(expr1);
+        target.reqSkillExpr = expr1;
         target.reqSkillCount = parseInt(elem("heart_require_skill_expression_count").value);
+        if (elem("heart_require_skill_2").checked) {
+            const expr2 = elem("heart_require_skill_expression_2").value;
+            target.reqSkill2Scorer = parseExpression(expr2);
+            target.reqSkill2Expr = expr2;
+            if (elem("heart_require_skill_3").checked) {
+                const expr3 = elem("heart_require_skill_expression_3").value;
+                target.reqSkill3Scorer = parseExpression(expr3);
+                target.reqSkill3Expr = expr3;
+                if (elem("heart_require_skill_4").checked) {
+                    const expr4 = elem("heart_require_skill_expression_4").value;
+                    target.reqSkill4Scorer = parseExpression(expr4);
+                    target.reqSkill4Expr = expr4;
+                }
+            }
+        }
     }
     document.getElementById("result_setname").textContent = target.setname;
     const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
@@ -1875,6 +1992,9 @@ function parseTarget(elements) {
     document.getElementById("result_goal").textContent = target.expr;
     document.getElementById("result_require_skill").textContent = target.reqSkillExpr
         + ((target.reqSkillCount > 0) ? ` [${target.reqSkillCount}個以上含める]` : "");
+    document.getElementById("result_require_skill_2").textContent = target.reqSkill2Expr;
+    document.getElementById("result_require_skill_3").textContent = target.reqSkill3Expr;
+    document.getElementById("result_require_skill_4").textContent = target.reqSkill4Expr;
     return target;
 }
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
@@ -1884,6 +2004,9 @@ function parseTarget(elements) {
 //      メモリ不足回避のために
 function calcNumOfBestHeartSet(target) {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
+    const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
+    const HAS_REQSKILL_3 = target.reqSkill3Scorer !== null;
+    const HAS_REQSKILL_4 = target.reqSkill4Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -1893,79 +2016,40 @@ function calcNumOfBestHeartSet(target) {
         : (m => m.curCost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
+    let baseTable = [];
     for (let i = 0; i < SET_LEN; i++) {
         dp1[i] = new Array(COST_LEN).fill(null);
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, count: 1 };
-    if (HAS_REQSKILL) {
-        for (const monster of monsterList) {
-            if (monster.target === null) {
-                continue;
-            }
-            if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
-                continue;
-            }
-            const cost = getCost(monster);
-            const scores = target.colors.map(c => target.scorer.calc(c, monster));
-            for (let s = 0; s < SET_LEN; s++) {
-                for (let c = 0; c < COST_LEN; c++) {
-                    const state1 = dp1[s][c];
-                    if (state1 === null) {
-                        continue;
-                    }
-                    const state2 = dp2[s][c];
-                    if (state2 === null || state1.score > state2.score) {
-                        dp2[s][c] = state1;
-                    }
-                    else if (state1.score === state2.score) {
-                        state2.count += state1.count;
-                    }
-                    const c3 = c + cost;
-                    if (c3 >= COST_LEN) {
-                        continue;
-                    }
-                    for (let p = 0; p < COUNT; p++) {
-                        const s3 = s | (1 << p);
-                        if (s === s3) {
-                            continue;
-                        }
-                        const score3 = state1.score + scores[p];
-                        const state4 = dp2[s3][c3];
-                        if (state4 === null || score3 > state4.score) {
-                            dp2[s3][c3] = {
-                                score: score3,
-                                count: state1.count,
-                            };
-                        }
-                        else if (score3 === state4.score) {
-                            state4.count += state1.count;
+    function dpSubProc(useBaseTable, monster, cost, scores) {
+        for (let s = 0; s < SET_LEN; s++) {
+            for (let c = 0; c < COST_LEN; c++) {
+                if (useBaseTable) {
+                    const stateBT1 = baseTable[s][c];
+                    if (stateBT1 !== null) {
+                        const cBT3 = c + cost;
+                        if (cBT3 < COST_LEN) {
+                            for (let p = 0; p < COUNT; p++) {
+                                const sBT3 = s | (1 << p);
+                                if (s === sBT3) {
+                                    continue;
+                                }
+                                const scoreBT3 = stateBT1.score + scores[p];
+                                const stateBT4 = dp2[sBT3][cBT3];
+                                if (stateBT4 === null || scoreBT3 > stateBT4.score) {
+                                    dp2[sBT3][cBT3] = {
+                                        score: scoreBT3,
+                                        count: stateBT1.count,
+                                    };
+                                }
+                                else if (scoreBT3 === stateBT4.score) {
+                                    stateBT4.count += stateBT1.count;
+                                }
+                            }
                         }
                     }
                 }
-            }
-            const dp3 = dp1;
-            dp1 = dp2;
-            dp2 = dp3;
-            dp2.forEach(a => a.fill(null));
-        }
-        for (let s = 0; s < SET_LEN; s++) {
-            if (popCount(s) < target.reqSkillCount) {
-                dp1[s].fill(null);
-            }
-        }
-    }
-    for (const monster of monsterList) {
-        if (monster.target === null) {
-            continue;
-        }
-        if (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0) {
-            continue;
-        }
-        const cost = getCost(monster);
-        const scores = target.colors.map(c => target.scorer.calc(c, monster));
-        for (let s = 0; s < SET_LEN; s++) {
-            for (let c = 0; c < COST_LEN; c++) {
                 const state1 = dp1[s][c];
                 if (state1 === null) {
                     continue;
@@ -2000,11 +2084,88 @@ function calcNumOfBestHeartSet(target) {
                 }
             }
         }
-        const dp3 = dp1;
-        dp1 = dp2;
-        dp2 = dp3;
-        dp2.forEach(a => a.fill(null));
     }
+    function dpProc(useBaseTable, skipFunc) {
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (skipFunc(monster)) {
+                continue;
+            }
+            let cost = getCost(monster);
+            let scores = target.colors.map(c => target.scorer.calc(c, monster));
+            dpSubProc(useBaseTable, monster, cost, scores);
+            const withSplus = target.withSplus
+                && monster.withSplus
+                && monster.target !== Rank.S_plus
+                && monster.hearts.some(h => h.rank === Rank.S_plus);
+            if (withSplus) {
+                const heart = monster.hearts.find(h => h.rank === Rank.S_plus);
+                const tmpCurCost = monster.curCost;
+                const tmpTarget = monster.target;
+                monster.curCost = heart.cost;
+                monster.target = Rank.S_plus;
+                cost = getCost(monster);
+                scores = target.colors.map(c => target.scorer.calc(c, monster));
+                dpSubProc(false, monster, cost, scores);
+                monster.curCost = tmpCurCost;
+                monster.target = tmpTarget;
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+    }
+    if (HAS_REQSKILL) {
+        dpProc(false, monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
+    }
+    if (HAS_REQSKILL_2) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill2Scorer.calc(Color.Unset, monster) > 0));
+    }
+    if (HAS_REQSKILL_3) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill3Scorer.calc(Color.Unset, monster) > 0));
+    }
+    if (HAS_REQSKILL_4) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
+    }
+    dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_2 && target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_3 && target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_4 && target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
     let bestScore = 0;
     let bestCount = 0;
     for (const line of dp1) {
@@ -2025,7 +2186,7 @@ function calcNumOfBestHeartSet(target) {
 }
 // ツリー上になってるこころセットの組み合わせを展開する
 function extractHeartSet(stack, tmp, heartSet) {
-    tmp[heartSet.pos] = heartSet.monster;
+    tmp[heartSet.pos] = heartSet;
     if (heartSet.subsets.length === 0) {
         stack.push(tmp.slice());
     }
@@ -2039,6 +2200,9 @@ function extractHeartSet(stack, tmp, heartSet) {
 // ベストなこころ組み合わせを求めて表示する
 function searchHeartSet(target) {
     const HAS_REQSKILL = target.reqSkillScorer !== null;
+    const HAS_REQSKILL_2 = target.reqSkill2Scorer !== null;
+    const HAS_REQSKILL_3 = target.reqSkill3Scorer !== null;
+    const HAS_REQSKILL_4 = target.reqSkill4Scorer !== null;
     const OFFSET = 10;
     const COUNT = target.colors.length;
     const SET_LEN = 1 << COUNT;
@@ -2048,90 +2212,50 @@ function searchHeartSet(target) {
         : (m => m.curCost - m.hearts.find(h => h.rank === m.target).maximumCost);
     let dp1 = new Array(SET_LEN);
     let dp2 = new Array(SET_LEN);
+    let baseTable = [];
     for (let i = 0; i < SET_LEN; i++) {
         dp1[i] = new Array(COST_LEN).fill(null);
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, sets: [] };
-    if (HAS_REQSKILL) {
-        for (const monster of monsterList) {
-            if (monster.target === null) {
-                continue;
-            }
-            if (!(target.reqSkillScorer.calc(Color.Unset, monster) > 0)) {
-                continue;
-            }
-            const cost = getCost(monster);
-            const scores = target.colors.map(c => target.scorer.calc(c, monster));
-            for (let s = 0; s < SET_LEN; s++) {
-                for (let c = 0; c < COST_LEN; c++) {
-                    const state1 = dp1[s][c];
-                    if (state1 === null) {
-                        continue;
-                    }
-                    const state2 = dp2[s][c];
-                    if (state2 === null || state1.score > state2.score) {
-                        dp2[s][c] = {
-                            score: state1.score,
-                            sets: state1.sets.slice(),
-                        };
-                    }
-                    else if (state1.score === state2.score) {
-                        state2.sets = state2.sets.concat(state1.sets);
-                    }
-                    const c3 = c + cost;
-                    if (c3 >= COST_LEN) {
-                        continue;
-                    }
-                    for (let p = 0; p < COUNT; p++) {
-                        const s3 = s | (1 << p);
-                        if (s === s3) {
-                            continue;
-                        }
-                        const score3 = state1.score + scores[p];
-                        const state4 = dp2[s3][c3];
-                        if (state4 === null || score3 > state4.score) {
-                            dp2[s3][c3] = {
-                                score: score3,
-                                sets: [{
+    function dpSubProc(useBaseTable, monster, cost, scores) {
+        for (let s = 0; s < SET_LEN; s++) {
+            for (let c = 0; c < COST_LEN; c++) {
+                if (useBaseTable) {
+                    const stateBT1 = baseTable[s][c];
+                    if (stateBT1 !== null) {
+                        const cBT3 = c + cost;
+                        if (cBT3 < COST_LEN) {
+                            for (let p = 0; p < COUNT; p++) {
+                                const sBT3 = s | (1 << p);
+                                if (s === sBT3) {
+                                    continue;
+                                }
+                                const scoreBT3 = stateBT1.score + scores[p];
+                                const stateBT4 = dp2[sBT3][cBT3];
+                                if (stateBT4 === null || scoreBT3 > stateBT4.score) {
+                                    dp2[sBT3][cBT3] = {
+                                        score: scoreBT3,
+                                        sets: [{
+                                                pos: p,
+                                                monster: monster,
+                                                rank: monster.target,
+                                                subsets: stateBT1.sets.slice(),
+                                            }],
+                                    };
+                                }
+                                else if (scoreBT3 === stateBT4.score) {
+                                    stateBT4.sets.push({
                                         pos: p,
                                         monster: monster,
-                                        subsets: state1.sets.slice(),
-                                    }],
-                            };
-                        }
-                        else if (score3 === state4.score) {
-                            state4.sets.push({
-                                pos: p,
-                                monster: monster,
-                                subsets: state1.sets.slice(),
-                            });
+                                        rank: monster.target,
+                                        subsets: stateBT1.sets.slice(),
+                                    });
+                                }
+                            }
                         }
                     }
                 }
-            }
-            const dp3 = dp1;
-            dp1 = dp2;
-            dp2 = dp3;
-            dp2.forEach(a => a.fill(null));
-        }
-        for (let s = 0; s < SET_LEN; s++) {
-            if (popCount(s) < target.reqSkillCount) {
-                dp1[s].fill(null);
-            }
-        }
-    }
-    for (const monster of monsterList) {
-        if (monster.target === null) {
-            continue;
-        }
-        if (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0) {
-            continue;
-        }
-        const cost = getCost(monster);
-        const scores = target.colors.map(c => target.scorer.calc(c, monster));
-        for (let s = 0; s < SET_LEN; s++) {
-            for (let c = 0; c < COST_LEN; c++) {
                 const state1 = dp1[s][c];
                 if (state1 === null) {
                     continue;
@@ -2163,6 +2287,7 @@ function searchHeartSet(target) {
                             sets: [{
                                     pos: p,
                                     monster: monster,
+                                    rank: monster.target,
                                     subsets: state1.sets.slice(),
                                 }],
                         };
@@ -2171,17 +2296,95 @@ function searchHeartSet(target) {
                         state4.sets.push({
                             pos: p,
                             monster: monster,
+                            rank: monster.target,
                             subsets: state1.sets.slice(),
                         });
                     }
                 }
             }
         }
-        const dp3 = dp1;
-        dp1 = dp2;
-        dp2 = dp3;
-        dp2.forEach(a => a.fill(null));
     }
+    function dpProc(useBaseTable, skipFunc) {
+        for (const monster of monsterList) {
+            if (monster.target === null) {
+                continue;
+            }
+            if (skipFunc(monster)) {
+                continue;
+            }
+            let cost = getCost(monster);
+            let scores = target.colors.map(c => target.scorer.calc(c, monster));
+            dpSubProc(useBaseTable, monster, cost, scores);
+            const withSplus = target.withSplus
+                && monster.withSplus
+                && monster.target !== Rank.S_plus
+                && monster.hearts.some(h => h.rank === Rank.S_plus);
+            if (withSplus) {
+                const heart = monster.hearts.find(h => h.rank === Rank.S_plus);
+                const tmpCurCost = monster.curCost;
+                const tmpTarget = monster.target;
+                monster.curCost = heart.cost;
+                monster.target = Rank.S_plus;
+                cost = getCost(monster);
+                scores = target.colors.map(c => target.scorer.calc(c, monster));
+                dpSubProc(false, monster, cost, scores);
+                monster.curCost = tmpCurCost;
+                monster.target = tmpTarget;
+            }
+            const dp3 = dp1;
+            dp1 = dp2;
+            dp2 = dp3;
+            dp2.forEach(a => a.fill(null));
+        }
+    }
+    if (HAS_REQSKILL) {
+        dpProc(false, monster => !(target.reqSkillScorer.calc(Color.Unset, monster) > 0));
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) < target.reqSkillCount) {
+                dp1[s].fill(null);
+            }
+        }
+    }
+    if (HAS_REQSKILL_2) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill2Scorer.calc(Color.Unset, monster) > 0));
+    }
+    if (HAS_REQSKILL_3) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill3Scorer.calc(Color.Unset, monster) > 0));
+    }
+    if (HAS_REQSKILL_4) {
+        for (let s = 0; s < SET_LEN; s++) {
+            if (popCount(s) === COUNT) {
+                dp1[s].fill(null);
+            }
+        }
+        baseTable = dp1.map(a => a.slice());
+        dp1.forEach(a => a.fill(null));
+        dpProc(true, monster => (target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+            || (target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+            || !(target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
+    }
+    dpProc(false, monster => (HAS_REQSKILL && target.reqSkillScorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_2 && target.reqSkill2Scorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_3 && target.reqSkill3Scorer.calc(Color.Unset, monster) > 0)
+        || (HAS_REQSKILL_4 && target.reqSkill4Scorer.calc(Color.Unset, monster) > 0));
     let best = null;
     for (const line of dp1) {
         for (const state of line) {
@@ -2199,7 +2402,7 @@ function searchHeartSet(target) {
     const result = document.getElementById("result");
     result.innerHTML = "";
     if (best === null || best.sets.length === 0) {
-        result.textContent = "見つかりませんでした";
+        result.appendChild(document.createElement("b")).textContent = "見つかりませんでした";
         return;
     }
     const heartSets = [];
@@ -2225,10 +2428,15 @@ function searchHeartSet(target) {
         };
         for (let p = 0; p < COUNT; p++) {
             const c = target.colors[p];
-            const m = heartSet[p];
-            if (m === null) {
+            const hs = heartSet[p];
+            if (hs === null) {
                 continue;
             }
+            const m = hs.monster;
+            const tmpTarget = m.target;
+            const tmpCurCost = m.curCost;
+            m.target = hs.rank;
+            m.curCost = m.hearts.find(h => h.rank === hs.rank).cost;
             st.score += target.scorer.calc(c, m);
             st.maximumHP += MaximumHPScorer.calc(c, m);
             st.maximumMP += MaximumMPScorer.calc(c, m);
@@ -2240,8 +2448,10 @@ function searchHeartSet(target) {
             st.dexterity += DexterityScorer.calc(c, m);
             st.cost += m.curCost;
             st.maximumCost += m.hearts.find(h => h.rank === m.target).maximumCost;
+            m.curCost = tmpCurCost;
+            m.target = tmpTarget;
         }
-        const key = JSON.stringify({ status: st, hearts: heartSet.map(h => h?.id ?? -1).sort() });
+        const key = JSON.stringify({ status: st, hearts: heartSet.map(h => `${h?.monster.id ?? -1} ${h?.monster.target}`).sort() });
         if (omitDuplicate.has(key)) {
             continue;
         }
@@ -2265,10 +2475,15 @@ function searchHeartSet(target) {
         text(".result-item-dexterity", `${st.dexterity}`);
         for (let p = 0; p < COUNT; p++) {
             const c = target.colors[p];
-            const m = heartSet[p];
-            if (m === null) {
+            const hs = heartSet[p];
+            if (hs === null) {
                 continue;
             }
+            const m = hs.monster;
+            const tmpTarget = m.target;
+            const tmpCurCost = m.curCost;
+            m.target = hs.rank;
+            m.curCost = m.hearts.find(h => h.rank === hs.rank).cost;
             const h = fragment.querySelector(`.result-item-heart${p + 1}`);
             const info = (m.color === Color.Rainbow)
                 ? RainbowColorInfo
@@ -2284,6 +2499,8 @@ function searchHeartSet(target) {
             hsc.textContent = `( スコア: ${target.scorer.calc(c, m)} )`;
             fragment.querySelector(`.result-item-effects${p + 1}`)
                 .textContent = m.hearts.find(h => h.rank === m.target).effects;
+            m.target = tmpTarget;
+            m.curCost = tmpCurCost;
         }
         result.appendChild(fragment);
     }
@@ -2387,7 +2604,7 @@ document.getElementById("add_monster_name")
     }
 });
 // こころ追加フォームでキャンセルしたとき
-document.querySelector('#add_heart_dialog button[value="cancel"]')
+document.querySelector(`#add_heart_dialog button[value="cancel"]`)
     .addEventListener("click", () => {
     if (DEBUG) {
         console.log("click add_heart_dialog CANCEL button");
@@ -2433,7 +2650,17 @@ document.getElementById("add_heart_dialog")
                 effects: str("add_effects").trim(),
             }],
         target: rank,
+        withSplus: true,
+        defaultTarget: rank,
+        defaultWithSplus: true,
     };
+    if (monsterMap.has(monster.name)) {
+        const orig = monsterMap.get(monster.name);
+        monster.withSplus = orig.withSplus;
+        // 単一のこころ追加においては既定は変更しない方針
+        monster.defaultTarget = orig.defaultTarget;
+        monster.defaultWithSplus = orig.defaultWithSplus;
+    }
     const updated = addHeart(monster);
     if (DEBUG) {
         console.log(`add heart: updated: ${updated}`);
@@ -2467,7 +2694,7 @@ document.getElementById("download")
     reader.readAsDataURL(new Blob([json]));
 });
 // ファイル読込フォームのキャンセル
-document.querySelector('#file_load_dialog button[value="cancel"]')
+document.querySelector(`#file_load_dialog button[value="cancel"]`)
     .addEventListener("click", () => {
     if (DEBUG) {
         console.log("click file_load_dialog CANCEL button");
@@ -2560,19 +2787,97 @@ function checkExpressionValidity(elemId) {
     }
     return false;
 }
-// 特別条件式フォームのバリデーションの有無の切り替え
+// 特別条件式フォームの条件1のバリデーションの有無の切り替え
 document.getElementById("heart_require_skill")
     .addEventListener("change", () => {
+    const checked = document.getElementById("heart_require_skill").checked;
     document.getElementById("heart_require_skill_expression")
-        .required = document.getElementById("heart_require_skill").checked;
+        .required = checked;
     checkExpressionValidity("heart_require_skill_expression");
+    document.getElementById("heart_with_s_plus")
+        .disabled = checked;
+    // 条件2
+    const checked2 = checked && document.getElementById("heart_require_skill_2").checked;
+    document.getElementById("heart_require_skill_expression_2")
+        .required = checked2;
+    checkExpressionValidity("heart_require_skill_expression_2");
+    // 条件3
+    const checked3 = checked2 && document.getElementById("heart_require_skill_3").checked;
+    document.getElementById("heart_require_skill_expression_3")
+        .required = checked3;
+    checkExpressionValidity("heart_require_skill_expression_3");
+    // 条件4
+    const checked4 = checked3 && document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked4;
+    checkExpressionValidity("heart_require_skill_expression_4");
 });
-// 特別条件式フォームのバリデーションのトリガーをセット
+// 特別条件式フォームの条件2バリデーションの有無の切り替え
+document.getElementById("heart_require_skill_2")
+    .addEventListener("change", () => {
+    const checked = document.getElementById("heart_require_skill_2").checked;
+    document.getElementById("heart_require_skill_expression_2")
+        .required = checked;
+    checkExpressionValidity("heart_require_skill_expression_2");
+    // 条件3
+    const checked3 = checked && document.getElementById("heart_require_skill_3").checked;
+    document.getElementById("heart_require_skill_expression_3")
+        .required = checked3;
+    checkExpressionValidity("heart_require_skill_expression_3");
+    // 条件4
+    const checked4 = checked3 && document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked4;
+    checkExpressionValidity("heart_require_skill_expression_4");
+});
+// 特別条件式フォームの条件3バリデーションの有無の切り替え
+document.getElementById("heart_require_skill_3")
+    .addEventListener("change", () => {
+    const checked = document.getElementById("heart_require_skill_3").checked;
+    document.getElementById("heart_require_skill_expression_3")
+        .required = checked;
+    checkExpressionValidity("heart_require_skill_expression_3");
+    // 条件4
+    const checked4 = checked && document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked4;
+    checkExpressionValidity("heart_require_skill_expression_4");
+});
+// 特別条件式フォームの条件4バリデーションの有無の切り替え
+document.getElementById("heart_require_skill_3")
+    .addEventListener("change", () => {
+    const checked = document.getElementById("heart_require_skill_4").checked;
+    document.getElementById("heart_require_skill_expression_4")
+        .required = checked;
+    checkExpressionValidity("heart_require_skill_expression_4");
+});
+// 特別条件式フォームの条件1のバリデーションのトリガーをセット
 document.getElementById("heart_require_skill_expression")
     // .addEventListener("blur", () => {
     // .addEventListener("focusout", () => {
     .addEventListener("input", () => {
     checkExpressionValidity("heart_require_skill_expression");
+});
+// 特別条件式フォームの条件2のバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression_2")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression_2");
+});
+// 特別条件式フォームの条件3のバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression_3")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression_3");
+});
+// 特別条件式フォームの条件4のバリデーションのトリガーをセット
+document.getElementById("heart_require_skill_expression_4")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    checkExpressionValidity("heart_require_skill_expression_4");
 });
 // 式フォームのバリデーションのトリガーをセット
 document.getElementById("expression")
@@ -2589,13 +2894,20 @@ document.getElementById("expression")
         e.required = ge.checked;
         checkExpressionValidity("expression");
     };
-    const goals = document.querySelectorAll('#search_heart_dialog input[name="goal"]');
+    const goals = document.querySelectorAll(`#search_heart_dialog input[name="goal"]`);
     for (const goal of goals) {
         goal.addEventListener("change", f);
     }
 })();
+// 覚醒同時検索の有無の切り替え
+document.getElementById("heart_with_s_plus")
+    .addEventListener("change", () => {
+    const checked = document.getElementById("heart_with_s_plus").checked;
+    document.getElementById("heart_require_skill")
+        .disabled = checked;
+});
 // こころセット探索対象の設定フォームのキャンセル
-document.querySelector('#search_heart_dialog button[value="cancel"]')
+document.querySelector(`#search_heart_dialog button[value="cancel"]`)
     .addEventListener("click", () => {
     if (DEBUG) {
         console.log("click search_heart_dialog CANCEL button");
@@ -2708,13 +3020,8 @@ document.getElementById("check_expression")
     }
     dialog.showModal();
 });
-// 特別条件の式の確認ボタンを押した時の処理
-document.getElementById("check_require_skill")
-    .addEventListener("click", () => {
-    if (DEBUG) {
-        console.log("click check_require_skill");
-    }
-    const exprElem = document.getElementById("heart_require_skill_expression");
+function checkRequireSkillExpression(exprElemId) {
+    const exprElem = document.getElementById(exprElemId);
     if (!exprElem.reportValidity()) {
         return;
     }
@@ -2772,17 +3079,53 @@ document.getElementById("check_require_skill")
         }
     }
     dialog.showModal();
+}
+// 特別条件の条件1の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression");
 });
-// 全こころのランク変更のリセット
+// 特別条件の条件2の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill_2")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill_2");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression_2");
+});
+// 特別条件の条件3の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill_3")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill_3");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression_3");
+});
+// 特別条件の条件4の式の確認ボタンを押した時の処理
+document.getElementById("check_require_skill_4")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_require_skill_4");
+    }
+    checkRequireSkillExpression("heart_require_skill_expression_4");
+});
+// 全こころのランク変更のクリア
 document.getElementById("reset_rank")
     .addEventListener("click", () => {
     let count = 0;
     for (const monster of monsterList) {
         if (monster.target !== null) {
             if (monster.hearts.every(h => h.rank >= monster.target)) {
-                continue;
+                if (monster.withSplus) {
+                    // ランク変更がないのでスキップ
+                    continue;
+                }
             }
         }
+        monster.withSplus = true;
         let bestRank = monster.hearts[0].rank;
         for (const heart of monster.hearts) {
             if (heart.rank < bestRank) {
@@ -2804,6 +3147,59 @@ document.getElementById("reset_rank")
         saveMonsterList(Trigger.ChooseRank);
         updateChangedRankCount();
     }
+});
+// 全こころのランク変更を既定に戻す
+document.getElementById("return_default_rank")
+    .addEventListener("click", () => {
+    let count = 0;
+    for (const monster of monsterList) {
+        let changed = false;
+        if (monster.target !== monster.defaultTarget) {
+            monster.target = monster.defaultTarget;
+            changed = true;
+        }
+        if (monster.withSplus !== monster.defaultWithSplus) {
+            monster.withSplus = monster.defaultWithSplus;
+            changed = true;
+        }
+        if (!changed) {
+            // ランク変更がないのでスキップ
+            continue;
+        }
+        let reorder = false;
+        const newCurCost = monster.hearts.find(h => h.rank === monster.target).cost;
+        if (monster.curCost !== newCurCost) {
+            monster.curCost = newCurCost;
+            monsterList.sort((a, b) => b.curCost - a.curCost);
+            reorder = true;
+        }
+        showUpdatedHeart(monster, reorder);
+        count++;
+    }
+    if (count > 0) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+});
+// 現在の全こころのランク変更を既定にする
+document.getElementById("set_default_rank")
+    .addEventListener("click", () => {
+    let count = 0;
+    for (const monster of monsterList) {
+        if (monster.target !== monster.defaultTarget) {
+            monster.defaultTarget = monster.target;
+            count++;
+        }
+        if (monster.withSplus !== monster.defaultWithSplus) {
+            monster.defaultWithSplus = monster.withSplus;
+            count++;
+        }
+    }
+    if (count > 0) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+    dialogAlert("既定として登録しました");
 });
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス近距離を求める
@@ -3130,7 +3526,9 @@ document.getElementById("add_damage_heartset").addEventListener("click", () => {
     const fragment = template.content.cloneNode(true);
     const name = fragment.querySelector(`input[name="damage_heart_name"]`);
     name.value = `こころセット${damageToolUtil.nextHeartsetCount()}`;
-    document.getElementById("damage_heartset_list").appendChild(fragment);
+    const list = document.getElementById("damage_heartset_list");
+    list.appendChild(fragment);
+    // list.insertBefore(fragment, list.firstChild);
 });
 // ダメージ計算のスキル追加
 document.getElementById("add_damage_skill").addEventListener("click", () => {
@@ -3138,7 +3536,9 @@ document.getElementById("add_damage_skill").addEventListener("click", () => {
     const fragment = template.content.cloneNode(true);
     const name = fragment.querySelector(`input[name="damage_skill_name"]`);
     name.value = `スキル${damageToolUtil.nextSkillCount()}`;
-    document.getElementById("damage_skill_list").appendChild(fragment);
+    const list = document.getElementById("damage_skill_list");
+    list.appendChild(fragment);
+    // list.insertBefore(fragment, list.firstChild);
 });
 // ダメージ計算
 document.getElementById("calc_damages").addEventListener("click", () => {
