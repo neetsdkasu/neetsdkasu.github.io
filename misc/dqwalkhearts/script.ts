@@ -23,6 +23,39 @@ function dialogAlert(msg: string): void {
     dialog.showModal();
 }
 
+let waitDialogCanceler: (() => void) | null = null;
+
+function dialogWait(msg: string | null, proc: () => void, canceler: (() => void) | null): void {
+    if (DEBUG) {
+        console.log(`dialogWait: ${msg}`);
+    }
+    document.getElementById("wait_message")!.textContent = msg ?? "しばらくお待ちください";
+    const dialog = document.getElementById("wait_dialog")! as HTMLDialogElement;
+    waitDialogCanceler = canceler;
+    setTimeout(proc, 1);
+    dialog.returnValue = "";
+    dialog.showModal();
+}
+
+function closeWaitDialog(returnValue: string) {
+    const dialog = document.getElementById("wait_dialog") as HTMLDialogElement;
+    dialog.returnValue = returnValue;
+    dialog.close();
+}
+
+document.getElementById("wait_dialog")!.addEventListener("close", () => {
+    if (DEBUG) {
+        console.log(`close wait_dialog`);
+    }
+    const dialog = document.getElementById("wait_dialog") as HTMLDialogElement;
+    if (dialog.returnValue !== "cancel") {
+        return;
+    }
+    if (waitDialogCanceler !== null) {
+        waitDialogCanceler();
+    }
+});
+
 function popCount(value: number): number {
     value = (value & 0x55555555) + ((value >>> 1) & 0x55555555);
     value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
@@ -3353,6 +3386,9 @@ document.getElementById("set_default_rank")!
     dialogAlert("既定として登録しました");
 });
 
+
+/////////////////////////////////////////////////////////////////////////////////////
+// ステータス距離
 /////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -3503,6 +3539,9 @@ document.getElementById("calc_status_distance")!.addEventListener("click", () =>
 
 
 /////////////////////////////////////////////////////////////////////////////////////
+// ダメージ目安計算
+/////////////////////////////////////////////////////////////////////////////////////
+
 
 class DamageToolData {
     name: string;
@@ -3795,6 +3834,174 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
 });
 
 
+/////////////////////////////////////////////////////////////////////////////////////
+// なんか、こころセット検索
+/////////////////////////////////////////////////////////////////////////////////////
+
+interface RNCoCo {
+    quadratic: number;
+    linear: number;
+    constant: number;
+}
+
+interface RNScorer {
+    scorer: Scorer;
+    goal: number;
+    lowerPenalty: RNCoCo;
+    higherPenalty: RNCoCo;
+    bonus: RNCoCo;
+}
+
+interface RNTarget {
+    job: Job;
+    maximumCost: number;
+    asLimitCost: boolean;
+    costCoCo: RNCoCo;
+    scoreres: RNScorer[];
+}
+
+function searchRNHeartset(target: RNTarget) {
+    let time = 0;
+    let id: number | null = null;
+    const canceler = () => {
+        time += 30;
+        if (id !== null) {
+            clearTimeout(id);
+        }
+        document.getElementById("reallyneeded_result")!.textContent = "キャンセル";
+    };
+    const proc = () => {
+        time++;
+        if (time < 30) {
+            id = setTimeout(proc, 1000);
+        } else {
+            closeWaitDialog("");
+            document.getElementById("reallyneeded_result")!.textContent = "やっほ";
+        }
+    };
+    dialogWait(null, proc, canceler);
+}
+
+// 職業ごとのこころ枠の組み合わせをフォームに設定する
+document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
+    const sel = document.getElementById("reallyneeded_job") as HTMLSelectElement;
+    const value = parseInt(sel.value ?? "0");
+    for (const job of JobPreset) {
+        if (job.id !== value) {
+            continue;
+        }
+        const maximumCostList = document.getElementById("reallyneeded_job_preset_maximum_cost_list")!;
+        maximumCostList.innerHTML = "";
+        for (const x of JobPresetMaximumCost) {
+            if (job.id < x.id || x.id + 100 <= job.id) {
+                continue;
+            }
+            for (const item of x.maximumCostList) {
+                const op = maximumCostList.appendChild(document.createElement("option"));
+                op.value = `${item.maximumCost}`;
+                op.textContent = ` Lv ${item.level}`;
+            }
+        }
+        return;
+    }
+    dialogAlert(`Unknown ID: ${value}`);
+});
+
+document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
+    const elem = (id: string) => document.getElementById(id) as HTMLInputElement;
+    const num = (id: string) => {
+        const x = parseInt(elem(id).value ?? "0");
+        return isNaN(x) ? 0 : x;
+    };
+
+    const jobId = num("reallyneeded_job");
+    const job = JobPreset.find(x => x.id === jobId)!;
+
+    const maximumCost = num("reallyneeded_heart_maximum_cost");
+    const asLimitCost = elem("reallyneeded_as_limit_heart_cost").checked;
+
+    const costCoCo: RNCoCo = {
+        quadratic: num("reallyneeded_heart_maximum_cost_hp2"),
+        linear: num("reallyneeded_heart_maximum_cost_hp1"),
+        constant: num("reallyneeded_heart_maximum_cost_hpc")
+    };
+
+    const target: RNTarget = {
+        job: job,
+        maximumCost: maximumCost,
+        asLimitCost: asLimitCost,
+        costCoCo: costCoCo,
+        scoreres: [],
+    };
+
+    const targetList: {name: string, scorer: Scorer | null}[] = [
+        {name: "maximumhp",    scorer: MaximumHPScorer},
+        {name: "maximummp",    scorer: MaximumMPScorer},
+        {name: "power",        scorer: PowerScorer},
+        {name: "defence",      scorer: DefenceScorer},
+        {name: "attackmagic",  scorer: AttackMagicScorer},
+        {name: "recovermagic", scorer: RecoverMagicScorer},
+        {name: "speed",        scorer: SpeedScorer},
+        {name: "dexterity",    scorer: DexterityScorer},
+        {name: "expr1",        scorer: null},
+        {name: "expr2",        scorer: null},
+        {name: "expr3",        scorer: null},
+        {name: "expr4",        scorer: null},
+        {name: "expr5",        scorer: null},
+        {name: "expr6",        scorer: null}
+    ];
+
+    for (const spec of targetList) {
+        if (!elem(`reallyneeded_${spec.name}`).checked) {
+            continue;
+        }
+        let scorer = spec.scorer;
+        if (scorer === null) {
+            const expr = elem(`reallyneeded_${spec.name}_expr`).value ?? "";
+            if (expr.trim() === "") {
+                dialogAlert(`${spec.name}でエラー: 式がありません`);
+                return;
+            }
+            try {
+                scorer = parseExpression(expr);
+            } catch (ex) {
+                dialogAlert(`${spec.name}でエラー: ${ex.getMessage()}`);
+                return;
+            }
+        }
+        target.scoreres.push({
+            scorer: scorer,
+            goal: num(`reallyneeded_${spec.name}_goal`),
+            lowerPenalty: {
+                quadratic: num(`reallyneeded_${spec.name}_lp2`),
+                linear: num(`reallyneeded_${spec.name}_lp1`),
+                constant: num(`reallyneeded_${spec.name}_lpc`)
+            },
+            higherPenalty: {
+                quadratic: num(`reallyneeded_${spec.name}_hp2`),
+                linear: num(`reallyneeded_${spec.name}_hp1`),
+                constant: num(`reallyneeded_${spec.name}_hpc`)
+            },
+            bonus: {
+                quadratic: num(`reallyneeded_${spec.name}_bn2`),
+                linear: num(`reallyneeded_${spec.name}_bn1`),
+                constant: num(`reallyneeded_${spec.name}_bnc`)
+            }
+        });
+    }
+
+    if (target.scoreres.length === 0) {
+        dialogAlert("エラー: 対象が選択されてません");
+        return;
+    }
+
+    searchRNHeartset(target);
+
+});
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+//
 /////////////////////////////////////////////////////////////////////////////////////
 
 

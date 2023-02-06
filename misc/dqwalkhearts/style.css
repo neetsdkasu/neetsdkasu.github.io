@@ -28,6 +28,7 @@ section.outline
 
 #damage_result > details > summary,
 .damagetool > details > div.outline > div.small,
+section.reallyneeded > details > div.outline > div.small,
 section.outline > h5
 {
     margin-top: 0px;
@@ -260,6 +261,11 @@ td
     font-size: 0.5rem;
 }
 
+table.reallyneeded > tbody > tr:hover
+{
+    background-color: #aaeeee;
+}
+
 #status_distance_tbody > tr:hover
 {
     background-color: #eeffff;
@@ -285,6 +291,11 @@ td
 #heart_with_s_plus:checked + * + *
 {
     display: inline;
+}
+
+div.outline.reallyneeded
+{
+    overflow-x: scroll;
 }
 
 .dialog-buttons
