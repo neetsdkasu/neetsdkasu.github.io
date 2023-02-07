@@ -29,7 +29,7 @@ interface Task {
     close: ((res: string | null) => void) | null;
 }
 
-function dialogWait(msg: string | null, task: Task): void {
+function dialogWait(task: Task, msg?: string): void {
     if (DEBUG) {
         console.log(`dialogWait: ${msg}`);
     }
@@ -54,12 +54,37 @@ function dialogWait(msg: string | null, task: Task): void {
                 task.close(res);
             }
             dialog.returnValue = "";
+            dialog.onclose = () => {};
             dialog.close();
         }
     };
     handle = setTimeout(proc, 1);
     dialog.returnValue = "";
     dialog.showModal();
+}
+
+function permutation(size: number): number[][] {
+    let limit = 10 ** size;
+    let flag = 0;
+    for (let i = 0; i < size; i++) {
+        flag |= 1 << i;
+    }
+    const res: number[][] = [];
+    const item: number[] = new Array(size).fill(0);
+    for (let x = 0; x < limit; x++) {
+        let f = 0;
+        let tmp = x;
+        for (let i = 0; i < size; i++) {
+            const m = tmp % 10;
+            item[i] = m;
+            f |= 1 << m;
+            tmp = Math.floor(tmp / 10);
+        }
+        if (f === flag) {
+            res.push(item.slice());
+        }
+    }
+    return res;
 }
 
 function popCount(value: number): number {
@@ -3879,7 +3904,10 @@ function searchRNHeartset(target: RNTarget): void {
             document.getElementById("reallyneeded_result")!.textContent = `${time} sec`;
             return null;
         } else {
-            document.getElementById("reallyneeded_result")!.textContent = "やっほ";
+            const x = JSON.stringify(permutation(target.job.colors.reduce((acc, c) => {
+                if (c === Color.Omit) { return acc; } else { return acc + 1; }
+            }, 0)));
+            document.getElementById("reallyneeded_result")!.textContent = `やっほ ${x}`;
             return "OK";
         }
     };
@@ -3888,7 +3916,7 @@ function searchRNHeartset(target: RNTarget): void {
         proc: proc,
         close: close
     }
-    dialogWait(null, task);
+    dialogWait(task);
 }
 
 // 職業ごとのこころ枠の組み合わせをフォームに設定する

@@ -18,7 +18,7 @@ function dialogAlert(msg) {
     const dialog = document.getElementById("alert_dialog");
     dialog.showModal();
 }
-function dialogWait(msg, task) {
+function dialogWait(task, msg) {
     if (DEBUG) {
         console.log(`dialogWait: ${msg}`);
     }
@@ -44,12 +44,36 @@ function dialogWait(msg, task) {
                 task.close(res);
             }
             dialog.returnValue = "";
+            dialog.onclose = () => { };
             dialog.close();
         }
     };
     handle = setTimeout(proc, 1);
     dialog.returnValue = "";
     dialog.showModal();
+}
+function permutation(size) {
+    let limit = 10 ** size;
+    let flag = 0;
+    for (let i = 0; i < size; i++) {
+        flag |= 1 << i;
+    }
+    const res = [];
+    const item = new Array(size).fill(0);
+    for (let x = 0; x < limit; x++) {
+        let f = 0;
+        let tmp = x;
+        for (let i = 0; i < size; i++) {
+            const m = tmp % 10;
+            item[i] = m;
+            f |= 1 << m;
+            tmp = Math.floor(tmp / 10);
+        }
+        if (f === flag) {
+            res.push(item.slice());
+        }
+    }
+    return res;
 }
 function popCount(value) {
     value = (value & 0x55555555) + ((value >>> 1) & 0x55555555);
@@ -3672,7 +3696,15 @@ function searchRNHeartset(target) {
             return null;
         }
         else {
-            document.getElementById("reallyneeded_result").textContent = "やっほ";
+            const x = JSON.stringify(permutation(target.job.colors.reduce((acc, c) => {
+                if (c === Color.Omit) {
+                    return acc;
+                }
+                else {
+                    return acc + 1;
+                }
+            }, 0)));
+            document.getElementById("reallyneeded_result").textContent = `やっほ ${x}`;
             return "OK";
         }
     };
@@ -3681,7 +3713,7 @@ function searchRNHeartset(target) {
         proc: proc,
         close: close
     };
-    dialogWait(null, task);
+    dialogWait(task);
 }
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("reallyneeded_job").addEventListener("change", () => {
