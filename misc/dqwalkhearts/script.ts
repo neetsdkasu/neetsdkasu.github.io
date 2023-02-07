@@ -23,38 +23,44 @@ function dialogAlert(msg: string): void {
     dialog.showModal();
 }
 
-let waitDialogCanceler: (() => void) | null = null;
+interface Task {
+    interval: number;
+    proc: () => (string | null);
+    close: ((res: string | null) => void) | null;
+}
 
-function dialogWait(msg: string | null, proc: () => void, canceler: (() => void) | null): void {
+function dialogWait(msg: string | null, task: Task): void {
     if (DEBUG) {
         console.log(`dialogWait: ${msg}`);
     }
     document.getElementById("wait_message")!.textContent = msg ?? "しばらくお待ちください";
     const dialog = document.getElementById("wait_dialog")! as HTMLDialogElement;
-    waitDialogCanceler = canceler;
-    setTimeout(proc, 1);
+    let handle = 0;
+    dialog.onclose = () => {
+        clearTimeout(handle);
+        if (dialog.returnValue === "cancel") {
+            if (task.close !== null) {
+                task.close(null);
+            }
+        }
+        dialog.onclose = () => {};
+    };
+    const proc = () => {
+        const res = task.proc();
+        if (res === null) {
+            handle = setTimeout(proc, task.interval);
+        } else {
+            if (task.close != null) {
+                task.close(res);
+            }
+            dialog.returnValue = "";
+            dialog.close();
+        }
+    };
+    handle = setTimeout(proc, 1);
     dialog.returnValue = "";
     dialog.showModal();
 }
-
-function closeWaitDialog(returnValue: string) {
-    const dialog = document.getElementById("wait_dialog") as HTMLDialogElement;
-    dialog.returnValue = returnValue;
-    dialog.close();
-}
-
-document.getElementById("wait_dialog")!.addEventListener("close", () => {
-    if (DEBUG) {
-        console.log(`close wait_dialog`);
-    }
-    const dialog = document.getElementById("wait_dialog") as HTMLDialogElement;
-    if (dialog.returnValue !== "cancel") {
-        return;
-    }
-    if (waitDialogCanceler !== null) {
-        waitDialogCanceler();
-    }
-});
 
 function popCount(value: number): number {
     value = (value & 0x55555555) + ((value >>> 1) & 0x55555555);
@@ -3860,26 +3866,29 @@ interface RNTarget {
     scoreres: RNScorer[];
 }
 
-function searchRNHeartset(target: RNTarget) {
+function searchRNHeartset(target: RNTarget): void {
     let time = 0;
-    let id: number | null = null;
-    const canceler = () => {
-        time += 30;
-        if (id !== null) {
-            clearTimeout(id);
+    const close = (res: string | null) => {
+        if (res === null) {
+            document.getElementById("reallyneeded_result")!.textContent = "キャンセル";
         }
-        document.getElementById("reallyneeded_result")!.textContent = "キャンセル";
     };
     const proc = () => {
         time++;
         if (time < 30) {
-            id = setTimeout(proc, 1000);
+            document.getElementById("reallyneeded_result")!.textContent = `${time} sec`;
+            return null;
         } else {
-            closeWaitDialog("");
             document.getElementById("reallyneeded_result")!.textContent = "やっほ";
+            return "OK";
         }
     };
-    dialogWait(null, proc, canceler);
+    const task: Task = {
+        interval: 1000,
+        proc: proc,
+        close: close
+    }
+    dialogWait(null, task);
 }
 
 // 職業ごとのこころ枠の組み合わせをフォームに設定する

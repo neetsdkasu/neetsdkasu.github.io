@@ -18,35 +18,39 @@ function dialogAlert(msg) {
     const dialog = document.getElementById("alert_dialog");
     dialog.showModal();
 }
-let waitDialogCanceler = null;
-function dialogWait(msg, proc, canceler) {
+function dialogWait(msg, task) {
     if (DEBUG) {
         console.log(`dialogWait: ${msg}`);
     }
     document.getElementById("wait_message").textContent = msg ?? "しばらくお待ちください";
     const dialog = document.getElementById("wait_dialog");
-    waitDialogCanceler = canceler;
-    setTimeout(proc, 1);
+    let handle = 0;
+    dialog.onclose = () => {
+        clearTimeout(handle);
+        if (dialog.returnValue === "cancel") {
+            if (task.close !== null) {
+                task.close(null);
+            }
+        }
+        dialog.onclose = () => { };
+    };
+    const proc = () => {
+        const res = task.proc();
+        if (res === null) {
+            handle = setTimeout(proc, task.interval);
+        }
+        else {
+            if (task.close != null) {
+                task.close(res);
+            }
+            dialog.returnValue = "";
+            dialog.close();
+        }
+    };
+    handle = setTimeout(proc, 1);
     dialog.returnValue = "";
     dialog.showModal();
 }
-function closeWaitDialog(returnValue) {
-    const dialog = document.getElementById("wait_dialog");
-    dialog.returnValue = returnValue;
-    dialog.close();
-}
-document.getElementById("wait_dialog").addEventListener("close", () => {
-    if (DEBUG) {
-        console.log(`close wait_dialog`);
-    }
-    const dialog = document.getElementById("wait_dialog");
-    if (dialog.returnValue !== "cancel") {
-        return;
-    }
-    if (waitDialogCanceler !== null) {
-        waitDialogCanceler();
-    }
-});
 function popCount(value) {
     value = (value & 0x55555555) + ((value >>> 1) & 0x55555555);
     value = (value & 0x33333333) + ((value >>> 2) & 0x33333333);
@@ -3656,25 +3660,28 @@ document.getElementById("calc_damages").addEventListener("click", () => {
 });
 function searchRNHeartset(target) {
     let time = 0;
-    let id = null;
-    const canceler = () => {
-        time += 30;
-        if (id !== null) {
-            clearTimeout(id);
+    const close = (res) => {
+        if (res === null) {
+            document.getElementById("reallyneeded_result").textContent = "キャンセル";
         }
-        document.getElementById("reallyneeded_result").textContent = "キャンセル";
     };
     const proc = () => {
         time++;
         if (time < 30) {
-            id = setTimeout(proc, 1000);
+            document.getElementById("reallyneeded_result").textContent = `${time} sec`;
+            return null;
         }
         else {
-            closeWaitDialog("");
             document.getElementById("reallyneeded_result").textContent = "やっほ";
+            return "OK";
         }
     };
-    dialogWait(null, proc, canceler);
+    const task = {
+        interval: 1000,
+        proc: proc,
+        close: close
+    };
+    dialogWait(null, task);
 }
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("reallyneeded_job").addEventListener("change", () => {
