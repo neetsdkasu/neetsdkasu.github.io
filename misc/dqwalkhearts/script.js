@@ -787,7 +787,7 @@ function addHeart(newMonster) {
     }
     else {
         addMonsterNameList(newMonster.name);
-        newMonster.id = monsterList.length;
+        newMonster.id = monsterList.length; // TODO こころの削除機能などを実装した場合にIDに衝突が起きうる
         monsterMap.set(newMonster.name, newMonster);
         insert(monsterList, newMonster, (n, e) => n.curCost > e.curCost);
         showNewHeart(newMonster);
@@ -3683,29 +3683,107 @@ document.getElementById("calc_damages").addEventListener("click", () => {
     }
 });
 function searchRNHeartset(target) {
+    const perm = permutation(target.setSize);
+    const calc = (heartset) => {
+        let penalty = 0;
+        let bonus = 0;
+        let cost = 0;
+        for (let i = 0; i < target.setSize; i++) {
+            const h = heartset.hearts[i];
+            if (h === null) {
+                continue;
+            }
+            cost += h.heart.cost - (target.asLimitCost ? 0 : h.heart.maximumCost);
+        }
+        if (cost > target.maximumCost) {
+            const cdiff = cost - target.maximumCost;
+            penalty += target.costCoCo.quadratic * cdiff * cdiff
+                + target.costCoCo.linear * cdiff + target.costCoCo.constant;
+        }
+        for (const rns of target.scoreres) {
+            let score = 0;
+            for (let i = 0; i < target.setSize; i++) {
+                const h = heartset.hearts[i];
+                if (h === null) {
+                    continue;
+                }
+                score += rns.scorer.calc(target.job.colors[heartset.order[i]], h.monster);
+            }
+            let tmpPenalty = 0;
+            if (score < rns.goal) {
+                const ldiff = rns.goal - score;
+                tmpPenalty += rns.lowerPenalty.quadratic * ldiff * ldiff
+                    + rns.lowerPenalty.linear * ldiff + rns.lowerPenalty.constant;
+            }
+            if (score > rns.goal) {
+                const hdiff = score - rns.goal;
+                tmpPenalty += rns.higherPenalty.quadratic * hdiff * hdiff
+                    + rns.higherPenalty.linear * hdiff + rns.higherPenalty.constant;
+            }
+            penalty += tmpPenalty;
+            if (tmpPenalty === 0) {
+                const diff = Math.abs(rns.goal - score);
+                bonus += rns.bonus.quadratic * diff * diff
+                    + rns.bonus.linear * diff + rns.bonus.constant;
+            }
+        }
+        heartset.penalty = penalty;
+        heartset.bonus = bonus;
+    };
+    const currentState = {
+        hearts: new Array(target.setSize).fill(null),
+        order: perm[0],
+        penalty: 0,
+        bonus: 0
+    };
+    calc(currentState);
+    const best = {
+        hearts: currentState.hearts.slice(),
+        order: currentState.order,
+        penalty: currentState.penalty,
+        bonus: currentState.bonus
+    };
+    const heartList = monsterList.filter(m => m.target !== null).map(m => {
+        const heart = {
+            monster: m,
+            heart: m.hearts.find(h => h.rank === m.target)
+        };
+        return heart;
+    });
     let time = 0;
+    const proc = () => {
+        const pIndex = Math.floor(Math.random() * target.setSize);
+        const hIndex = Math.floor(Math.random() * heartList.length);
+        const oIndex = Math.floor(Math.random() * perm.length);
+        currentState.hearts[pIndex] = heartList[hIndex];
+        currentState.order = perm[oIndex];
+        calc(currentState);
+        if (currentState.penalty < best.penalty
+            || (currentState.penalty === best.penalty && currentState.bonus > best.bonus)) {
+            best.hearts = currentState.hearts.slice();
+            best.order = currentState.order;
+            best.penalty = currentState.penalty;
+            best.bonus = currentState.bonus;
+        }
+        const x = JSON.stringify({
+            heartset: currentState.hearts.map(h => h === null ? null : `${h.monster.name} ${Rank[h.monster.target]}`),
+            order: currentState.order,
+            penalty: currentState.penalty,
+            bonus: currentState.bonus
+        });
+        const y = JSON.stringify({
+            heartset: best.hearts.map(h => h === null ? null : `${h.monster.name} ${Rank[h.monster.target]}`),
+            order: best.order,
+            penalty: best.penalty,
+            bonus: best.bonus
+        });
+        document.getElementById("reallyneeded_result").textContent = `CUR: ${x},  BEST: ${y}`;
+        time++;
+        return time < 1000 ? null : "OK";
+    };
     const close = (res) => {
         if (res === null) {
             document.getElementById("reallyneeded_result").textContent = "キャンセル";
-        }
-    };
-    const proc = () => {
-        time++;
-        if (time < 30) {
-            document.getElementById("reallyneeded_result").textContent = `${time} sec`;
-            return null;
-        }
-        else {
-            const x = JSON.stringify(permutation(target.job.colors.reduce((acc, c) => {
-                if (c === Color.Omit) {
-                    return acc;
-                }
-                else {
-                    return acc + 1;
-                }
-            }, 0)));
-            document.getElementById("reallyneeded_result").textContent = `やっほ ${x}`;
-            return "OK";
         }
     };
     const task = {
@@ -3747,6 +3825,8 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
     };
     const jobId = num("reallyneeded_job");
     const job = JobPreset.find(x => x.id === jobId);
+    // Color.Omitは末尾にのみ存在することが前提
+    const setSize = job.colors.reduce((acc, c) => c !== Color.Omit ? acc + 1 : acc, 0);
     const maximumCost = num("reallyneeded_heart_maximum_cost");
     const asLimitCost = elem("reallyneeded_as_limit_heart_cost").checked;
     const costCoCo = {
@@ -3756,6 +3836,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
     };
     const target = {
         job: job,
+        setSize: setSize,
         maximumCost: maximumCost,
         asLimitCost: asLimitCost,
         costCoCo: costCoCo,
