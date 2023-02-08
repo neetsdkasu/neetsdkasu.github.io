@@ -3682,117 +3682,211 @@ document.getElementById("calc_damages").addEventListener("click", () => {
         }
     }
 });
-function searchRNHeartset(target) {
-    const perm = permutation(target.setSize);
-    const calc = (heartset) => {
-        let penalty = 0;
-        let bonus = 0;
-        let cost = 0;
+// ReallyNeededのこころセット表示
+function showRNHeartset(target, heartset) {
+    const res = document.getElementById("reallyneeded_result");
+    if (!res.querySelector(".result-item-number")) {
+        res.innerHTML = "";
+        const template = document.getElementById("result_item");
+        const fragment = template.content.cloneNode(true);
+        res.appendChild(fragment);
+    }
+    const elem = (name) => res.querySelector(`.result-item-${name}`);
+    elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}`;
+    let plusMaximumCost = 0;
+    for (let i = 0; i < target.setSize; i++) {
+        const h = heartset.hearts[i];
+        if (h !== null) {
+            plusMaximumCost += h.heart.maximumCost;
+        }
+    }
+    elem("cost").textContent = `${heartset.cost + plusMaximumCost} / ${target.maximumCost} + ${plusMaximumCost}`;
+    const status = {
+        maximumHP: 0,
+        maximumMP: 0,
+        power: 0,
+        defence: 0,
+        attackMagic: 0,
+        recoverMagic: 0,
+        speed: 0,
+        dexterity: 0
+    };
+    for (let i = 0; i < target.setSize; i++) {
+        const h = heartset.hearts[heartset.order[i]];
+        if (h === null) {
+            continue;
+        }
+        const tmpRank = h.monster.target;
+        h.monster.target = h.heart.rank;
+        const he = elem(`heart${i + 1}`);
+        he.innerHTML = "";
+        const info = (h.monster.color === Color.Rainbow)
+            ? RainbowColorInfo
+            : SingleColorInfoMap.get(h.monster.color);
+        const colorSpan = he.appendChild(document.createElement("span"));
+        colorSpan.classList.add(info.colorName);
+        colorSpan.textContent = info.text;
+        he.appendChild(document.createElement("span")).textContent = `${h.heart.cost}`;
+        he.appendChild(document.createElement("span")).textContent = h.monster.name;
+        he.appendChild(document.createElement("span")).textContent = Rank[h.heart.rank].replace("_plus", "+");
+        elem(`effects${i + 1}`).textContent = h.heart.effects;
+        const c = target.job.colors[i];
+        status.maximumHP += MaximumHPScorer.calc(c, h.monster);
+        status.maximumMP += MaximumMPScorer.calc(c, h.monster);
+        status.power += PowerScorer.calc(c, h.monster);
+        status.defence += DefenceScorer.calc(c, h.monster);
+        status.attackMagic += AttackMagicScorer.calc(c, h.monster);
+        status.recoverMagic += RecoverMagicScorer.calc(c, h.monster);
+        status.speed += SpeedScorer.calc(c, h.monster);
+        status.dexterity += DexterityScorer.calc(c, h.monster);
+        h.monster.target = tmpRank;
+    }
+    elem("maximumhp").textContent = `${status.maximumHP}`;
+    elem("maximummp").textContent = `${status.maximumMP}`;
+    elem("power").textContent = `${status.power}`;
+    elem("defence").textContent = `${status.defence}`;
+    elem("attackmagic").textContent = `${status.attackMagic}`;
+    elem("recovermagic").textContent = `${status.recoverMagic}`;
+    elem("speed").textContent = `${status.speed}`;
+    elem("dexterity").textContent = `${status.dexterity}`;
+}
+// ReallyNeededのこころセットのスコア計算
+function calcRNHeartsetScore(target, heartset) {
+    let penalty = 0;
+    let bonus = 0;
+    let cost = 0;
+    for (let i = 0; i < target.setSize; i++) {
+        const h = heartset.hearts[i];
+        if (h === null) {
+            continue;
+        }
+        cost += h.heart.cost - (target.asLimitCost ? 0 : h.heart.maximumCost);
+    }
+    if (cost > target.maximumCost) {
+        const cdiff = cost - target.maximumCost;
+        penalty += target.costCoCo.quadratic * cdiff * cdiff
+            + target.costCoCo.linear * cdiff + target.costCoCo.constant;
+    }
+    for (const rns of target.scoreres) {
+        let score = 0;
         for (let i = 0; i < target.setSize; i++) {
-            const h = heartset.hearts[i];
+            const h = heartset.hearts[heartset.order[i]];
             if (h === null) {
                 continue;
             }
-            cost += h.heart.cost - (target.asLimitCost ? 0 : h.heart.maximumCost);
+            const tmpRank = h.monster.target;
+            h.monster.target = h.heart.rank;
+            score += rns.scorer.calc(target.job.colors[i], h.monster);
+            h.monster.target = tmpRank;
         }
-        if (cost > target.maximumCost) {
-            const cdiff = cost - target.maximumCost;
-            penalty += target.costCoCo.quadratic * cdiff * cdiff
-                + target.costCoCo.linear * cdiff + target.costCoCo.constant;
+        let tmpPenalty = 0;
+        if (score < rns.goal) {
+            const ldiff = rns.goal - score;
+            tmpPenalty += rns.lowerPenalty.quadratic * ldiff * ldiff
+                + rns.lowerPenalty.linear * ldiff + rns.lowerPenalty.constant;
         }
-        for (const rns of target.scoreres) {
-            let score = 0;
-            for (let i = 0; i < target.setSize; i++) {
-                const h = heartset.hearts[i];
-                if (h === null) {
-                    continue;
-                }
-                score += rns.scorer.calc(target.job.colors[heartset.order[i]], h.monster);
-            }
-            let tmpPenalty = 0;
-            if (score < rns.goal) {
-                const ldiff = rns.goal - score;
-                tmpPenalty += rns.lowerPenalty.quadratic * ldiff * ldiff
-                    + rns.lowerPenalty.linear * ldiff + rns.lowerPenalty.constant;
-            }
-            if (score > rns.goal) {
-                const hdiff = score - rns.goal;
-                tmpPenalty += rns.higherPenalty.quadratic * hdiff * hdiff
-                    + rns.higherPenalty.linear * hdiff + rns.higherPenalty.constant;
-            }
-            penalty += tmpPenalty;
-            if (tmpPenalty === 0) {
-                const diff = Math.abs(rns.goal - score);
-                bonus += rns.bonus.quadratic * diff * diff
-                    + rns.bonus.linear * diff + rns.bonus.constant;
-            }
+        if (score > rns.goal) {
+            const hdiff = score - rns.goal;
+            tmpPenalty += rns.higherPenalty.quadratic * hdiff * hdiff
+                + rns.higherPenalty.linear * hdiff + rns.higherPenalty.constant;
         }
-        heartset.penalty = penalty;
-        heartset.bonus = bonus;
+        penalty += tmpPenalty;
+        if (tmpPenalty === 0) {
+            const diff = Math.abs(rns.goal - score);
+            bonus += rns.bonus.quadratic * diff * diff
+                + rns.bonus.linear * diff + rns.bonus.constant;
+        }
+    }
+    heartset.penalty = penalty;
+    heartset.bonus = bonus;
+    heartset.cost = cost;
+}
+// ReallyNeededのこころセットを探索する
+function searchRNHeartset(target) {
+    const perm = permutation(target.setSize);
+    const copy = (hs) => {
+        const res = {
+            hearts: hs.hearts.slice(),
+            order: hs.order,
+            penalty: hs.penalty,
+            bonus: hs.bonus,
+            cost: hs.cost
+        };
+        return res;
     };
     const currentState = {
         hearts: new Array(target.setSize).fill(null),
         order: perm[0],
         penalty: 0,
-        bonus: 0
+        bonus: 0,
+        cost: 0
     };
-    calc(currentState);
-    const best = {
-        hearts: currentState.hearts.slice(),
-        order: currentState.order,
-        penalty: currentState.penalty,
-        bonus: currentState.bonus
-    };
-    const heartList = monsterList.filter(m => m.target !== null).map(m => {
+    calcRNHeartsetScore(target, currentState);
+    let best = copy(currentState);
+    const heartList = [];
+    let maxID = 0;
+    for (const m of monsterList) {
+        if (m.target === null) {
+            continue;
+        }
+        maxID = Math.max(maxID, m.id);
         const heart = {
             monster: m,
             heart: m.hearts.find(h => h.rank === m.target)
         };
-        return heart;
-    });
+        heartList.push(heart);
+        if (m.withSplus && m.target !== Rank.S_plus) {
+            const sph = m.hearts.find(h => h.rank === Rank.S_plus);
+            if (sph) {
+                const spHeart = {
+                    monster: m,
+                    heart: sph
+                };
+                heartList.push(spHeart);
+            }
+        }
+    }
+    const used = new Array(maxID + 1).fill(false);
     let time = 0;
     const proc = () => {
+        time++;
         const pIndex = Math.floor(Math.random() * target.setSize);
         const hIndex = Math.floor(Math.random() * heartList.length);
         const oIndex = Math.floor(Math.random() * perm.length);
+        const h = heartList[hIndex];
+        if (used[h.monster.id]) {
+            return time < 1000 ? null : "OK";
+        }
+        const ch = currentState.hearts[pIndex];
+        if (ch !== null) {
+            used[ch.monster.id] = false;
+        }
+        used[h.monster.id] = true;
         currentState.hearts[pIndex] = heartList[hIndex];
         currentState.order = perm[oIndex];
-        calc(currentState);
-        if (currentState.penalty < best.penalty
-            || (currentState.penalty === best.penalty && currentState.bonus > best.bonus)) {
-            best.hearts = currentState.hearts.slice();
-            best.order = currentState.order;
-            best.penalty = currentState.penalty;
-            best.bonus = currentState.bonus;
+        calcRNHeartsetScore(target, currentState);
+        if (currentState.cost < target.maximumCost) {
+            if (currentState.penalty < best.penalty
+                || (currentState.penalty === best.penalty && currentState.bonus > best.bonus)) {
+                best = copy(currentState);
+                showRNHeartset(target, best);
+            }
         }
-        const x = JSON.stringify({
-            heartset: currentState.hearts.map(h => h === null ? null : `${h.monster.name} ${Rank[h.monster.target]}`),
-            order: currentState.order,
-            penalty: currentState.penalty,
-            bonus: currentState.bonus
-        });
-        const y = JSON.stringify({
-            heartset: best.hearts.map(h => h === null ? null : `${h.monster.name} ${Rank[h.monster.target]}`),
-            order: best.order,
-            penalty: best.penalty,
-            bonus: best.bonus
-        });
-        document.getElementById("reallyneeded_result").textContent = `CUR: ${x},  BEST: ${y}`;
-        time++;
         return time < 1000 ? null : "OK";
     };
     const close = (res) => {
         if (res === null) {
-            document.getElementById("reallyneeded_result").textContent = "キャンセル";
+            dialogAlert("探索を中止しました");
         }
     };
     const task = {
-        interval: 1000,
+        interval: 1,
         proc: proc,
         close: close
     };
     dialogWait(task);
 }
+// ReallyNeededのこころセット探索フォームにて
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("reallyneeded_job").addEventListener("change", () => {
     const sel = document.getElementById("reallyneeded_job");
@@ -3817,6 +3911,7 @@ document.getElementById("reallyneeded_job").addEventListener("change", () => {
     }
     dialogAlert(`Unknown ID: ${value}`);
 });
+// ReallyNeededのこころセット探索開始ボタン
 document.getElementById("reallyneeded_start").addEventListener("click", () => {
     const elem = (id) => document.getElementById(id);
     const num = (id) => {
@@ -3901,7 +3996,11 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
         dialogAlert("エラー: 対象が選択されてません");
         return;
     }
+    document.getElementById("reallyneeded_result").innerHTML = "";
+    const oldPowerUp = powerUp;
+    powerUp = job.powerUp;
     searchRNHeartset(target);
+    powerUp = oldPowerUp;
 });
 /////////////////////////////////////////////////////////////////////////////////////
 //
