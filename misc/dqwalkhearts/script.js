@@ -3683,72 +3683,78 @@ document.getElementById("calc_damages").addEventListener("click", () => {
     }
 });
 // ReallyNeededのこころセット表示
-function showRNHeartset(target, heartset) {
+function showRNHeartset(target, heartsets) {
     const res = document.getElementById("reallyneeded_result");
-    if (!res.querySelector(".result-item-number")) {
-        res.innerHTML = "";
-        const template = document.getElementById("result_item");
-        const fragment = template.content.cloneNode(true);
-        res.appendChild(fragment);
-    }
-    const elem = (name) => res.querySelector(`.result-item-${name}`);
-    elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}`;
-    let plusMaximumCost = 0;
-    for (let i = 0; i < target.setSize; i++) {
-        const h = heartset.hearts[i];
-        if (h !== null) {
-            plusMaximumCost += h.heart.maximumCost;
+    let items = res.querySelectorAll(":scope > div.outline");
+    for (let pos = 0; pos < heartsets.length; pos++) {
+        const heartset = heartsets[pos];
+        if (pos >= items.length) {
+            const template = document.getElementById("result_item");
+            const fragment = template.content.cloneNode(true);
+            res.appendChild(fragment);
+            items = res.querySelectorAll(":scope > div.outline");
         }
-    }
-    elem("cost").textContent = `${heartset.cost + plusMaximumCost} / ${target.maximumCost} + ${plusMaximumCost}`;
-    const status = {
-        maximumHP: 0,
-        maximumMP: 0,
-        power: 0,
-        defence: 0,
-        attackMagic: 0,
-        recoverMagic: 0,
-        speed: 0,
-        dexterity: 0
-    };
-    for (let i = 0; i < target.setSize; i++) {
-        const h = heartset.hearts[heartset.order[i]];
-        if (h === null) {
-            continue;
+        const item = items[pos];
+        const elem = (name) => item.querySelector(`.result-item-${name}`);
+        elem("number").textContent = `${pos + 1} / ${heartsets.length}`;
+        elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}`;
+        let plusMaximumCost = 0;
+        for (let i = 0; i < target.setSize; i++) {
+            const h = heartset.hearts[i];
+            if (h !== null) {
+                plusMaximumCost += h.heart.maximumCost;
+            }
         }
-        const tmpRank = h.monster.target;
-        h.monster.target = h.heart.rank;
-        const he = elem(`heart${i + 1}`);
-        he.innerHTML = "";
-        const info = (h.monster.color === Color.Rainbow)
-            ? RainbowColorInfo
-            : SingleColorInfoMap.get(h.monster.color);
-        const colorSpan = he.appendChild(document.createElement("span"));
-        colorSpan.classList.add(info.colorName);
-        colorSpan.textContent = info.text;
-        he.appendChild(document.createElement("span")).textContent = `${h.heart.cost}`;
-        he.appendChild(document.createElement("span")).textContent = h.monster.name;
-        he.appendChild(document.createElement("span")).textContent = Rank[h.heart.rank].replace("_plus", "+");
-        elem(`effects${i + 1}`).textContent = h.heart.effects;
-        const c = target.job.colors[i];
-        status.maximumHP += MaximumHPScorer.calc(c, h.monster);
-        status.maximumMP += MaximumMPScorer.calc(c, h.monster);
-        status.power += PowerScorer.calc(c, h.monster);
-        status.defence += DefenceScorer.calc(c, h.monster);
-        status.attackMagic += AttackMagicScorer.calc(c, h.monster);
-        status.recoverMagic += RecoverMagicScorer.calc(c, h.monster);
-        status.speed += SpeedScorer.calc(c, h.monster);
-        status.dexterity += DexterityScorer.calc(c, h.monster);
-        h.monster.target = tmpRank;
+        elem("cost").textContent = `${heartset.cost + plusMaximumCost} / ${target.maximumCost} + ${plusMaximumCost}`;
+        const status = {
+            maximumHP: 0,
+            maximumMP: 0,
+            power: 0,
+            defence: 0,
+            attackMagic: 0,
+            recoverMagic: 0,
+            speed: 0,
+            dexterity: 0
+        };
+        for (let i = 0; i < target.setSize; i++) {
+            const h = heartset.hearts[heartset.order[i]];
+            if (h === null) {
+                continue;
+            }
+            const tmpRank = h.monster.target;
+            h.monster.target = h.heart.rank;
+            const he = elem(`heart${i + 1}`);
+            he.innerHTML = "";
+            const info = (h.monster.color === Color.Rainbow)
+                ? RainbowColorInfo
+                : SingleColorInfoMap.get(h.monster.color);
+            const colorSpan = he.appendChild(document.createElement("span"));
+            colorSpan.classList.add(info.colorName);
+            colorSpan.textContent = info.text;
+            he.appendChild(document.createElement("span")).textContent = `${h.heart.cost}`;
+            he.appendChild(document.createElement("span")).textContent = h.monster.name;
+            he.appendChild(document.createElement("span")).textContent = Rank[h.heart.rank].replace("_plus", "+");
+            elem(`effects${i + 1}`).textContent = h.heart.effects;
+            const c = target.job.colors[i];
+            status.maximumHP += MaximumHPScorer.calc(c, h.monster);
+            status.maximumMP += MaximumMPScorer.calc(c, h.monster);
+            status.power += PowerScorer.calc(c, h.monster);
+            status.defence += DefenceScorer.calc(c, h.monster);
+            status.attackMagic += AttackMagicScorer.calc(c, h.monster);
+            status.recoverMagic += RecoverMagicScorer.calc(c, h.monster);
+            status.speed += SpeedScorer.calc(c, h.monster);
+            status.dexterity += DexterityScorer.calc(c, h.monster);
+            h.monster.target = tmpRank;
+        }
+        elem("maximumhp").textContent = `${status.maximumHP}`;
+        elem("maximummp").textContent = `${status.maximumMP}`;
+        elem("power").textContent = `${status.power}`;
+        elem("defence").textContent = `${status.defence}`;
+        elem("attackmagic").textContent = `${status.attackMagic}`;
+        elem("recovermagic").textContent = `${status.recoverMagic}`;
+        elem("speed").textContent = `${status.speed}`;
+        elem("dexterity").textContent = `${status.dexterity}`;
     }
-    elem("maximumhp").textContent = `${status.maximumHP}`;
-    elem("maximummp").textContent = `${status.maximumMP}`;
-    elem("power").textContent = `${status.power}`;
-    elem("defence").textContent = `${status.defence}`;
-    elem("attackmagic").textContent = `${status.attackMagic}`;
-    elem("recovermagic").textContent = `${status.recoverMagic}`;
-    elem("speed").textContent = `${status.speed}`;
-    elem("dexterity").textContent = `${status.dexterity}`;
 }
 // ReallyNeededのこころセットのスコア計算
 function calcRNHeartsetScore(target, heartset) {
@@ -3814,7 +3820,7 @@ function searchRNHeartset(target) {
         };
         return res;
     };
-    const currentState = {
+    let currentState = {
         hearts: new Array(target.setSize).fill(null),
         order: perm[0],
         penalty: 0,
@@ -3822,7 +3828,48 @@ function searchRNHeartset(target) {
         cost: 0
     };
     calcRNHeartsetScore(target, currentState);
-    let best = copy(currentState);
+    const bests = [];
+    const update = (state) => {
+        let changed = false;
+        for (let i = 0; i < bests.length; i++) {
+            const b = bests[i];
+            if (state.penalty > b.penalty) {
+                continue;
+            }
+            if (state.penalty === b.penalty && state.bonus < b.bonus) {
+                continue;
+            }
+            if (state.penalty === b.penalty && state.bonus === b.bonus && state.cost === b.cost) {
+                const c1 = b.hearts.reduce((acc, h1) => {
+                    if (h1 !== null) {
+                        if (state.hearts.some(h2 => h2 !== null && h2.monster.id === h1.monster.id)) {
+                            return acc + 1;
+                        }
+                    }
+                    return acc;
+                }, 0);
+                const c2 = state.hearts.reduce((acc, h2) => {
+                    if (h2 !== null) {
+                        if (b.hearts.some(h1 => h1 !== null && h2.monster.id === h1.monster.id)) {
+                            return acc + 1;
+                        }
+                    }
+                    return acc;
+                }, 0);
+                if (c1 === c2) {
+                    return false;
+                }
+            }
+            bests[i] = state;
+            state = b;
+            changed = true;
+        }
+        if (bests.length < 10) {
+            bests.push(state);
+            changed = true;
+        }
+        return changed;
+    };
     const heartList = [];
     let maxID = 0;
     for (const m of monsterList) {
@@ -3866,10 +3913,9 @@ function searchRNHeartset(target) {
         currentState.order = perm[oIndex];
         calcRNHeartsetScore(target, currentState);
         if (currentState.cost < target.maximumCost) {
-            if (currentState.penalty < best.penalty
-                || (currentState.penalty === best.penalty && currentState.bonus > best.bonus)) {
-                best = copy(currentState);
-                showRNHeartset(target, best);
+            if (update(currentState)) {
+                currentState = copy(currentState);
+                showRNHeartset(target, bests);
             }
         }
         return time < 1000 ? null : "OK";
@@ -3911,6 +3957,30 @@ document.getElementById("reallyneeded_job").addEventListener("change", () => {
     }
     dialogAlert(`Unknown ID: ${value}`);
 });
+// ReallyNeededのこころセット探索フォームにて
+// 初期値の職業のこころ枠の組み合わせをフォームに設定する
+(function () {
+    const sel = document.getElementById("reallyneeded_job");
+    const value = parseInt(sel.value ?? "0");
+    for (const job of JobPreset) {
+        if (job.id !== value) {
+            continue;
+        }
+        const maximumCostList = document.getElementById("reallyneeded_job_preset_maximum_cost_list");
+        maximumCostList.innerHTML = "";
+        for (const x of JobPresetMaximumCost) {
+            if (job.id < x.id || x.id + 100 <= job.id) {
+                continue;
+            }
+            for (const item of x.maximumCostList) {
+                const op = maximumCostList.appendChild(document.createElement("option"));
+                op.value = `${item.maximumCost}`;
+                op.textContent = ` Lv ${item.level}`;
+            }
+        }
+        return;
+    }
+})();
 // ReallyNeededのこころセット探索開始ボタン
 document.getElementById("reallyneeded_start").addEventListener("click", () => {
     const elem = (id) => document.getElementById(id);
