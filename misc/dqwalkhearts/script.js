@@ -3895,30 +3895,85 @@ function searchRNHeartset(target) {
     }
     const used = new Array(maxID + 1).fill(false);
     let time = 0;
+    const LIMIT = 1000;
+    let pos = 0;
+    let nochange = 0;
     const proc = () => {
         time++;
-        const pIndex = Math.floor(Math.random() * target.setSize);
-        const hIndex = Math.floor(Math.random() * heartList.length);
-        const oIndex = Math.floor(Math.random() * perm.length);
-        const h = heartList[hIndex];
-        if (used[h.monster.id]) {
-            return time < 1000 ? null : "OK";
+        let better = currentState;
+        let changed = false;
+        const tmpState = copy(currentState);
+        const rp = Math.floor(Math.random() * heartList.length);
+        for (let k = 0; k < heartList.length; k++) {
+            const h = heartList[(k + rp) % heartList.length];
+            if (used[h.monster.id]) {
+                continue;
+            }
+            tmpState.hearts[pos] = h;
+            for (const p of perm) {
+                tmpState.order = p;
+                calcRNHeartsetScore(target, tmpState);
+                if (tmpState.penalty < better.penalty
+                    || (tmpState.penalty === better.penalty && tmpState.bonus >= better.bonus)) {
+                    better = copy(tmpState);
+                    changed = true;
+                }
+            }
         }
-        const ch = currentState.hearts[pIndex];
-        if (ch !== null) {
-            used[ch.monster.id] = false;
+        if (currentState.hearts[pos] !== null) {
+            tmpState.hearts[pos] = null;
+            for (const p of perm) {
+                tmpState.order = p;
+                calcRNHeartsetScore(target, tmpState);
+                if (tmpState.penalty < better.penalty
+                    || (tmpState.penalty === better.penalty && tmpState.bonus >= better.bonus)) {
+                    better = copy(tmpState);
+                    changed = true;
+                }
+            }
         }
-        used[h.monster.id] = true;
-        currentState.hearts[pIndex] = heartList[hIndex];
-        currentState.order = perm[oIndex];
-        calcRNHeartsetScore(target, currentState);
+        if (!changed) {
+            pos = (pos + 1) % target.setSize;
+            nochange++;
+            if (nochange >= target.setSize) {
+                const nn = Math.floor(Math.random() * target.setSize) + 1;
+                for (let i = 0; i < nn; i++) {
+                    const pIndex = Math.floor(Math.random() * target.setSize);
+                    const hIndex = Math.floor(Math.random() * heartList.length);
+                    const rh = heartList[hIndex];
+                    if (used[rh.monster.id]) {
+                        continue;
+                    }
+                    const oh = currentState.hearts[pIndex];
+                    if (oh !== null) {
+                        used[oh.monster.id] = false;
+                    }
+                    currentState.hearts[pIndex] = rh;
+                    used[rh.monster.id] = true;
+                }
+                calcRNHeartsetScore(target, currentState);
+                nochange = 0;
+            }
+            return time < LIMIT ? null : "OK";
+        }
+        nochange = 0;
+        const h0 = currentState.hearts[pos];
+        if (h0 !== null) {
+            used[h0.monster.id] = false;
+        }
+        const h1 = better.hearts[pos];
+        if (h1 !== null) {
+            used[h1.monster.id] = true;
+        }
+        currentState = better;
         if (currentState.cost < target.maximumCost) {
             if (update(currentState)) {
                 currentState = copy(currentState);
                 showRNHeartset(target, bests);
             }
         }
-        return time < 1000 ? null : "OK";
+        pos = (pos + 1) % target.setSize;
+        return time < LIMIT ? null : "OK";
     };
     const close = (res) => {
         if (res === null) {
