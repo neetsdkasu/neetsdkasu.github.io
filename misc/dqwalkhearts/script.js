@@ -29,21 +29,34 @@ function dialogWait(task, msg) {
         clearTimeout(handle);
         if (dialog.returnValue === "cancel") {
             if (task.close !== null) {
-                task.close(null);
+                task.close(null); // TODO ここのエラーを捕捉しないとヤバいすね･･･
             }
         }
         dialog.onclose = () => { };
     };
     const proc = () => {
-        const res = task.proc();
-        if (res === null) {
-            handle = setTimeout(proc, task.interval);
-        }
-        else {
-            if (task.close != null) {
-                task.close(res);
+        try {
+            const res = task.proc();
+            if (res === null) {
+                handle = setTimeout(proc, task.interval);
             }
-            dialog.returnValue = "";
+            else {
+                if (task.close != null) {
+                    task.close(res); // TODO ここのエラーを捕捉しないとヤバいすね･･･
+                }
+                dialog.returnValue = "";
+                dialog.onclose = () => { };
+                dialog.close();
+            }
+        }
+        catch (ex) {
+            clearTimeout(handle);
+            dialogAlert(`エラー: タスクを中止しました ( ${ex} )`);
+            console.log(ex);
+            if (task.close !== null) {
+                task.close(null); // TODO ここのエラーを捕捉しないとヤバいすね･･･
+            }
+            dialog.returnValue = "cancel";
             dialog.onclose = () => { };
             dialog.close();
         }
@@ -3839,26 +3852,21 @@ function searchRNHeartset(target) {
             if (state.penalty === b.penalty && state.bonus < b.bonus) {
                 continue;
             }
-            if (state.penalty === b.penalty && state.bonus === b.bonus && state.cost === b.cost) {
-                const c1 = b.hearts.reduce((acc, h1) => {
-                    if (h1 !== null) {
-                        if (state.hearts.some(h2 => h2 !== null && h2.monster.id === h1.monster.id)) {
-                            return acc + 1;
-                        }
+            if (state.penalty === b.penalty && state.bonus === b.bonus) {
+                if (state.cost === b.cost) {
+                    const h1 = b.hearts
+                        .map(h => h === null ? "*" : `${h.monster.id} ${h.heart.rank}`)
+                        .sort()
+                        .join(",");
+                    const h2 = state.hearts
+                        .map(h => h === null ? "*" : `${h.monster.id} ${h.heart.rank}`)
+                        .sort()
+                        .join(",");
+                    if (h1 === h2) {
+                        return false;
                     }
-                    return acc;
-                }, 0);
-                const c2 = state.hearts.reduce((acc, h2) => {
-                    if (h2 !== null) {
-                        if (b.hearts.some(h1 => h1 !== null && h2.monster.id === h1.monster.id)) {
-                            return acc + 1;
-                        }
-                    }
-                    return acc;
-                }, 0);
-                if (c1 === c2) {
-                    return false;
                 }
+                continue;
             }
             bests[i] = state;
             state = b;
@@ -3914,7 +3922,7 @@ function searchRNHeartset(target) {
                 tmpState.order = p;
                 calcRNHeartsetScore(target, tmpState);
                 if (tmpState.penalty < better.penalty
-                    || (tmpState.penalty === better.penalty && tmpState.bonus >= better.bonus)) {
+                    || (tmpState.penalty === better.penalty && tmpState.bonus > better.bonus)) {
                     better = copy(tmpState);
                     changed = true;
                 }
@@ -3926,7 +3934,7 @@ function searchRNHeartset(target) {
                 tmpState.order = p;
                 calcRNHeartsetScore(target, tmpState);
                 if (tmpState.penalty < better.penalty
-                    || (tmpState.penalty === better.penalty && tmpState.bonus >= better.bonus)) {
+                    || (tmpState.penalty === better.penalty && tmpState.bonus > better.bonus)) {
                     better = copy(tmpState);
                     changed = true;
                 }
