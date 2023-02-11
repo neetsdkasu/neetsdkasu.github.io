@@ -3710,15 +3710,15 @@ function showRNHeartset(target, heartsets) {
         const item = items[pos];
         const elem = (name) => item.querySelector(`.result-item-${name}`);
         elem("number").textContent = `${pos + 1} / ${heartsets.length}`;
-        elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}`;
         let plusMaximumCost = 0;
         for (let i = 0; i < target.setSize; i++) {
-            const h = heartset.hearts[i];
+            const h = heartset.hearts[heartset.order[i]];
             if (h !== null) {
                 plusMaximumCost += h.heart.maximumCost;
             }
         }
         elem("cost").textContent = `${heartset.cost + plusMaximumCost} / ${target.maximumCost} + ${plusMaximumCost}`;
+        const statusValues = new Array(target.scoreres.length).fill(0);
         const status = {
             maximumHP: 0,
             maximumMP: 0,
@@ -3727,7 +3727,11 @@ function showRNHeartset(target, heartsets) {
             attackMagic: 0,
             recoverMagic: 0,
             speed: 0,
-            dexterity: 0
+            dexterity: 0,
+            rank: Rank.D,
+            cost: heartset.cost,
+            maximumCost: 0,
+            effects: ""
         };
         for (let i = 0; i < target.setSize; i++) {
             const h = heartset.hearts[heartset.order[i]];
@@ -3757,6 +3761,9 @@ function showRNHeartset(target, heartsets) {
             status.recoverMagic += RecoverMagicScorer.calc(c, h.monster);
             status.speed += SpeedScorer.calc(c, h.monster);
             status.dexterity += DexterityScorer.calc(c, h.monster);
+            for (let z = 0; z < statusValues.length; z++) {
+                statusValues[z] += target.scoreres[z].scorer.calc(c, h.monster);
+            }
             h.monster.target = tmpRank;
         }
         elem("maximumhp").textContent = `${status.maximumHP}`;
@@ -3767,6 +3774,27 @@ function showRNHeartset(target, heartsets) {
         elem("recovermagic").textContent = `${status.recoverMagic}`;
         elem("speed").textContent = `${status.speed}`;
         elem("dexterity").textContent = `${status.dexterity}`;
+        if (target.useRefExpr) {
+            const refMonster = {
+                id: 0,
+                name: "参考値",
+                color: Color.Red,
+                curCost: status.cost,
+                hearts: [status],
+                target: status.rank,
+                withSplus: false,
+                defaultTarget: status.rank,
+                defaultWithSplus: false
+            };
+            for (let z = 0; z < statusValues.length; z++) {
+                target.scoreres[z].refSetter(status, statusValues[z]);
+            }
+            const refScore = target.refExpr.calc(Color.Blue, refMonster);
+            elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}, 参考値: ${refScore}`;
+        }
+        else {
+            elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}`;
+        }
     }
 }
 // ReallyNeededのこころセットのスコア計算
@@ -3901,6 +3929,12 @@ function searchRNHeartset(target) {
             }
         }
     }
+    for (let i = heartList.length - 1; i > 0; i--) {
+        const k = Math.floor(Math.random() * (i + 1));
+        const tmp = heartList[i];
+        heartList[i] = heartList[k];
+        heartList[k] = tmp;
+    }
     const used = new Array(maxID + 1).fill(false);
     let time = 0;
     const LIMIT = 1000;
@@ -3912,33 +3946,57 @@ function searchRNHeartset(target) {
         let changed = false;
         const tmpState = copy(currentState);
         const rp = Math.floor(Math.random() * heartList.length);
+        let randState = null;
         for (let k = 0; k < heartList.length; k++) {
             const h = heartList[(k + rp) % heartList.length];
             if (used[h.monster.id]) {
                 continue;
             }
             tmpState.hearts[pos] = h;
+            calcRNHeartsetScore(target, tmpState);
+            let tmpBetter = copy(tmpState);
             for (const p of perm) {
                 tmpState.order = p;
                 calcRNHeartsetScore(target, tmpState);
-                if (tmpState.penalty < better.penalty
-                    || (tmpState.penalty === better.penalty && tmpState.bonus > better.bonus)) {
-                    better = copy(tmpState);
-                    changed = true;
+                if (tmpState.penalty < tmpBetter.penalty
+                    || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
+                    tmpBetter = copy(tmpState);
                 }
+            }
+            if (tmpBetter.penalty < better.penalty
+                || (tmpBetter.penalty === better.penalty && tmpBetter.bonus > better.bonus)) {
+                better = tmpBetter;
+                changed = true;
+                break;
+            }
+            else if (tmpBetter.penalty <= better.penalty && Math.random() > 0.95) {
+                randState = tmpBetter;
             }
         }
-        if (currentState.hearts[pos] !== null) {
+        if (!changed && currentState.hearts[pos] !== null) {
             tmpState.hearts[pos] = null;
+            calcRNHeartsetScore(target, tmpState);
+            let tmpBetter = copy(tmpState);
             for (const p of perm) {
                 tmpState.order = p;
                 calcRNHeartsetScore(target, tmpState);
-                if (tmpState.penalty < better.penalty
-                    || (tmpState.penalty === better.penalty && tmpState.bonus > better.bonus)) {
-                    better = copy(tmpState);
-                    changed = true;
+                if (tmpState.penalty < tmpBetter.penalty
+                    || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
+                    tmpBetter = copy(tmpState);
                 }
             }
+            if (tmpBetter.penalty < better.penalty
+                || (tmpBetter.penalty === better.penalty && tmpBetter.bonus > better.bonus)) {
+                better = tmpBetter;
+                changed = true;
+            }
+            else if (tmpBetter.penalty <= better.penalty && Math.random() > 0.95) {
+                randState = tmpBetter;
+            }
+        }
+        if (!changed && randState !== null && Math.random() > 0.95) {
+            better = randState;
+            changed = true;
         }
         if (!changed) {
             pos = (pos + 1) % target.setSize;
@@ -3993,7 +4051,7 @@ function searchRNHeartset(target) {
         proc: proc,
         close: close
     };
-    dialogWait(task);
+    dialogWait(task, "探索中です･･･");
 }
 // ReallyNeededのこころセット探索フォームにて
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
@@ -4062,6 +4120,18 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
         linear: num("reallyneeded_heart_maximum_cost_hp1"),
         constant: num("reallyneeded_heart_maximum_cost_hpc")
     };
+    const useRefExpr = elem("reallyneeded_refexpr").checked;
+    let refExpr = null;
+    if (useRefExpr) {
+        const refExprSrc = elem("reallyneeded_refexpr_expr").value ?? "";
+        try {
+            refExpr = parseExpression(refExprSrc);
+        }
+        catch (ex) {
+            dialogAlert("参照値式にエラー: ${ex.getMessage()}");
+            return;
+        }
+    }
     const target = {
         job: job,
         setSize: setSize,
@@ -4069,22 +4139,24 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
         asLimitCost: asLimitCost,
         costCoCo: costCoCo,
         scoreres: [],
+        useRefExpr: useRefExpr,
+        refExpr: refExpr
     };
     const targetList = [
-        { name: "maximumhp", scorer: MaximumHPScorer },
-        { name: "maximummp", scorer: MaximumMPScorer },
-        { name: "power", scorer: PowerScorer },
-        { name: "defence", scorer: DefenceScorer },
-        { name: "attackmagic", scorer: AttackMagicScorer },
-        { name: "recovermagic", scorer: RecoverMagicScorer },
-        { name: "speed", scorer: SpeedScorer },
-        { name: "dexterity", scorer: DexterityScorer },
-        { name: "expr1", scorer: null },
-        { name: "expr2", scorer: null },
-        { name: "expr3", scorer: null },
-        { name: "expr4", scorer: null },
-        { name: "expr5", scorer: null },
-        { name: "expr6", scorer: null }
+        { name: "maximumhp", scorer: MaximumHPScorer, refName: "HP", refSetter: (h, v) => h.maximumHP = v },
+        { name: "maximummp", scorer: MaximumMPScorer, refName: "MP", refSetter: (h, v) => h.maximumMP = v },
+        { name: "power", scorer: PowerScorer, refName: "PWR", refSetter: (h, v) => h.power = v },
+        { name: "defence", scorer: DefenceScorer, refName: "DEF", refSetter: (h, v) => h.defence = v },
+        { name: "attackmagic", scorer: AttackMagicScorer, refName: "AMG", refSetter: (h, v) => h.attackMagic = v },
+        { name: "recovermagic", scorer: RecoverMagicScorer, refName: "RMG", refSetter: (h, v) => h.recoverMagic = v },
+        { name: "speed", scorer: SpeedScorer, refName: "SPD", refSetter: (h, v) => h.speed = v },
+        { name: "dexterity", scorer: DexterityScorer, refName: "DEX", refSetter: (h, v) => h.dexterity = v },
+        { name: "expr1", scorer: null, refName: "式A", refSetter: (h, v) => h.effects += ` 式A${v} ` },
+        { name: "expr2", scorer: null, refName: "式B", refSetter: (h, v) => h.effects += ` 式B${v} ` },
+        { name: "expr3", scorer: null, refName: "式C", refSetter: (h, v) => h.effects += ` 式C${v} ` },
+        { name: "expr4", scorer: null, refName: "式D", refSetter: (h, v) => h.effects += ` 式D${v} ` },
+        { name: "expr5", scorer: null, refName: "式E", refSetter: (h, v) => h.effects += ` 式E${v} ` },
+        { name: "expr6", scorer: null, refName: "式F", refSetter: (h, v) => h.effects += ` 式F${v} ` }
     ];
     for (const spec of targetList) {
         if (!elem(`reallyneeded_${spec.name}`).checked) {
@@ -4101,7 +4173,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
                 scorer = parseExpression(expr);
             }
             catch (ex) {
-                dialogAlert(`${spec.name}でエラー: ${ex.getMessage()}`);
+                dialogAlert(`${spec.refName}でエラー: ${ex.getMessage()}`);
                 return;
             }
         }
@@ -4122,7 +4194,8 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
                 quadratic: num(`reallyneeded_${spec.name}_bn2`),
                 linear: num(`reallyneeded_${spec.name}_bn1`),
                 constant: num(`reallyneeded_${spec.name}_bnc`)
-            }
+            },
+            refSetter: spec.refSetter
         });
     }
     if (target.scoreres.length === 0) {
