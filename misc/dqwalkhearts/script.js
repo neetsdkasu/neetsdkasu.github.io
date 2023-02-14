@@ -51,7 +51,6 @@ function dialogWait(task, msg) {
         }
         catch (ex) {
             clearTimeout(handle);
-            dialogAlert(`エラー: タスクを中止しました ( ${ex} )`);
             console.log(ex);
             if (task.close !== null) {
                 task.close(null); // TODO ここのエラーを捕捉しないとヤバいすね･･･
@@ -59,6 +58,7 @@ function dialogWait(task, msg) {
             dialog.returnValue = "cancel";
             dialog.onclose = () => { };
             dialog.close();
+            dialogAlert(`エラー: タスクを中止しました ( ${ex} )`);
         }
     };
     handle = setTimeout(proc, 1);
@@ -94,6 +94,14 @@ function popCount(value) {
     value = (value & 0x0F0F0F0F) + ((value >>> 4) & 0x0F0F0F0F);
     value = (value & 0x00FF00FF) + ((value >>> 8) & 0x00FF00FF);
     return (value & 0x0000FFFF) + ((value >>> 16) & 0x0000FFFF);
+}
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const k = Math.floor(Math.random() * (i + 1));
+        const tmp = arr[i];
+        arr[i] = arr[k];
+        arr[k] = tmp;
+    }
 }
 function binarySearch(arr, value, less) {
     // バイナリサーチほしいか否か？
@@ -3929,117 +3937,105 @@ function searchRNHeartset(target) {
             }
         }
     }
-    for (let i = heartList.length - 1; i > 0; i--) {
-        const k = Math.floor(Math.random() * (i + 1));
-        const tmp = heartList[i];
-        heartList[i] = heartList[k];
-        heartList[k] = tmp;
+    const hIndexes = new Array(target.setSize).fill(new Array(heartList.length));
+    const hhIndexes = new Array(target.setSize).fill(0);
+    for (const indexes of hIndexes) {
+        for (let i = 0; i < indexes.length; i++) {
+            indexes[i] = i;
+        }
+        shuffle(indexes);
     }
     const used = new Array(maxID + 1).fill(false);
     let time = 0;
-    const LIMIT = 1000;
+    const LIMIT = 20;
     let pos = 0;
-    let nochange = 0;
+    let cycle = 0;
+    const CYCLE = target.setSize * heartList.length * 4;
+    let bDiffSum = 0;
+    let bCount = 0;
+    let pDiffSum = 0;
+    let pCount = 0;
     const proc = () => {
-        time++;
-        let better = currentState;
-        let changed = false;
-        const tmpState = copy(currentState);
-        const rp = Math.floor(Math.random() * heartList.length);
-        let randState = null;
-        for (let k = 0; k < heartList.length; k++) {
-            const h = heartList[(k + rp) % heartList.length];
+        if (cycle >= CYCLE) {
+            cycle = 0;
+            time++;
+            if (time >= LIMIT) {
+                return "OK";
+            }
+            else {
+                for (const indexes of hIndexes) {
+                    shuffle(indexes);
+                }
+            }
+        }
+        cycle++;
+        pos = (pos + 1) % target.setSize;
+        let h = null;
+        const hhi = hhIndexes[pos];
+        if (hhi >= heartList.length) {
+            hhIndexes[pos] = 0;
+            if (currentState.hearts[pos] === null) {
+                return null;
+            }
+        }
+        else {
+            hhIndexes[pos] = hhi + 1;
+            const hi = hIndexes[pos][hhi];
+            h = heartList[hi];
             if (used[h.monster.id]) {
-                continue;
+                return null;
             }
-            tmpState.hearts[pos] = h;
+        }
+        const tmpState = copy(currentState);
+        tmpState.hearts[pos] = h;
+        calcRNHeartsetScore(target, tmpState);
+        let tmpBetter = copy(tmpState);
+        for (const p of perm) {
+            tmpState.order = p;
             calcRNHeartsetScore(target, tmpState);
-            let tmpBetter = copy(tmpState);
-            for (const p of perm) {
-                tmpState.order = p;
-                calcRNHeartsetScore(target, tmpState);
-                if (tmpState.penalty < tmpBetter.penalty
-                    || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
-                    tmpBetter = copy(tmpState);
+            if (tmpState.penalty < tmpBetter.penalty
+                || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
+                tmpBetter = copy(tmpState);
+            }
+        }
+        if (tmpBetter.penalty === 0 && currentState.penalty === 0) {
+            if (tmpBetter.bonus < currentState.bonus) {
+                const temperature = 0.0001 ** (cycle / CYCLE);
+                const diff = (currentState.bonus - tmpBetter.bonus);
+                bDiffSum += diff;
+                bCount++;
+                const bDiffAvg = bDiffSum / bCount;
+                const probability = Math.exp(-diff / (bDiffAvg ** 0.5) / temperature);
+                if (Math.random() > probability) {
+                    return null;
                 }
             }
-            if (tmpBetter.penalty < better.penalty
-                || (tmpBetter.penalty === better.penalty && tmpBetter.bonus > better.bonus)) {
-                better = tmpBetter;
-                changed = true;
-                break;
-            }
-            else if (tmpBetter.penalty <= better.penalty && Math.random() > 0.95) {
-                randState = tmpBetter;
-            }
         }
-        if (!changed && currentState.hearts[pos] !== null) {
-            tmpState.hearts[pos] = null;
-            calcRNHeartsetScore(target, tmpState);
-            let tmpBetter = copy(tmpState);
-            for (const p of perm) {
-                tmpState.order = p;
-                calcRNHeartsetScore(target, tmpState);
-                if (tmpState.penalty < tmpBetter.penalty
-                    || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
-                    tmpBetter = copy(tmpState);
-                }
-            }
-            if (tmpBetter.penalty < better.penalty
-                || (tmpBetter.penalty === better.penalty && tmpBetter.bonus > better.bonus)) {
-                better = tmpBetter;
-                changed = true;
-            }
-            else if (tmpBetter.penalty <= better.penalty && Math.random() > 0.95) {
-                randState = tmpBetter;
+        else if (tmpBetter.penalty > currentState.penalty) {
+            const temperature = 0.0001 ** (cycle / CYCLE);
+            const diff = (tmpBetter.penalty - currentState.penalty);
+            pDiffSum += diff;
+            pCount++;
+            const pDiffAvg = pDiffSum / pCount;
+            const probability = Math.exp(-diff / (pDiffAvg ** 0.5) / temperature);
+            if (Math.random() > probability) {
+                return null;
             }
         }
-        if (!changed && randState !== null && Math.random() > 0.95) {
-            better = randState;
-            changed = true;
+        if (currentState.hearts[pos] !== null) {
+            used[currentState.hearts[pos].monster.id] = false;
         }
-        if (!changed) {
-            pos = (pos + 1) % target.setSize;
-            nochange++;
-            if (nochange >= target.setSize) {
-                const nn = Math.floor(Math.random() * target.setSize) + 1;
-                for (let i = 0; i < nn; i++) {
-                    const pIndex = Math.floor(Math.random() * target.setSize);
-                    const hIndex = Math.floor(Math.random() * heartList.length);
-                    const rh = heartList[hIndex];
-                    if (used[rh.monster.id]) {
-                        continue;
-                    }
-                    const oh = currentState.hearts[pIndex];
-                    if (oh !== null) {
-                        used[oh.monster.id] = false;
-                    }
-                    currentState.hearts[pIndex] = rh;
-                    used[rh.monster.id] = true;
-                }
-                calcRNHeartsetScore(target, currentState);
-                nochange = 0;
-            }
-            return time < LIMIT ? null : "OK";
+        if (tmpBetter.hearts[pos] !== null) {
+            used[tmpBetter.hearts[pos].monster.id] = true;
         }
-        nochange = 0;
-        const h0 = currentState.hearts[pos];
-        if (h0 !== null) {
-            used[h0.monster.id] = false;
-        }
-        const h1 = better.hearts[pos];
-        if (h1 !== null) {
-            used[h1.monster.id] = true;
-        }
-        currentState = better;
-        if (currentState.cost < target.maximumCost) {
+        currentState = tmpBetter;
+        if (currentState.cost <= target.maximumCost) {
             if (update(currentState)) {
                 currentState = copy(currentState);
                 showRNHeartset(target, bests);
             }
         }
-        pos = (pos + 1) % target.setSize;
-        return time < LIMIT ? null : "OK";
+        return null;
     };
     const close = (res) => {
         if (res === null) {
