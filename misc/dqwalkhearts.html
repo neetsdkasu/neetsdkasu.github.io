@@ -649,10 +649,10 @@
             <dt>ボーナス</dt><dd>目標値を達成している場合の好ましさを表す点数（※対象のペナルティの計算結果が0のときのみボーナスは算出される）</dd>
             <dt>対象</dt><dd>各こころにおいてペナルティやボーナスの計算の対象となる値を指定する</dd>
             <dt>式A～式F</dt><dd>各こころにおいて対象となる値を式で求める</dd>
-            <dt>目標値</dt><dd>こころセットにおける対象の合計値が目指すべき値（※達成できるギリギリを設定したほうがよい？）</dd>
+            <dt>目標値</dt><dd>こころセットにおける対象の合計値が目指すべき値</dd>
             <dt>低ペナ</dt><dd>目標値より低い場合に科すペナルティ（目標値以上の値を目指したい場合に設定する）</dd>
             <dt>高ペナ</dt><dd>目標値を超えている場合に科すペナルティ（目標値以下の値を目指したい場合に設定する）</dd>
-            <dt>コスト高ペナ</dt><dd>こころセット探索中にコストの上限を超えてしまった場合に科すペナルティ（※値の設定をしないと良いこころセットを見つけられなくなる）</dd>
+            <dt>コスト高ペナ</dt><dd>こころセット探索中にコストの上限を超えてしまった場合に科すペナルティ（※値の設定をしないとこころセットを見つけにくくなる）</dd>
             <dt>ペナルティ・ボーナスの計算</dt><dd>目標値からの差分の大きさを<code>x</code>とした場合に、式<code>a*x^2+b*x+c</code>で各対象ごとに計算しそれらを合計したものを点数とする</dd>
             <dt>2次係数</dt><dd>式<code>a*x^2+b*x+c</code>の2次の項<code>a*x^2</code>の係数<code>a</code>のこと</dd>
             <dt>1次係数</dt><dd>式<code>a*x^2+b*x+c</code>の1次の項<code>b*x</code>の係数<code>b</code>のこと</dd>
@@ -960,6 +960,15 @@
               <input type="checkbox" name="reallyneeded_refexpr" id="reallyneeded_refexpr" />
               <label for="reallyneeded_refexpr">参考値式:</label>
               <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr_expr" id="reallyneeded_refexpr_expr" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DEX+NUM(式A#)+NUM(式B#)+NUM(式C#)+NUM(式D#)+NUM(式E#)+NUM(式F#)" / />
+            </div>
+            <hr />
+            <div>
+              <label for="reallyneeded_algorithm">探索手法:</label>
+              <select name="reallyneeded_algorithm" id="reallyneeded_algorithm">
+                <option value="gr" selected>Greedy</option>
+                <option value="hc"         >Hill Climbing</option>
+                <option value="sa"         >Simulated Annealing</option>
+              </select>
             </div>
             <hr />
             <div><button type="button" id="reallyneeded_start">探索開始</button></div>
