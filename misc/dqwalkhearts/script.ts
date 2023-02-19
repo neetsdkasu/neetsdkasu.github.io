@@ -4370,10 +4370,22 @@ function searchRNHeartsetHC(target: RNTarget): void {
                 return "OK";
             }
             noChange = 0;
-            shuffle(heartList);
-            currentState.hearts.fill(null);
+            for (let pos = 0; pos < target.setSize; pos++) {
+                if (pos < heartList.length) {
+                    currentState.hearts[pos] = heartList[pos];
+                } else {
+                    currentState.hearts[pos] = null;
+                }
+            }
             calcRNHeartsetScore(target, currentState);
             used.fill(false);
+            for (let pos = 0; pos < target.setSize; pos++) {
+                const h = currentState.hearts[pos];
+                if (h !== null) {
+                    used[h.monster.id] = true;
+                }
+            }
+            shuffle(heartList);
         }
         const heart = heartList[hIndex];
         hIndex = (hIndex + 1) % heartList.length;
@@ -4555,99 +4567,98 @@ function searchRNHeartsetGr(target: RNTarget): void {
             }
         }
     }
-    const hIndexes = new Array(target.setSize).fill(new Array(heartList.length));
-    const hhIndexes = new Array(target.setSize).fill(0);
-    for (const indexes of hIndexes) {
-        for (let i = 0; i < indexes.length; i++) {
-            indexes[i] = i;
-        }
-        shuffle(indexes);
-    }
+    shuffle(heartList);
     const used = new Array(maxID + 1).fill(false);
     let time = 0;
     const LIMIT = 20;
-    let pos = 0;
-    let cycle = 0;
-    const CYCLE = target.setSize * heartList.length * 4;
-    let bDiffSum = 0;
-    let bCount = 0;
-    let pDiffSum = 0;
-    let pCount = 0;
+    let hIndex = 0;
+    let tmpBest = copy(currentState);
+    let bestPos = -1;
     const proc = () => {
-        if (cycle >= CYCLE) {
-            cycle = 0;
-            time++;
-            if (time >= LIMIT) {
-                return "OK";
+        if (hIndex >= heartList.length) {
+            for (let pos = 0; pos < target.setSize; pos++) {
+                const tmpState = copy(currentState);
+                tmpState.hearts[pos] = null;
+                calcRNHeartsetScore(target, tmpState);
+                let tmpBetter = copy(tmpState);
+                for (const p of perm) {
+                    tmpState.order = p;
+                    calcRNHeartsetScore(target, tmpState);
+                    if (tmpState.penalty < tmpBetter.penalty
+                            || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
+                        tmpBetter = copy(tmpState);
+                    }
+                }
+                if (tmpBetter.penalty < tmpBest.penalty
+                        || (tmpBetter.penalty === tmpBest.penalty && tmpBetter.bonus > tmpBest.bonus)) {
+                    tmpBest = tmpBetter;
+                    bestPos = pos;
+                }
+            }
+            if (bestPos < 0) {
+                time++;
+                if (time >= LIMIT) {
+                    return "OK";
+                }
+                for (let pos = 0; pos < target.setSize; pos++) {
+                    if (pos < heartList.length) {
+                        currentState.hearts[pos] = heartList[pos];
+                    } else {
+                        currentState.hearts[pos] = null;
+                    }
+                }
+                calcRNHeartsetScore(target, currentState);
+                used.fill(false);
+                for (let pos = 0; pos < target.setSize; pos++) {
+                    const heart = currentState.hearts[pos];
+                    if (heart !== null) {
+                        used[heart.monster.id] = true;
+                    }
+                }
+                tmpBest = copy(currentState);
             } else {
-                for (const indexes of hIndexes) {
-                    shuffle(indexes);
+                const oldHeart = currentState.hearts[bestPos];
+                if (oldHeart !== null) {
+                    used[oldHeart.monster.id] = false;
+                }
+                const newHeart = tmpBest.hearts[bestPos];
+                if (newHeart !== null) {
+                    used[newHeart.monster.id] = true;
+                }
+                currentState = copy(tmpBest);
+                bestPos = -1;
+                if (currentState.cost < target.maximumCost) {
+                    if (update(currentState)) {
+                        currentState = copy(currentState);
+                        showRNHeartset(target, bests);
+                    }
                 }
             }
+            shuffle(heartList);
+            hIndex = 0;
         }
-        cycle++;
-        pos = (pos + 1) % target.setSize;
-        let h: RNHeart | null = null;
-        const hhi = hhIndexes[pos];
-        if (hhi >= heartList.length) {
-            hhIndexes[pos] = 0;
-            if (currentState.hearts[pos] === null) {
-                return null;
-            }
-        } else {
-            hhIndexes[pos] = hhi + 1;
-            const hi = hIndexes[pos][hhi];
-            h = heartList[hi];
-            if (used[h.monster.id]) {
-                return null;
-            }
+        const heart = heartList[hIndex];
+        hIndex++;
+        if (used[heart.monster.id]) {
+            return null;
         }
-        const tmpState = copy(currentState);
-        tmpState.hearts[pos] = h;
-        calcRNHeartsetScore(target, tmpState);
-        let tmpBetter = copy(tmpState);
-        for (const p of perm) {
-            tmpState.order = p;
+        for (let pos = 0; pos < target.setSize; pos++) {
+            const tmpState = copy(currentState);
+            tmpState.hearts[pos] = heart;
             calcRNHeartsetScore(target, tmpState);
-            if (tmpState.penalty < tmpBetter.penalty
-                    || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
-                tmpBetter = copy(tmpState);
-            }
-        }
-        if (tmpBetter.penalty === 0 && currentState.penalty === 0) {
-             if (tmpBetter.bonus < currentState.bonus) {
-                const temperature = 0.0001 ** (cycle / CYCLE);
-                const diff = (currentState.bonus - tmpBetter.bonus);
-                bDiffSum += diff;
-                bCount++;
-                const bDiffAvg = bDiffSum / bCount;
-                const probability = Math.exp(-diff / (bDiffAvg ** 0.5) / temperature);
-                if (Math.random() > probability) {
-                    return null;
+            let tmpBetter = copy(tmpState);
+            for (const p of perm) {
+                tmpState.order = p;
+                calcRNHeartsetScore(target, tmpState);
+                if (tmpState.penalty < tmpBetter.penalty
+                        || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
+                    tmpBetter = copy(tmpState);
                 }
             }
-        } else if (tmpBetter.penalty > currentState.penalty) {
-            const temperature = 0.0001 ** (cycle / CYCLE);
-            const diff = (tmpBetter.penalty - currentState.penalty);
-            pDiffSum += diff;
-            pCount++;
-            const pDiffAvg = pDiffSum / pCount;
-            const probability = Math.exp(-diff / (pDiffAvg ** 0.5) / temperature);
-            if (Math.random() > probability) {
-                return null;
-            }
-        }
-        if (currentState.hearts[pos] !== null) {
-            used[currentState.hearts[pos]!.monster.id] = false;
-        }
-        if (tmpBetter.hearts[pos] !== null) {
-            used[tmpBetter.hearts[pos]!.monster.id]  = true;
-        }
-        currentState = tmpBetter;
-        if (currentState.cost <= target.maximumCost) {
-            if (update(currentState)) {
-                currentState = copy(currentState);
-                showRNHeartset(target, bests);
+            if (tmpBetter.penalty < tmpBest.penalty
+                    || (tmpBetter.penalty === tmpBest.penalty && tmpBetter.bonus > tmpBest.bonus)) {
+                tmpBest = tmpBetter;
+                bestPos = pos;
             }
         }
         return null;
