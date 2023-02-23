@@ -3916,6 +3916,16 @@ interface RNTarget {
     scoreres: RNScorer[];
     useRefExpr: boolean;
     refExpr: Scorer | null;
+    useRefExpr2: boolean;
+    refExpr2: Scorer | null;
+    useRefExpr3: boolean;
+    refExpr3: Scorer | null;
+    useRefExpr4: boolean;
+    refExpr4: Scorer | null;
+    useRefExpr5: boolean;
+    refExpr5: Scorer | null;
+    useRefExpr6: boolean;
+    refExpr6: Scorer | null;
 }
 
 interface RNHeart {
@@ -4010,26 +4020,46 @@ function showRNHeartset(target: RNTarget, heartsets: RNHeartset[]): void {
         elem("recovermagic").textContent = `${status.recoverMagic}`;
         elem("speed").textContent        = `${status.speed}`;
         elem("dexterity").textContent    = `${status.dexterity}`;
-        if (target.useRefExpr) {
-            const refMonster: Monster = {
-                id: 0,
-                name: "参考値",
-                color: Color.Red,
-                curCost: status.cost,
-                hearts: [status],
-                target: status.rank,
-                withSplus: false,
-                defaultTarget: status.rank,
-                defaultWithSplus: false
-            };
-            for (let z = 0; z < statusValues.length; z++) {
-                target.scoreres[z].refSetter(status, statusValues[z]);
-            }
-            const refScore = target.refExpr!.calc(Color.Blue, refMonster);
-            elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}, 参考値: ${refScore}`;
-        } else {
-            elem("score").textContent = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}`;
+        let scoreStr = `penalty: ${heartset.penalty}, bonus: ${heartset.bonus}`;
+        const refMonster: Monster = {
+            id: 0,
+            name: "参考値",
+            color: Color.Red, // 参考値式にCOLOR(赤)があると計算されてしまうな･･･
+            curCost: status.cost,
+            hearts: [status],
+            target: status.rank,
+            withSplus: false,
+            defaultTarget: status.rank,
+            defaultWithSplus: false
+        };
+        for (let z = 0; z < statusValues.length; z++) {
+            target.scoreres[z].refSetter(status, statusValues[z]);
         }
+        if (target.useRefExpr) {
+            const refScore = target.refExpr!.calc(Color.Blue, refMonster);
+            scoreStr += `, 参考値1: ${refScore}`;
+        }
+        if (target.useRefExpr2) {
+            const refScore2 = target.refExpr2!.calc(Color.Blue, refMonster);
+            scoreStr += `, 参考値2: ${refScore2}`;
+        }
+        if (target.useRefExpr3) {
+            const refScore3 = target.refExpr3!.calc(Color.Blue, refMonster);
+            scoreStr += `, 参考値3: ${refScore3}`;
+        }
+        if (target.useRefExpr4) {
+            const refScore4 = target.refExpr4!.calc(Color.Blue, refMonster);
+            scoreStr += `, 参考値4: ${refScore4}`;
+        }
+        if (target.useRefExpr5) {
+            const refScore5 = target.refExpr5!.calc(Color.Blue, refMonster);
+            scoreStr += `, 参考値5: ${refScore5}`;
+        }
+        if (target.useRefExpr6) {
+            const refScore6 = target.refExpr6!.calc(Color.Blue, refMonster);
+            scoreStr += `, 参考値6: ${refScore6}`;
+        }
+        elem("score").textContent = scoreStr;
     }
 }
 
@@ -4756,7 +4786,67 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr = parseExpression(refExprSrc);
         } catch (ex) {
-            dialogAlert("参照値式にエラー: ${ex.getMessage()}");
+            dialogAlert("参考値1の式にエラー: ${ex.getMessage()}");
+            return;
+        }
+    }
+
+    const useRefExpr2 = elem("reallyneeded_refexpr2").checked;
+    let refExpr2: Scorer | null = null;
+    if (useRefExpr2) {
+        const refExpr2Src = elem("reallyneeded_refexpr2_expr").value ?? "";
+        try {
+            refExpr2 = parseExpression(refExpr2Src);
+        } catch (ex) {
+            dialogAlert("参考値2の式にエラー: ${ex.getMessage()}");
+            return;
+        }
+    }
+
+    const useRefExpr3 = elem("reallyneeded_refexpr3").checked;
+    let refExpr3: Scorer | null = null;
+    if (useRefExpr3) {
+        const refExpr3Src = elem("reallyneeded_refexpr3_expr").value ?? "";
+        try {
+            refExpr3 = parseExpression(refExpr3Src);
+        } catch (ex) {
+            dialogAlert("参考値3の式にエラー: ${ex.getMessage()}");
+            return;
+        }
+    }
+
+    const useRefExpr4 = elem("reallyneeded_refexpr4").checked;
+    let refExpr4: Scorer | null = null;
+    if (useRefExpr4) {
+        const refExpr4Src = elem("reallyneeded_refexpr4_expr").value ?? "";
+        try {
+            refExpr4 = parseExpression(refExpr4Src);
+        } catch (ex) {
+            dialogAlert("参考値4の式にエラー: ${ex.getMessage()}");
+            return;
+        }
+    }
+
+    const useRefExpr5 = elem("reallyneeded_refexpr5").checked;
+    let refExpr5: Scorer | null = null;
+    if (useRefExpr5) {
+        const refExpr5Src = elem("reallyneeded_refexpr5_expr").value ?? "";
+        try {
+            refExpr5 = parseExpression(refExpr5Src);
+        } catch (ex) {
+            dialogAlert("参考値5の式にエラー: ${ex.getMessage()}");
+            return;
+        }
+    }
+
+    const useRefExpr6 = elem("reallyneeded_refexpr6").checked;
+    let refExpr6: Scorer | null = null;
+    if (useRefExpr6) {
+        const refExpr6Src = elem("reallyneeded_refexpr6_expr").value ?? "";
+        try {
+            refExpr6 = parseExpression(refExpr6Src);
+        } catch (ex) {
+            dialogAlert("参考値6の式にエラー: ${ex.getMessage()}");
             return;
         }
     }
@@ -4769,7 +4859,17 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         costCoCo: costCoCo,
         scoreres: [],
         useRefExpr: useRefExpr,
-        refExpr: refExpr
+        refExpr: refExpr,
+        useRefExpr2: useRefExpr2,
+        refExpr2: refExpr2,
+        useRefExpr3: useRefExpr3,
+        refExpr3: refExpr3,
+        useRefExpr4: useRefExpr4,
+        refExpr4: refExpr4,
+        useRefExpr5: useRefExpr5,
+        refExpr5: refExpr5,
+        useRefExpr6: useRefExpr6,
+        refExpr6: refExpr6
     };
 
     const targetList: {
@@ -4791,7 +4891,9 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         {name: "expr3",        scorer: null,              refName: "式C", refSetter: (h, v) => h.effects += ` 式C${v} ` },
         {name: "expr4",        scorer: null,              refName: "式D", refSetter: (h, v) => h.effects += ` 式D${v} ` },
         {name: "expr5",        scorer: null,              refName: "式E", refSetter: (h, v) => h.effects += ` 式E${v} ` },
-        {name: "expr6",        scorer: null,              refName: "式F", refSetter: (h, v) => h.effects += ` 式F${v} ` }
+        {name: "expr6",        scorer: null,              refName: "式F", refSetter: (h, v) => h.effects += ` 式F${v} ` },
+        {name: "expr7",        scorer: null,              refName: "式G", refSetter: (h, v) => h.effects += ` 式G${v} ` },
+        {name: "expr8",        scorer: null,              refName: "式H", refSetter: (h, v) => h.effects += ` 式H${v} ` }
     ];
 
     for (const spec of targetList) {

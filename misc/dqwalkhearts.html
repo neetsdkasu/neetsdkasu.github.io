@@ -660,8 +660,8 @@
             <dt>ペナルティ・ボーナスの値の設定のヒント</dt><dd>基本的に1次係数を<code>1</code>にしておけばだいたいOK</dd>
             <dt>目標値ピッタリの値を求めるヒント</dt><dd>対象の低ペナと高ペナの両方ともに値を設定すればたぶんOK</dd>
             <dt>こころセットの優劣のヒント</dt><dd>対象に目標値は無いが値が大きいほうが良い場合は目標値とペナルティを0にしボーナスにだけ正の値を設定すればいいかも？</dd>
-            <dt>参考値</dt><dd>こころセットの対象の合計値から参考にしたい値を参考値式から算出する（※こころセット探索の評価には使用されず、検索結果に表示されるだけの値となる）</dd>
-            <dt>参考値式</dt><dd>こころセットの対象の合計値から参考にしたい値を算出するための計算式（※式A～式Fの値は<code>NUM</code>関数を用いて取得する。例：<code>NUM(式A#)</code>）</dd>
+            <dt>参考値</dt><dd>こころセットの対象の合計値から参考にしたい値を参考値式から算出する（※こころセット探索の評価には使用されず、検索結果に表示されるだけの値となる）（※探索のチェックの入ってる対象項目のみを参照できる）</dd>
+            <dt>参考値の式</dt><dd>こころセットの対象の合計値から参考にしたい値を算出するための計算式（※式A～式Hの値は<code>NUM</code>関数を用いて取得する。例：<code>NUM(式A#)</code>）</dd>
           </dl>
           </details>
           <div class="outline reallyneeded">
@@ -953,13 +953,72 @@
                   <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_bn1" id="reallyneeded_expr6_bn1" /></td>
                   <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_bnc" id="reallyneeded_expr6_bnc" /></td>
                 </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr7" id="reallyneeded_expr7" />
+                    <label for="reallyneeded_expr7">式G</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr7_expr" id="reallyneeded_expr7_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr7_goal" id="reallyneeded_expr7_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_lp2" id="reallyneeded_expr7_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_lp1" id="reallyneeded_expr7_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_lpc" id="reallyneeded_expr7_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_hp2" id="reallyneeded_expr7_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_hp1" id="reallyneeded_expr7_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_hpc" id="reallyneeded_expr7_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_bn2" id="reallyneeded_expr7_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_bn1" id="reallyneeded_expr7_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_bnc" id="reallyneeded_expr7_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr8" id="reallyneeded_expr8" />
+                    <label for="reallyneeded_expr8">式H</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr8_expr" id="reallyneeded_expr8_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr8_goal" id="reallyneeded_expr8_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_lp2" id="reallyneeded_expr8_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_lp1" id="reallyneeded_expr8_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_lpc" id="reallyneeded_expr8_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_hp2" id="reallyneeded_expr8_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_hp1" id="reallyneeded_expr8_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_hpc" id="reallyneeded_expr8_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_bn2" id="reallyneeded_expr8_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_bn1" id="reallyneeded_expr8_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_bnc" id="reallyneeded_expr8_bnc" /></td>
+                </tr>
               </tbody>
             </table>
             <hr />
             <div>
               <input type="checkbox" name="reallyneeded_refexpr" id="reallyneeded_refexpr" />
-              <label for="reallyneeded_refexpr">参考値式:</label>
-              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr_expr" id="reallyneeded_refexpr_expr" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DEX+NUM(式A#)+NUM(式B#)+NUM(式C#)+NUM(式D#)+NUM(式E#)+NUM(式F#)" / />
+              <label for="reallyneeded_refexpr">参考値1の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr_expr" id="reallyneeded_refexpr_expr" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DEX+NUM(式A#)+NUM(式B#)+NUM(式C#)+NUM(式D#)+NUM(式E#)+NUM(式F#)+NUM(式G#)+NUM(式H#)" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr2" id="reallyneeded_refexpr2" />
+              <label for="reallyneeded_refexpr2">参考値2の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr2_expr" id="reallyneeded_refexpr2_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr3" id="reallyneeded_refexpr3" />
+              <label for="reallyneeded_refexpr3">参考値3の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr3_expr" id="reallyneeded_refexpr3_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr4" id="reallyneeded_refexpr4" />
+              <label for="reallyneeded_refexpr4">参考値4の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr4_expr" id="reallyneeded_refexpr4_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr5" id="reallyneeded_refexpr5" />
+              <label for="reallyneeded_refexpr5">参考値5の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr5_expr" id="reallyneeded_refexpr5_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr6" id="reallyneeded_refexpr6" />
+              <label for="reallyneeded_refexpr6">参考値6の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr6_expr" id="reallyneeded_refexpr6_expr" placeholder="" / />
             </div>
             <hr />
             <div>
