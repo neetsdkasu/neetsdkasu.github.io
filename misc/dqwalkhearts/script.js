@@ -3968,7 +3968,9 @@ function searchRNHeartsetSA(target) {
     }
     const used = new Array(maxID + 1).fill(false);
     let time = 0;
-    const LIMIT = 20;
+    const RESET = 20;
+    const KICK = 40;
+    const LIMIT = 60;
     let pos = 0;
     let cycle = 0;
     const CYCLE = target.setSize * heartList.length * 4;
@@ -3987,6 +3989,33 @@ function searchRNHeartsetSA(target) {
                 for (const indexes of hIndexes) {
                     shuffle(indexes);
                 }
+            }
+            if (time === RESET) {
+                currentState.hearts.fill(null);
+                used.fill(false);
+                calcRNHeartsetScore(target, currentState);
+            }
+            if (time === KICK) {
+                // KICK???
+                currentState.hearts.fill(null);
+                used.fill(false);
+                let kickPos = 0;
+                for (const hi of hIndexes[0]) {
+                    if (hi >= heartList.length) {
+                        continue;
+                    }
+                    const h = heartList[hi];
+                    if (used[h.monster.id]) {
+                        continue;
+                    }
+                    currentState.hearts[kickPos] = h;
+                    used[h.monster.id] = true;
+                    kickPos++;
+                    if (kickPos >= target.setSize) {
+                        break;
+                    }
+                }
+                calcRNHeartsetScore(target, currentState);
             }
         }
         cycle++;
