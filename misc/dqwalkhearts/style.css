@@ -1,6 +1,6 @@
 body
 {
-    padding: 1rem 2rem 10rem 2rem;
+    padding: 1rem 1rem 10rem 1rem;
 }
 
 footer
@@ -28,6 +28,7 @@ section.outline
 
 #damage_result > details > summary,
 .damagetool > details > div.outline > div.small,
+section.reallyneeded > details > div.outline > div.small,
 section.outline > h5
 {
     margin-top: 0px;
@@ -201,6 +202,7 @@ input[type="checkbox"]:disabled + label,
     /* overflow-y: scroll; */
 }
 
+#reallyneeded_result,
 #heart_list
 {
     height: 32rem;
@@ -260,6 +262,11 @@ td
     font-size: 0.5rem;
 }
 
+table.reallyneeded > tbody > tr:hover
+{
+    background-color: #aaeeee;
+}
+
 #status_distance_tbody > tr:hover
 {
     background-color: #eeffff;
@@ -285,6 +292,11 @@ td
 #heart_with_s_plus:checked + * + *
 {
     display: inline;
+}
+
+div.outline.reallyneeded
+{
+    overflow-x: scroll;
 }
 
 .dialog-buttons

@@ -31,6 +31,16 @@
       </form>
     </dialog>
 
+    <dialog id="wait_dialog">
+      <div id="wait_message">しばらくお待ちください</div>
+      <hr />
+      <form method="dialog">
+        <div>
+          <button value="cancel">中止</button>
+        </div>
+      </form>
+    </dialog>
+
     <dialog id="file_load_dialog">
       <div>こころリストをファイルから読み込む</div>
       <hr />
@@ -50,6 +60,7 @@
     </dialog>
 
     <datalist id="job_preset_maximum_cost_list"></datalist>
+    <datalist id="reallyneeded_job_preset_maximum_cost_list"></datalist>
 
     <datalist id="monster_name_list"></datalist>
 
@@ -599,7 +610,6 @@
             <dt>Cost</dt><dd>上位互換のうちコストが最小のこころ</dd>
             <dt>Euclidean</dt><dd>各ステータス差の二乗和の平方根でステータス距離を求め、一番距離の近いこころを求める</dd>
             <dt>Manhattan</dt><dd>各ステータス差の絶対値の和でステータス距離を求め、一番距離の近いこころを求める</dd>
-
           </dl>
           <button id="calc_status_distance">計算</button>
           <table>
@@ -623,6 +633,410 @@
             <tbody id="status_distance_tbody">
             </tbody>
           </table>
+        </details>
+      </section>
+
+      <hr class="secret" />
+
+      <section class="secret reallyneeded">
+        <h5>本当はこういうこころセット探索が欲しかった(と思っていたが実装した感じ、思ってたのと違う)</h5>
+        <details>
+          <details class="outline">
+            <summary>説明</summary>
+          <dl>
+            <dt>探索方法</dt><dd>こころセットから少しでもペナルティが下がるor少しでもボーナスが上がるこころを見つけたらこころを入れ替えるを繰り返す</dd>
+            <dt>ペナルティ</dt><dd>目標値から離れている場合の不適切さを表す点数</dd>
+            <dt>ボーナス</dt><dd>目標値を達成している場合の好ましさを表す点数（※対象のペナルティの計算結果が0のときのみボーナスは算出される）</dd>
+            <dt>対象</dt><dd>各こころにおいてペナルティやボーナスの計算の対象となる値を指定する</dd>
+            <dt>式A～式F</dt><dd>各こころにおいて対象となる値を式で求める</dd>
+            <dt>目標値</dt><dd>こころセットにおける対象の合計値が目指すべき値</dd>
+            <dt>低ペナ</dt><dd>目標値より低い場合に科すペナルティ（目標値以上の値を目指したい場合に設定する）</dd>
+            <dt>高ペナ</dt><dd>目標値を超えている場合に科すペナルティ（目標値以下の値を目指したい場合に設定する）</dd>
+            <dt>コスト高ペナ</dt><dd>こころセット探索中にコストの上限を超えてしまった場合に科すペナルティ（※値の設定をしないとこころセットを見つけにくくなる）</dd>
+            <dt>ペナルティ・ボーナスの計算</dt><dd>目標値からの差分の大きさを<code>x</code>とした場合に、式<code>a*x^2+b*x+c</code>で各対象ごとに計算しそれらを合計したものを点数とする</dd>
+            <dt>2次係数</dt><dd>式<code>a*x^2+b*x+c</code>の2次の項<code>a*x^2</code>の係数<code>a</code>のこと</dd>
+            <dt>1次係数</dt><dd>式<code>a*x^2+b*x+c</code>の1次の項<code>b*x</code>の係数<code>b</code>のこと</dd>
+            <dt>定数</dt><dd>式<code>a*x^2+b*x+c</code>の定数項<code>c</code>のこと</dd>
+            <dt>ペナルティ・ボーナスの値の設定のヒント</dt><dd>基本的に1次係数を<code>1</code>にしておけばだいたいOK</dd>
+            <dt>目標値ピッタリの値を求めるヒント</dt><dd>対象の低ペナと高ペナの両方ともに値を設定すればたぶんOK</dd>
+            <dt>こころセットの優劣のヒント</dt><dd>対象に目標値は無いが値が大きいほうが良い場合は目標値とペナルティを0にしボーナスにだけ正の値を設定すればいいかも？</dd>
+            <dt>参考値</dt><dd>こころセットの対象の合計値から参考にしたい値を参考値式から算出する（※こころセット探索の評価には使用されず、検索結果に表示されるだけの値となる）（※探索のチェックの入ってる対象項目のみを参照できる）</dd>
+            <dt>参考値の式</dt><dd>こころセットの対象の合計値から参考にしたい値を算出するための計算式（※式A～式Hの値は<code>NUM</code>関数を用いて取得する。例：<code>NUM(式A#)</code>）</dd>
+          </dl>
+          </details>
+          <div class="outline reallyneeded">
+            <div class="small">設定</div>
+            <div>
+              <label for="reallyneeded_job">職業:</label>
+              <select name="reallyneeded_job" id="reallyneeded_job">
+                <option value="101" selected>戦士</option>
+                <option value="102"         >魔法使い</option>
+                <option value="103"         >僧侶</option>
+                <option value="104"         >武闘家</option>
+                <option value="105"         >盗賊</option>
+                <option value="106"         >踊り子</option>
+                <option value="107"         >遊び人</option>
+                <option value="201"         >バトルマスター</option>
+                <option value="202"         >賢者</option>
+                <option value="203"         >レンジャー</option>
+                <option value="204"         >魔法戦士</option>
+                <option value="205"         >パラディン</option>
+                <option value="206"         >スーパースター</option>
+                <option value="207"         >海賊</option>
+                <option value="208"         >まものマスター</option>
+                <option value="301"         >ゴッドハンド</option>
+                <option value="302"         >大魔道士</option>
+                <option value="303"         >大神官</option>
+              </select>
+            </div>
+            <div>
+              <label for="reallyneeded_heart_maximum_cost">こころ最大コスト:</label>
+              <input type="number" name="reallyneeded_heart_maximum_cost" id="reallyneeded_heart_maximum_cost" min="0" max="1000" list="reallyneeded_job_preset_maximum_cost_list" />
+              <span class="small">
+                <input type="checkbox" name="reallyneeded_as_limit_heart_cost" id="reallyneeded_as_limit_heart_cost" />
+                <label for="reallyneeded_as_limit_heart_cost">上限コストとして扱う</label>
+              </span>
+            </div>
+            <div>
+              <span>コスト高ペナ:</span>
+              <label for="reallyneeded_heart_maximum_cost_hp2">2次係数:</label>
+              <input type="number" min="0" max="9999" name="reallyneeded_heart_maximum_cost_hp2" id="reallyneeded_heart_maximum_cost_hp2" />
+              <label for="reallyneeded_heart_maximum_cost_hp1">1次係数:</label>
+              <input type="number" min="0" max="9999" name="reallyneeded_heart_maximum_cost_hp1" id="reallyneeded_heart_maximum_cost_hp1" />
+              <label for="reallyneeded_heart_maximum_cost_hpc">定数:</label>
+              <input type="number" min="0" max="9999" name="reallyneeded_heart_maximum_cost_hpc" id="reallyneeded_heart_maximum_cost_hpc" />
+            </div>
+            <hr />
+            <table class="reallyneeded">
+              <thead>
+                <tr>
+                  <th rowspan="2">対象</th>
+                  <th rowspan="2">目標値</th>
+                  <th colspan="3">低ぺナ</th>
+                  <th colspan="3">高ぺナ</th>
+                  <th colspan="3">ボーナス</th>
+                </tr>
+                <tr>
+                  <th>2次係数</th><th>1次係数</th><th>定数</th>
+                  <th>2次係数</th><th>1次係数</th><th>定数</th>
+                  <th>2次係数</th><th>1次係数</th><th>定数</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_maximumhp" id="reallyneeded_maximumhp" />
+                    <label for="reallyneeded_maximumhp">HP</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_maximumhp_goal" id="reallyneeded_maximumhp_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_lp2" id="reallyneeded_maximumhp_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_lp1" id="reallyneeded_maximumhp_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_lpc" id="reallyneeded_maximumhp_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_hp2" id="reallyneeded_maximumhp_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_hp1" id="reallyneeded_maximumhp_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_hpc" id="reallyneeded_maximumhp_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_bn2" id="reallyneeded_maximumhp_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_bn1" id="reallyneeded_maximumhp_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximumhp_bnc" id="reallyneeded_maximumhp_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_maximummp" id="reallyneeded_maximummp" />
+                    <label for="reallyneeded_maximummp">MP</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_maximummp_goal" id="reallyneeded_maximummp_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_lp2" id="reallyneeded_maximummp_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_lp1" id="reallyneeded_maximummp_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_lpc" id="reallyneeded_maximummp_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_hp2" id="reallyneeded_maximummp_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_hp1" id="reallyneeded_maximummp_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_hpc" id="reallyneeded_maximummp_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_bn2" id="reallyneeded_maximummp_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_bn1" id="reallyneeded_maximummp_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_maximummp_bnc" id="reallyneeded_maximummp_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_power" id="reallyneeded_power" />
+                    <label for="reallyneeded_power">力</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_power_goal" id="reallyneeded_power_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_lp2" id="reallyneeded_power_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_lp1" id="reallyneeded_power_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_lpc" id="reallyneeded_power_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_hp2" id="reallyneeded_power_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_hp1" id="reallyneeded_power_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_hpc" id="reallyneeded_power_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_bn2" id="reallyneeded_power_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_bn1" id="reallyneeded_power_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_power_bnc" id="reallyneeded_power_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_defence" id="reallyneeded_defence" />
+                    <label for="reallyneeded_defence">守り</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_defence_goal" id="reallyneeded_defence_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_lp2" id="reallyneeded_defence_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_lp1" id="reallyneeded_defence_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_lpc" id="reallyneeded_defence_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_hp2" id="reallyneeded_defence_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_hp1" id="reallyneeded_defence_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_hpc" id="reallyneeded_defence_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_bn2" id="reallyneeded_defence_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_bn1" id="reallyneeded_defence_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_defence_bnc" id="reallyneeded_defence_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_attackmagic" id="reallyneeded_attackmagic" />
+                    <label for="reallyneeded_attackmagic">攻魔</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_attackmagic_goal" id="reallyneeded_attackmagic_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_lp2" id="reallyneeded_attackmagic_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_lp1" id="reallyneeded_attackmagic_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_lpc" id="reallyneeded_attackmagic_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_hp2" id="reallyneeded_attackmagic_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_hp1" id="reallyneeded_attackmagic_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_hpc" id="reallyneeded_attackmagic_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_bn2" id="reallyneeded_attackmagic_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_bn1" id="reallyneeded_attackmagic_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_attackmagic_bnc" id="reallyneeded_attackmagic_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_recovermagic" id="reallyneeded_recovermagic" />
+                    <label for="reallyneeded_recovermagic">回魔</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_recovermagic_goal" id="reallyneeded_recovermagic_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_lp2" id="reallyneeded_recovermagic_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_lp1" id="reallyneeded_recovermagic_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_lpc" id="reallyneeded_recovermagic_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_hp2" id="reallyneeded_recovermagic_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_hp1" id="reallyneeded_recovermagic_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_hpc" id="reallyneeded_recovermagic_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_bn2" id="reallyneeded_recovermagic_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_bn1" id="reallyneeded_recovermagic_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_recovermagic_bnc" id="reallyneeded_recovermagic_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_speed" id="reallyneeded_speed" />
+                    <label for="reallyneeded_speed">早さ</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_speed_goal" id="reallyneeded_speed_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_lp2" id="reallyneeded_speed_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_lp1" id="reallyneeded_speed_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_lpc" id="reallyneeded_speed_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_hp2" id="reallyneeded_speed_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_hp1" id="reallyneeded_speed_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_hpc" id="reallyneeded_speed_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_bn2" id="reallyneeded_speed_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_bn1" id="reallyneeded_speed_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_speed_bnc" id="reallyneeded_speed_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_dexterity" id="reallyneeded_dexterity" />
+                    <label for="reallyneeded_dexterity">器用</label>
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_dexterity_goal" id="reallyneeded_dexterity_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_lp2" id="reallyneeded_dexterity_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_lp1" id="reallyneeded_dexterity_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_lpc" id="reallyneeded_dexterity_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_hp2" id="reallyneeded_dexterity_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_hp1" id="reallyneeded_dexterity_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_hpc" id="reallyneeded_dexterity_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_bn2" id="reallyneeded_dexterity_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_bn1" id="reallyneeded_dexterity_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_dexterity_bnc" id="reallyneeded_dexterity_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr1" id="reallyneeded_expr1" />
+                    <label for="reallyneeded_expr1">式A</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr1_expr" id="reallyneeded_expr1_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr1_goal" id="reallyneeded_expr1_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_lp2" id="reallyneeded_expr1_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_lp1" id="reallyneeded_expr1_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_lpc" id="reallyneeded_expr1_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_hp2" id="reallyneeded_expr1_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_hp1" id="reallyneeded_expr1_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_hpc" id="reallyneeded_expr1_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_bn2" id="reallyneeded_expr1_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_bn1" id="reallyneeded_expr1_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr1_bnc" id="reallyneeded_expr1_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr2" id="reallyneeded_expr2" />
+                    <label for="reallyneeded_expr2">式B</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr2_expr" id="reallyneeded_expr2_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr2_goal" id="reallyneeded_expr2_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_lp2" id="reallyneeded_expr2_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_lp1" id="reallyneeded_expr2_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_lpc" id="reallyneeded_expr2_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_hp2" id="reallyneeded_expr2_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_hp1" id="reallyneeded_expr2_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_hpc" id="reallyneeded_expr2_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_bn2" id="reallyneeded_expr2_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_bn1" id="reallyneeded_expr2_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr2_bnc" id="reallyneeded_expr2_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr3" id="reallyneeded_expr3" />
+                    <label for="reallyneeded_expr3">式C</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr3_expr" id="reallyneeded_expr3_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr3_goal" id="reallyneeded_expr3_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_lp2" id="reallyneeded_expr3_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_lp1" id="reallyneeded_expr3_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_lpc" id="reallyneeded_expr3_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_hp2" id="reallyneeded_expr3_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_hp1" id="reallyneeded_expr3_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_hpc" id="reallyneeded_expr3_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_bn2" id="reallyneeded_expr3_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_bn1" id="reallyneeded_expr3_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr3_bnc" id="reallyneeded_expr3_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr4" id="reallyneeded_expr4" />
+                    <label for="reallyneeded_expr4">式D</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr4_expr" id="reallyneeded_expr4_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr4_goal" id="reallyneeded_expr4_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_lp2" id="reallyneeded_expr4_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_lp1" id="reallyneeded_expr4_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_lpc" id="reallyneeded_expr4_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_hp2" id="reallyneeded_expr4_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_hp1" id="reallyneeded_expr4_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_hpc" id="reallyneeded_expr4_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_bn2" id="reallyneeded_expr4_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_bn1" id="reallyneeded_expr4_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr4_bnc" id="reallyneeded_expr4_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr5" id="reallyneeded_expr5" />
+                    <label for="reallyneeded_expr5">式E</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr5_expr" id="reallyneeded_expr5_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr5_goal" id="reallyneeded_expr5_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_lp2" id="reallyneeded_expr5_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_lp1" id="reallyneeded_expr5_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_lpc" id="reallyneeded_expr5_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_hp2" id="reallyneeded_expr5_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_hp1" id="reallyneeded_expr5_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_hpc" id="reallyneeded_expr5_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_bn2" id="reallyneeded_expr5_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_bn1" id="reallyneeded_expr5_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr5_bnc" id="reallyneeded_expr5_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr6" id="reallyneeded_expr6" />
+                    <label for="reallyneeded_expr6">式F</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr6_expr" id="reallyneeded_expr6_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr6_goal" id="reallyneeded_expr6_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_lp2" id="reallyneeded_expr6_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_lp1" id="reallyneeded_expr6_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_lpc" id="reallyneeded_expr6_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_hp2" id="reallyneeded_expr6_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_hp1" id="reallyneeded_expr6_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_hpc" id="reallyneeded_expr6_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_bn2" id="reallyneeded_expr6_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_bn1" id="reallyneeded_expr6_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr6_bnc" id="reallyneeded_expr6_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr7" id="reallyneeded_expr7" />
+                    <label for="reallyneeded_expr7">式G</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr7_expr" id="reallyneeded_expr7_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr7_goal" id="reallyneeded_expr7_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_lp2" id="reallyneeded_expr7_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_lp1" id="reallyneeded_expr7_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_lpc" id="reallyneeded_expr7_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_hp2" id="reallyneeded_expr7_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_hp1" id="reallyneeded_expr7_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_hpc" id="reallyneeded_expr7_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_bn2" id="reallyneeded_expr7_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_bn1" id="reallyneeded_expr7_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr7_bnc" id="reallyneeded_expr7_bnc" /></td>
+                </tr>
+                <tr>
+                  <td>
+                    <input type="checkbox" name="reallyneeded_expr8" id="reallyneeded_expr8" />
+                    <label for="reallyneeded_expr8">式H</label>
+                    <input type="text" maxlength="300" size="20" name="reallyneeded_expr8_expr" id="reallyneeded_expr8_expr" / />
+                  </td>
+                  <td><input type="number" min="0" max="3000" name="reallyneeded_expr8_goal" id="reallyneeded_expr8_goal" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_lp2" id="reallyneeded_expr8_lp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_lp1" id="reallyneeded_expr8_lp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_lpc" id="reallyneeded_expr8_lpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_hp2" id="reallyneeded_expr8_hp2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_hp1" id="reallyneeded_expr8_hp1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_hpc" id="reallyneeded_expr8_hpc" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_bn2" id="reallyneeded_expr8_bn2" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_bn1" id="reallyneeded_expr8_bn1" /></td>
+                  <td><input type="number" min="0" max="9999" name="reallyneeded_expr8_bnc" id="reallyneeded_expr8_bnc" /></td>
+                </tr>
+              </tbody>
+            </table>
+            <hr />
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr" id="reallyneeded_refexpr" />
+              <label for="reallyneeded_refexpr">参考値1の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr_expr" id="reallyneeded_refexpr_expr" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DEX+NUM(式A#)+NUM(式B#)+NUM(式C#)+NUM(式D#)+NUM(式E#)+NUM(式F#)+NUM(式G#)+NUM(式H#)" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr2" id="reallyneeded_refexpr2" />
+              <label for="reallyneeded_refexpr2">参考値2の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr2_expr" id="reallyneeded_refexpr2_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr3" id="reallyneeded_refexpr3" />
+              <label for="reallyneeded_refexpr3">参考値3の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr3_expr" id="reallyneeded_refexpr3_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr4" id="reallyneeded_refexpr4" />
+              <label for="reallyneeded_refexpr4">参考値4の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr4_expr" id="reallyneeded_refexpr4_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr5" id="reallyneeded_refexpr5" />
+              <label for="reallyneeded_refexpr5">参考値5の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr5_expr" id="reallyneeded_refexpr5_expr" placeholder="" / />
+            </div>
+            <div>
+              <input type="checkbox" name="reallyneeded_refexpr6" id="reallyneeded_refexpr6" />
+              <label for="reallyneeded_refexpr6">参考値6の式:</label>
+              <input type="text" maxlength="300" size="100" name="reallyneeded_refexpr6_expr" id="reallyneeded_refexpr6_expr" placeholder="" / />
+            </div>
+            <hr />
+            <div>
+              <label for="reallyneeded_algorithm">探索手法:</label>
+              <select name="reallyneeded_algorithm" id="reallyneeded_algorithm">
+                <option value="gr" selected>Greedy</option>
+                <option value="hc"         >Hill Climbing</option>
+                <option value="sa"         >Simulated Annealing</option>
+                <option value="bf"         >Brute Force</option>
+              </select>
+            </div>
+            <hr />
+            <div><button type="button" id="reallyneeded_start">探索開始</button></div>
+          </div>
+          <div class="outline reallyneeded">
+            <div class="small">結果</div>
+            <div id="reallyneeded_result"></div>
+          </div>
         </details>
       </section>
 
