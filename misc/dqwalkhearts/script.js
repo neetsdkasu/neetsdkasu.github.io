@@ -3744,6 +3744,8 @@ function showRNHeartset(target, heartsets) {
         for (let i = 0; i < target.setSize; i++) {
             const h = heartset.hearts[heartset.order[i]];
             if (h === null) {
+                elem(`heart${i + 1}`).innerHTML = "";
+                elem(`effects${i + 1}`).textContent = "";
                 continue;
             }
             const tmpRank = h.monster.target;
@@ -4471,6 +4473,301 @@ function searchRNHeartsetGr(target) {
     };
     dialogWait(task, "探索中です･･･");
 }
+// ReallyNeededのこころセットを探索する (Brute Force)
+function searchRNHeartsetBF(target) {
+    const perm = permutation(target.setSize);
+    const copy = (hs) => {
+        const res = {
+            hearts: hs.hearts.slice(),
+            order: hs.order,
+            penalty: hs.penalty,
+            bonus: hs.bonus,
+            cost: hs.cost
+        };
+        return res;
+    };
+    let currentState = {
+        hearts: new Array(target.setSize).fill(null),
+        order: perm[0],
+        penalty: 0,
+        bonus: 0,
+        cost: 0
+    };
+    calcRNHeartsetScore(target, currentState);
+    const bests = [];
+    const update = (state) => {
+        let changed = false;
+        if (bests.length > 0) {
+            if (state.penalty > bests[bests.length - 1].penalty) {
+                return false;
+            }
+        }
+        for (let i = 0; i < bests.length; i++) {
+            const b = bests[i];
+            if (state.penalty > b.penalty) {
+                continue;
+            }
+            if (state.penalty === b.penalty && state.bonus < b.bonus) {
+                continue;
+            }
+            if (state.penalty === b.penalty && state.bonus === b.bonus) {
+                if (state.cost === b.cost) {
+                    const h1 = b.hearts
+                        .map(h => h === null ? "*" : `${h.monster.id} ${h.heart.rank}`)
+                        .sort()
+                        .join(",");
+                    const h2 = state.hearts
+                        .map(h => h === null ? "*" : `${h.monster.id} ${h.heart.rank}`)
+                        .sort()
+                        .join(",");
+                    if (h1 === h2) {
+                        return false;
+                    }
+                }
+                continue;
+            }
+            bests[i] = state;
+            state = b;
+            changed = true;
+        }
+        if (bests.length < 10) {
+            bests.push(state);
+            changed = true;
+        }
+        return changed;
+    };
+    const heartList = [];
+    let maxID = 0;
+    for (const m of monsterList) {
+        if (m.target === null) {
+            continue;
+        }
+        maxID = Math.max(maxID, m.id);
+        const heart = {
+            monster: m,
+            heart: m.hearts.find(h => h.rank === m.target)
+        };
+        heartList.push(heart);
+        if (m.withSplus && m.target !== Rank.S_plus) {
+            const sph = m.hearts.find(h => h.rank === Rank.S_plus);
+            if (sph) {
+                const spHeart = {
+                    monster: m,
+                    heart: sph
+                };
+                heartList.push(spHeart);
+            }
+        }
+    }
+    const used = new Array(maxID + 1).fill(false);
+    const pairs = [];
+    let phase = 0;
+    const phase0 = () => {
+        for (let i = 0; i < heartList.length; i++) {
+            const hi = heartList[i];
+            for (let k = i + 1; k < heartList.length; k++) {
+                const hk = heartList[k];
+                if (hi.monster.id === hk.monster.id) {
+                    continue;
+                }
+                pairs.push([hi, hk]);
+            }
+        }
+        return true;
+    };
+    const phase1 = () => {
+        if (target.setSize < 1) {
+            return true;
+        }
+        let updated = false;
+        for (const h of heartList) {
+            currentState.hearts[0] = h;
+            calcRNHeartsetScore(target, currentState);
+            if (currentState.cost > target.maximumCost) {
+                continue;
+            }
+            let tmpBetter = copy(currentState);
+            for (const p of perm) {
+                currentState.order = p;
+                calcRNHeartsetScore(target, currentState);
+                if (currentState.penalty < tmpBetter.penalty
+                    || (currentState.penalty === tmpBetter.penalty
+                        && currentState.bonus > tmpBetter.bonus)) {
+                    tmpBetter = copy(currentState);
+                }
+            }
+            if (update(tmpBetter)) {
+                updated = true;
+            }
+        }
+        if (updated) {
+            showRNHeartset(target, bests);
+        }
+        return true;
+    };
+    const phase2 = () => {
+        if (target.setSize < 2) {
+            return true;
+        }
+        let updated = false;
+        for (const hp of pairs) {
+            currentState.hearts[0] = hp[0];
+            currentState.hearts[1] = hp[1];
+            calcRNHeartsetScore(target, currentState);
+            if (currentState.cost > target.maximumCost) {
+                continue;
+            }
+            let tmpBetter = copy(currentState);
+            for (const p of perm) {
+                currentState.order = p;
+                calcRNHeartsetScore(target, currentState);
+                if (currentState.penalty < tmpBetter.penalty
+                    || (currentState.penalty === tmpBetter.penalty
+                        && currentState.bonus > tmpBetter.bonus)) {
+                    tmpBetter = copy(currentState);
+                }
+            }
+            if (update(tmpBetter)) {
+                updated = true;
+            }
+        }
+        if (updated) {
+            showRNHeartset(target, bests);
+        }
+        return true;
+    };
+    let hIndex = 0;
+    const phase3 = () => {
+        if (target.setSize < 3) {
+            return true;
+        }
+        if (hIndex >= heartList.length) {
+            return true;
+        }
+        const h = heartList[hIndex];
+        hIndex++;
+        let updated = false;
+        currentState.hearts[2] = h;
+        for (const hp of pairs) {
+            if (hp[0].monster.id === h.monster.id
+                || hp[1].monster.id === h.monster.id) {
+                continue;
+            }
+            currentState.hearts[0] = hp[0];
+            currentState.hearts[1] = hp[1];
+            calcRNHeartsetScore(target, currentState);
+            if (currentState.cost > target.maximumCost) {
+                continue;
+            }
+            let tmpBetter = copy(currentState);
+            for (const p of perm) {
+                currentState.order = p;
+                calcRNHeartsetScore(target, currentState);
+                if (currentState.penalty < tmpBetter.penalty
+                    || (currentState.penalty === tmpBetter.penalty
+                        && currentState.bonus > tmpBetter.bonus)) {
+                    tmpBetter = copy(currentState);
+                }
+            }
+            if (update(tmpBetter)) {
+                updated = true;
+            }
+        }
+        if (updated) {
+            showRNHeartset(target, bests);
+        }
+        return false;
+    };
+    let hpIndex = 0;
+    const phase4 = () => {
+        if (target.setSize < 4) {
+            return true;
+        }
+        if (hpIndex >= pairs.length) {
+            return true;
+        }
+        const hx = pairs[hpIndex];
+        hpIndex++;
+        let updated = false;
+        currentState.hearts[2] = hx[0];
+        currentState.hearts[3] = hx[1];
+        used[hx[0].monster.id] = true;
+        used[hx[1].monster.id] = true;
+        for (const hp of pairs) {
+            if (used[hp[0].monster.id] || used[hp[1].monster.id]) {
+                continue;
+            }
+            currentState.hearts[0] = hp[0];
+            currentState.hearts[1] = hp[1];
+            calcRNHeartsetScore(target, currentState);
+            if (currentState.cost > target.maximumCost) {
+                continue;
+            }
+            let tmpBetter = copy(currentState);
+            for (const p of perm) {
+                currentState.order = p;
+                calcRNHeartsetScore(target, currentState);
+                if (currentState.penalty < tmpBetter.penalty
+                    || (currentState.penalty === tmpBetter.penalty
+                        && currentState.bonus > tmpBetter.bonus)) {
+                    tmpBetter = copy(currentState);
+                }
+            }
+            if (update(tmpBetter)) {
+                updated = true;
+            }
+        }
+        used[hx[0].monster.id] = false;
+        used[hx[1].monster.id] = false;
+        if (updated) {
+            showRNHeartset(target, bests);
+        }
+        return false;
+    };
+    const proc = () => {
+        switch (phase) {
+            case 0:
+                if (phase0()) {
+                    phase++;
+                }
+                break;
+            case 1:
+                if (phase1()) {
+                    phase++;
+                }
+                break;
+            case 2:
+                if (phase2()) {
+                    phase++;
+                }
+                break;
+            case 3:
+                if (phase3()) {
+                    phase++;
+                }
+                break;
+            case 4:
+                if (phase4()) {
+                    phase++;
+                }
+                break;
+            default:
+                return "OK";
+        }
+        return null;
+    };
+    const close = (res) => {
+        if (res === null) {
+            dialogAlert("探索を中止しました");
+        }
+    };
+    const task = {
+        interval: 1,
+        proc: proc,
+        close: close
+    };
+    dialogWait(task, "探索中です･･･");
+}
 // ReallyNeededのこころセット探索フォームにて
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 document.getElementById("reallyneeded_job").addEventListener("change", () => {
@@ -4697,6 +4994,9 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
     const oldPowerUp = powerUp;
     powerUp = job.powerUp;
     switch (algorithm) {
+        case "bf":
+            searchRNHeartsetBF(target);
+            break;
         case "gr":
             searchRNHeartsetGr(target);
             break;
