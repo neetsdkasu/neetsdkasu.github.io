@@ -59,6 +59,26 @@
       </form>
     </dialog>
 
+    <dialog id="change_monster_name_dialog">
+      <div>こころ名の変更</div>
+      <hr />
+      <form method="dialog">
+        <input type="hidden" name="change_monster_name_monster_id" value="" />
+        <div>
+          <label for="old_monster_name">元の名前:</label><input type="text" name="old_monster_name" id="old_monster_name" readonly />
+        </div>
+        <br />
+        <div>
+          <label for="new_monster_name">新しい名前:</label><input type="text" name="new_monster_name" id="new_monster_name" pattern="[^\(\)\s]+" title="半角丸括弧や空白文字は使用できません" required />
+        </div>
+        <hr />
+        <div>
+          <button type="submit" value="change"  >変更を適用する</button>
+          <button type="button" value="cancel">キャンセル</button>
+        </div>
+      </form>
+    </dialog>
+
     <datalist id="job_preset_maximum_cost_list"></datalist>
     <datalist id="reallyneeded_job_preset_maximum_cost_list"></datalist>
 
@@ -198,6 +218,7 @@
             <option value="301"         >ゴッドハンド</option>
             <option value="302"         >大魔道士</option>
             <option value="303"         >大神官</option>
+            <option value="304"         >ニンジャ</option>
           </select>
         </div>
         <div>
@@ -687,7 +708,15 @@
                 <option value="301"         >ゴッドハンド</option>
                 <option value="302"         >大魔道士</option>
                 <option value="303"         >大神官</option>
+                <option value="304"         >ニンジャ</option>
               </select>
+            </div>
+            <div>
+              <div><span>こころ枠1:</span> <span id="reallyneeded_heart1"></span></div>
+              <div><span>こころ枠2:</span> <span id="reallyneeded_heart2"></span></div>
+              <div><span>こころ枠3:</span> <span id="reallyneeded_heart3"></span></div>
+              <div><span>こころ枠4:</span> <span id="reallyneeded_heart4"></span></div>
+              <div><span>色適合時の変化:</span> <span id="reallyneeded_power_up"></span>倍</div>
             </div>
             <div>
               <label for="reallyneeded_heart_maximum_cost">こころ最大コスト:</label>
@@ -1229,7 +1258,8 @@
           <div><span>こころ最大コスト:</span> <span class="monster-maximumcost"></span></div>
           <div><span>スキル・特殊効果:</span> <span class="monster-effects"></span></div>
           <div>
-            <button type="button">追加・編集</button>
+            <button type="button" class="monster-change-name">名前の変更</button>
+            <button type="button" class="monster-add-or-edit">追加・編集</button>
           </div>
           <div>
             <label>

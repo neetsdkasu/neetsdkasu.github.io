@@ -182,7 +182,9 @@ const JobPreset = [
     { id: 302, name: "大魔道士", powerUp: 1.3,
         colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Purple] },
     { id: 303, name: "大神官", powerUp: 1.3,
-        colors: [Color.Blue | Color.Green, Color.Rainbow, Color.Blue | Color.Green, Color.Green] }
+        colors: [Color.Blue | Color.Green, Color.Rainbow, Color.Blue | Color.Green, Color.Green] },
+    { id: 304, name: "ニンジャ", powerUp: 1.3,
+        colors: [Color.Blue | Color.Yellow, Color.Rainbow, Color.Blue | Color.Yellow, Color.Blue] }
 ];
 const JobPresetMaximumCost = [
     { id: 100, maximumCostList: [
@@ -581,7 +583,7 @@ function showNewHeart(monster) {
             }
         }
     }
-    fragment.querySelector("button").addEventListener("click", () => {
+    fragment.querySelector("button.monster-add-or-edit").addEventListener("click", () => {
         const dialog = document.getElementById("add_heart_dialog");
         const form = dialog.querySelector("form");
         form.reset();
@@ -609,6 +611,18 @@ function showNewHeart(monster) {
             elem("add_maximumcost", `${h.maximumCost}`);
             elem("add_effects", `${h.effects}`);
         }
+        dialog.showModal();
+    });
+    fragment.querySelector("button.monster-change-name").addEventListener("click", () => {
+        const dialog = document.getElementById("change_monster_name_dialog");
+        const form = dialog.querySelector("form");
+        form.reset();
+        const elements = form.elements;
+        const elem = (name, value) => {
+            elements.namedItem(name).value = value;
+        };
+        elem("old_monster_name", monster.name);
+        elem("change_monster_name_monster_id", `${monster.id}`);
         dialog.showModal();
     });
     const withSplus = monster.withSplus
@@ -2048,19 +2062,21 @@ function parseTarget(elements) {
     for (let i = 0; i < 4; i++) {
         const e = document.getElementById(`result_heart${i + 1}`);
         e.innerHTML = "";
+        let foundColor = false;
         if (i < target.colors.length) {
             const color = target.colors[i];
             for (const c of COLORS) {
                 if ((c & color) === 0) {
                     continue;
                 }
+                foundColor = true;
                 const info = SingleColorInfoMap.get(c);
                 const span = e.appendChild(document.createElement("span"));
                 span.classList.add(info.colorName);
                 span.textContent = info.text;
             }
         }
-        else {
+        if (!foundColor) {
             e.textContent = "－";
         }
     }
@@ -3279,6 +3295,54 @@ document.getElementById("set_default_rank")
     }
     dialogAlert("既定として登録しました");
 });
+// こころ名の変更フォームのキャンセル
+document.querySelector(`#change_monster_name_dialog button[value="cancel"]`)
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click change_monster_name_dialog CANCEL button");
+    }
+    const dialog = document.getElementById("change_monster_name_dialog");
+    dialog.returnValue = "cancel";
+    dialog.close();
+});
+// こころ名の変更フォームの新しい名前のバリデーションのトリガーをセット
+document.getElementById("new_monster_name")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    const elem = document.getElementById("new_monster_name");
+    const v = elem.validity;
+    if (v.customError || v.valid) {
+        const newName = elem.value.trim();
+        if (monsterMap.has(newName)) {
+            elem.setCustomValidity(`『 ${newName} 』は同名のこころがあるので使えません`);
+        }
+        else if (newName === "") {
+            elem.setCustomValidity("新しい名前が空欄です");
+        }
+        else {
+            elem.setCustomValidity("");
+        }
+    }
+});
+// こころ名の変更（フォームを閉じたときに発動）
+document.getElementById("change_monster_name_dialog")
+    .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close change_monster_name_dialog");
+    }
+    const dialog = document.getElementById("change_monster_name_dialog");
+    if (dialog.returnValue !== "change") {
+        return;
+    }
+    const oldName = document.getElementById("old_monster_name").value;
+    const newName = document.getElementById("new_monster_name").value;
+    const monster = monsterMap.get(oldName);
+    monster.name = newName;
+    replaceMonsterList(monsterList);
+    saveMonsterList(Trigger.UpdateStatus);
+    dialogAlert(`こころの名前を『 ${oldName} 』から『 ${newName} 』に変更しました`);
+});
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス距離
 /////////////////////////////////////////////////////////////////////////////////////
@@ -3397,7 +3461,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
         targetSpan.classList.add(targetInfo.colorName);
         targetSpan.textContent = targetInfo.text;
         targetTd.appendChild(document.createElement("span")).textContent =
-            `${m1.curCost} ${m1.name} ${Rank[m1.target]}`;
+            `${m1.curCost} ${m1.name} ${Rank[m1.target].replace("_plus", "+")}`;
         function append(ds) {
             const td = tr.appendChild(document.createElement("td"));
             if (ds.monster === null) {
@@ -3411,7 +3475,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             span.classList.add(info.colorName);
             span.textContent = info.text;
             td.appendChild(document.createElement("span")).textContent =
-                `${ds.monster.curCost} ${ds.monster.name} ${Rank[ds.monster.target]} (${Math.ceil(ds.distance)})`;
+                `${ds.monster.curCost} ${ds.monster.name} ${Rank[ds.monster.target].replace("_plus", "+")} (${Math.ceil(ds.distance)})`;
         }
         append(upwardMinCost);
         append(upwardEuclidean);
@@ -4818,6 +4882,29 @@ document.getElementById("reallyneeded_job").addEventListener("change", () => {
                 op.textContent = ` Lv ${item.level}`;
             }
         }
+        const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
+        for (let i = 0; i < 4; i++) {
+            const e = document.getElementById(`reallyneeded_heart${i + 1}`);
+            e.innerHTML = "";
+            let foundColor = false;
+            if (i < job.colors.length) {
+                const color = job.colors[i];
+                for (const c of COLORS) {
+                    if ((c & color) === 0) {
+                        continue;
+                    }
+                    foundColor = true;
+                    const info = SingleColorInfoMap.get(c);
+                    const span = e.appendChild(document.createElement("span"));
+                    span.classList.add(info.colorName);
+                    span.textContent = info.text;
+                }
+            }
+            if (!foundColor) {
+                e.textContent = "－";
+            }
+        }
+        document.getElementById("reallyneeded_power_up").textContent = `${job.powerUp}`;
         return;
     }
     dialogAlert(`Unknown ID: ${value}`);
@@ -4843,6 +4930,29 @@ document.getElementById("reallyneeded_job").addEventListener("change", () => {
                 op.textContent = ` Lv ${item.level}`;
             }
         }
+        const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
+        for (let i = 0; i < 4; i++) {
+            const e = document.getElementById(`reallyneeded_heart${i + 1}`);
+            e.innerHTML = "";
+            let foundColor = false;
+            if (i < job.colors.length) {
+                const color = job.colors[i];
+                for (const c of COLORS) {
+                    if ((c & color) === 0) {
+                        continue;
+                    }
+                    foundColor = true;
+                    const info = SingleColorInfoMap.get(c);
+                    const span = e.appendChild(document.createElement("span"));
+                    span.classList.add(info.colorName);
+                    span.textContent = info.text;
+                }
+            }
+            if (!foundColor) {
+                e.textContent = "－";
+            }
+        }
+        document.getElementById("reallyneeded_power_up").textContent = `${job.powerUp}`;
         return;
     }
 })();
