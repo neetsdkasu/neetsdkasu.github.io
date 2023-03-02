@@ -583,7 +583,7 @@ function showNewHeart(monster) {
             }
         }
     }
-    fragment.querySelector("button").addEventListener("click", () => {
+    fragment.querySelector("button.monster-add-or-edit").addEventListener("click", () => {
         const dialog = document.getElementById("add_heart_dialog");
         const form = dialog.querySelector("form");
         form.reset();
@@ -611,6 +611,18 @@ function showNewHeart(monster) {
             elem("add_maximumcost", `${h.maximumCost}`);
             elem("add_effects", `${h.effects}`);
         }
+        dialog.showModal();
+    });
+    fragment.querySelector("button.monster-change-name").addEventListener("click", () => {
+        const dialog = document.getElementById("change_monster_name_dialog");
+        const form = dialog.querySelector("form");
+        form.reset();
+        const elements = form.elements;
+        const elem = (name, value) => {
+            elements.namedItem(name).value = value;
+        };
+        elem("old_monster_name", monster.name);
+        elem("change_monster_name_monster_id", `${monster.id}`);
         dialog.showModal();
     });
     const withSplus = monster.withSplus
@@ -3282,6 +3294,54 @@ document.getElementById("set_default_rank")
         updateChangedRankCount();
     }
     dialogAlert("既定として登録しました");
+});
+// こころ名の変更フォームのキャンセル
+document.querySelector(`#change_monster_name_dialog button[value="cancel"]`)
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click change_monster_name_dialog CANCEL button");
+    }
+    const dialog = document.getElementById("change_monster_name_dialog");
+    dialog.returnValue = "cancel";
+    dialog.close();
+});
+// こころ名の変更フォームの新しい名前のバリデーションのトリガーをセット
+document.getElementById("new_monster_name")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    const elem = document.getElementById("new_monster_name");
+    const v = elem.validity;
+    if (v.customError || v.valid) {
+        const newName = elem.value.trim();
+        if (monsterMap.has(newName)) {
+            elem.setCustomValidity(`『 ${newName} 』は同名のこころがあるので使えません`);
+        }
+        else if (newName === "") {
+            elem.setCustomValidity("新しい名前が空欄です");
+        }
+        else {
+            elem.setCustomValidity("");
+        }
+    }
+});
+// こころ名の変更（フォームを閉じたときに発動）
+document.getElementById("change_monster_name_dialog")
+    .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close change_monster_name_dialog");
+    }
+    const dialog = document.getElementById("change_monster_name_dialog");
+    if (dialog.returnValue !== "change") {
+        return;
+    }
+    const oldName = document.getElementById("old_monster_name").value;
+    const newName = document.getElementById("new_monster_name").value;
+    const monster = monsterMap.get(oldName);
+    monster.name = newName;
+    replaceMonsterList(monsterList);
+    saveMonsterList(Trigger.UpdateStatus);
+    dialogAlert(`こころの名前を『 ${oldName} 』から『 ${newName} 』に変更しました`);
 });
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス距離
