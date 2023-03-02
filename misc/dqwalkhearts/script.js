@@ -3461,7 +3461,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
         targetSpan.classList.add(targetInfo.colorName);
         targetSpan.textContent = targetInfo.text;
         targetTd.appendChild(document.createElement("span")).textContent =
-            `${m1.curCost} ${m1.name} ${Rank[m1.target]}`;
+            `${m1.curCost} ${m1.name} ${Rank[m1.target].replace("_plus", "+")}`;
         function append(ds) {
             const td = tr.appendChild(document.createElement("td"));
             if (ds.monster === null) {
@@ -3475,7 +3475,7 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
             span.classList.add(info.colorName);
             span.textContent = info.text;
             td.appendChild(document.createElement("span")).textContent =
-                `${ds.monster.curCost} ${ds.monster.name} ${Rank[ds.monster.target]} (${Math.ceil(ds.distance)})`;
+                `${ds.monster.curCost} ${ds.monster.name} ${Rank[ds.monster.target].replace("_plus", "+")} (${Math.ceil(ds.distance)})`;
         }
         append(upwardMinCost);
         append(upwardEuclidean);
