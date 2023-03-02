@@ -2164,18 +2164,21 @@ function parseTarget(elements: HTMLFormControlsCollection): Target {
     for (let i = 0; i < 4; i++) {
         const e = document.getElementById(`result_heart${i+1}`)!;
         e.innerHTML = "";
+        let foundColor = false;
         if (i < target.colors.length) {
             const color = target.colors[i];
             for (const c of COLORS) {
                 if ((c & color) === 0) {
                     continue;
                 }
+                foundColor = true;
                 const info = SingleColorInfoMap.get(c)!;
                 const span = e.appendChild(document.createElement("span"));
                 span.classList.add(info.colorName);
                 span.textContent = info.text;
             }
-        } else {
+        }
+        if (!foundColor) {
             e.textContent = "－";
         }
     }
@@ -5054,6 +5057,29 @@ document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
                 op.textContent = ` Lv ${item.level}`;
             }
         }
+        const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
+        for (let i = 0; i < 4; i++) {
+            const e = document.getElementById(`reallyneeded_heart${i+1}`)!;
+            e.innerHTML = "";
+            let foundColor = false;
+            if (i < job.colors.length) {
+                const color = job.colors[i];
+                for (const c of COLORS) {
+                    if ((c & color) === 0) {
+                        continue;
+                    }
+                    foundColor = true;
+                    const info = SingleColorInfoMap.get(c)!;
+                    const span = e.appendChild(document.createElement("span"));
+                    span.classList.add(info.colorName);
+                    span.textContent = info.text;
+                }
+            }
+            if (!foundColor) {
+                e.textContent = "－";
+            }
+        }
+        document.getElementById("reallyneeded_power_up")!.textContent = `${job.powerUp}`;
         return;
     }
     dialogAlert(`Unknown ID: ${value}`);
@@ -5080,6 +5106,29 @@ document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
                 op.textContent = ` Lv ${item.level}`;
             }
         }
+        const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
+        for (let i = 0; i < 4; i++) {
+            const e = document.getElementById(`reallyneeded_heart${i+1}`)!;
+            e.innerHTML = "";
+            let foundColor = false;
+            if (i < job.colors.length) {
+                const color = job.colors[i];
+                for (const c of COLORS) {
+                    if ((c & color) === 0) {
+                        continue;
+                    }
+                    foundColor = true;
+                    const info = SingleColorInfoMap.get(c)!;
+                    const span = e.appendChild(document.createElement("span"));
+                    span.classList.add(info.colorName);
+                    span.textContent = info.text;
+                }
+            }
+            if (!foundColor) {
+                e.textContent = "－";
+            }
+        }
+        document.getElementById("reallyneeded_power_up")!.textContent = `${job.powerUp}`;
         return;
     }
 })();
