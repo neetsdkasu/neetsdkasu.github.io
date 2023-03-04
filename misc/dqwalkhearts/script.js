@@ -587,6 +587,7 @@ function showNewHeart(monster) {
         const dialog = document.getElementById("add_heart_dialog");
         const form = dialog.querySelector("form");
         form.reset();
+        document.getElementById("add_monster_name").readOnly = true;
         const elements = form.elements;
         const rad = (name, value) => {
             elements.namedItem(name).value = value;
@@ -2681,6 +2682,7 @@ document.getElementById("add_heart")
         console.log("click add_heart");
     }
     const dialog = document.getElementById("add_heart_dialog");
+    document.getElementById("add_monster_name").readOnly = false;
     dialog.querySelector("form").reset();
     dialog.returnValue = "";
     dialog.showModal();

@@ -667,6 +667,7 @@ function showNewHeart(monster: Monster): void {
         const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
         const form = dialog.querySelector("form") as HTMLFormElement;
         form.reset();
+        (document.getElementById("add_monster_name") as HTMLInputElement).readOnly = true;
         const elements = form.elements;
         const rad = (name: string, value: string) => {
             (elements.namedItem(name) as RadioNodeList).value = value;
@@ -2814,6 +2815,7 @@ document.getElementById("add_heart")!
         console.log("click add_heart");
     }
     const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
+    (document.getElementById("add_monster_name") as HTMLInputElement).readOnly = false;
     (dialog.querySelector("form") as HTMLFormElement).reset();
     dialog.returnValue = "";
     dialog.showModal();
