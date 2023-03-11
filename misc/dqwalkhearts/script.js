@@ -184,7 +184,9 @@ const JobPreset = [
     { id: 303, name: "大神官", powerUp: 1.3,
         colors: [Color.Blue | Color.Green, Color.Rainbow, Color.Blue | Color.Green, Color.Green] },
     { id: 304, name: "ニンジャ", powerUp: 1.3,
-        colors: [Color.Blue | Color.Yellow, Color.Rainbow, Color.Blue | Color.Yellow, Color.Blue] }
+        colors: [Color.Blue | Color.Yellow, Color.Rainbow, Color.Blue | Color.Yellow, Color.Blue] },
+    { id: 305, name: "魔剣士", powerUp: 1.3,
+        colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple] }
 ];
 const JobPresetMaximumCost = [
     { id: 100, maximumCostList: [
@@ -587,6 +589,7 @@ function showNewHeart(monster) {
         const dialog = document.getElementById("add_heart_dialog");
         const form = dialog.querySelector("form");
         form.reset();
+        document.getElementById("add_monster_name").readOnly = true;
         const elements = form.elements;
         const rad = (name, value) => {
             elements.namedItem(name).value = value;
@@ -2681,6 +2684,7 @@ document.getElementById("add_heart")
         console.log("click add_heart");
     }
     const dialog = document.getElementById("add_heart_dialog");
+    document.getElementById("add_monster_name").readOnly = false;
     dialog.querySelector("form").reset();
     dialog.returnValue = "";
     dialog.showModal();

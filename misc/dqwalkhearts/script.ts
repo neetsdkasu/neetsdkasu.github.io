@@ -235,7 +235,9 @@ const JobPreset: Job[] = [
     { id: 303, name: "大神官", powerUp: 1.3,
         colors: [Color.Blue|Color.Green, Color.Rainbow, Color.Blue|Color.Green, Color.Green] },
     { id: 304, name: "ニンジャ", powerUp: 1.3,
-        colors: [Color.Blue|Color.Yellow, Color.Rainbow, Color.Blue|Color.Yellow, Color.Blue] }
+        colors: [Color.Blue|Color.Yellow, Color.Rainbow, Color.Blue|Color.Yellow, Color.Blue] },
+    { id: 305, name: "魔剣士", powerUp: 1.3,
+        colors: [Color.Red|Color.Purple, Color.Rainbow, Color.Red|Color.Purple, Color.Red|Color.Purple] }
 ];
 
 interface JobMaximumCostItem {
@@ -667,6 +669,7 @@ function showNewHeart(monster: Monster): void {
         const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
         const form = dialog.querySelector("form") as HTMLFormElement;
         form.reset();
+        (document.getElementById("add_monster_name") as HTMLInputElement).readOnly = true;
         const elements = form.elements;
         const rad = (name: string, value: string) => {
             (elements.namedItem(name) as RadioNodeList).value = value;
@@ -2814,6 +2817,7 @@ document.getElementById("add_heart")!
         console.log("click add_heart");
     }
     const dialog = document.getElementById("add_heart_dialog") as HTMLDialogElement;
+    (document.getElementById("add_monster_name") as HTMLInputElement).readOnly = false;
     (dialog.querySelector("form") as HTMLFormElement).reset();
     dialog.returnValue = "";
     dialog.showModal();
