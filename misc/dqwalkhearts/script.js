@@ -3793,7 +3793,8 @@ function showRNHeartset(target, heartsets) {
                 plusMaximumCost += h.heart.maximumCost;
             }
         }
-        elem("cost").textContent = `${heartset.cost + plusMaximumCost} / ${target.maximumCost} + ${plusMaximumCost}`;
+        const heartsetCost = heartset.cost + (target.asLimitCost ? 0 : plusMaximumCost);
+        elem("cost").textContent = `${heartsetCost} / ${target.maximumCost} + ${plusMaximumCost}`;
         const statusValues = new Array(target.scoreres.length).fill(0);
         const status = {
             maximumHP: 0,
