@@ -29,6 +29,7 @@ section.outline
 #damage_result > details > summary,
 .damagetool > details > div.outline > div.small,
 section.reallyneeded > details > div.outline > div.small,
+section.manualset > details > div.outline > div.small,
 section.outline > h5
 {
     margin-top: 0px;
@@ -133,6 +134,7 @@ fieldset > details > summary
     color: purple;
 }
 
+.bold,
 .monster-rank:checked + span,
 input[name$="_rank"]:checked + label
 {
