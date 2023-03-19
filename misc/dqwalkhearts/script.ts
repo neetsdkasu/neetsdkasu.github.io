@@ -2253,7 +2253,7 @@ function calcNumOfBestHeartSet(target: Target): number {
         dp2[i] = new Array(COST_LEN).fill(null);
     }
     dp1[0][OFFSET] = { score: 0, count: 1 };
-    function dpSubProc(useBaseTable: boolean, monster: Monster, cost: number, scores: number[]) {
+    function dpSubProc(useBaseTable: boolean, monster: Monster, cost: number, scores: number[]): void {
         for (let s = 0; s < SET_LEN; s++) {
             for (let c = 0; c < COST_LEN; c++) {
                 if (useBaseTable) {
@@ -2313,7 +2313,7 @@ function calcNumOfBestHeartSet(target: Target): number {
             }
         }
     }
-    function dpProc(useBaseTable: boolean, skipFunc: (monster: Monster) => boolean) {
+    function dpProc(useBaseTable: boolean, skipFunc: (monster: Monster) => boolean): void {
         for (const monster of monsterList) {
             if (monster.target === null) {
                 continue;
@@ -2413,7 +2413,7 @@ function calcNumOfBestHeartSet(target: Target): number {
 }
 
 // ツリー上になってるこころセットの組み合わせを展開する
-function extractHeartSet(stack: (HeartSet | null)[][], tmp: (HeartSet | null)[], heartSet: HeartSet) {
+function extractHeartSet(stack: (HeartSet | null)[][], tmp: (HeartSet | null)[], heartSet: HeartSet): void {
     tmp[heartSet.pos] = heartSet;
     if (heartSet.subsets.length === 0) {
         stack.push(tmp.slice());
@@ -2733,7 +2733,7 @@ function searchHeartSet(target: Target): void {
 }
 
 // デモ用データの加工
-function convertToDummy(list: Monster[]) {
+function convertToDummy(list: Monster[]): void {
     if (DEBUG) {
         console.log("fill dummy data");
     }
@@ -5412,6 +5412,286 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
     powerUp = oldPowerUp;
 
 });
+
+
+/////////////////////////////////////////////////////////////////////////////////////
+// マニュアルこころセット
+/////////////////////////////////////////////////////////////////////////////////////
+
+
+function showManualHeartset(): void {
+    const sel = document.getElementById("manualset_job") as HTMLSelectElement;
+    const value = parseInt(sel.value ?? "0");
+    for (const job of JobPreset) {
+        if (job.id !== value) {
+            continue;
+        }
+        const oldPowerUp = powerUp;
+        powerUp = job.powerUp;
+        const res = document.getElementById("manualset_result")!;
+        const elem = (name: string) => res.querySelector(`.result-item-${name}`)!;
+        const text = (name: string, value: any) => elem(name).textContent = `${value}`;
+        if (res.children.length === 0) {
+            const template = document.getElementById("result_item") as HTMLTemplateElement;
+            const fragment = template.content.cloneNode(true) as DocumentFragment;
+            res.appendChild(fragment);
+            elem("number").parentElement!.hidden = true;
+            elem("score").parentElement!.hidden = true;
+        }
+        const maximumCost = parseInt((document.getElementById("manualset_heart_maximum_cost") as HTMLInputElement).value ?? "0");
+        const asLimitCost = (document.getElementById("manualset_as_limit_heart_cost") as HTMLInputElement).checked;
+        const status: Status = {
+            maximumHP: 0,
+            maximumMP: 0,
+            power: 0,
+            defence: 0,
+            attackMagic: 0,
+            recoverMagic: 0,
+            speed: 0,
+            dexterity: 0
+        };
+        let cost = 0;
+        let additionalMaximumCost = 0;
+        for (let i = 0; i < 4; i++) {
+            const t = document.getElementById(`manualset_heart${i+1}_name`) as HTMLInputElement;
+            if (t.disabled) {
+                text(`heart${i+1}`, "－");
+                text(`effects${i+1}`, "");
+                continue;
+            }
+            const name = t.value;
+            if (!monsterMap.has(name)) {
+                text(`heart${i+1}`, "");
+                text(`effects${i+1}`, "");
+                continue;
+            }
+            const monster = monsterMap.get(name)!;
+            const he = elem(`heart${i+1}`);
+            he.innerHTML = "";
+            if (monster.target === null) {
+                he.appendChild(document.createElement("span")).textContent = "-";
+                he.appendChild(document.createElement("span")).textContent = monster.name;
+                he.appendChild(document.createElement("span")).textContent = "－";
+                text(`effects${i+1}`, "");
+                continue;
+            }
+            const heart = monster.hearts.find(h => h.rank === monster.target)!;
+            cost += heart.cost;
+            additionalMaximumCost += heart.maximumCost;
+            const info = (monster.color === Color.Rainbow)
+                       ? RainbowColorInfo
+                       : SingleColorInfoMap.get(monster.color)!;
+            const colorSpan = he.appendChild(document.createElement("span"));
+            colorSpan.classList.add(info.colorName);
+            colorSpan.textContent = info.text;
+            he.appendChild(document.createElement("span")).textContent = `${heart.cost}`;
+            he.appendChild(document.createElement("span")).textContent = monster.name;
+            he.appendChild(document.createElement("span")).textContent = Rank[heart.rank].replace("_plus", "+");
+            text(`effects${i+1}`, heart.effects);
+            const c = job.colors[i];
+            status.maximumHP    += MaximumHPScorer.calc(c, monster);
+            status.maximumMP    += MaximumMPScorer.calc(c, monster);
+            status.power        += PowerScorer.calc(c, monster);
+            status.defence      += DefenceScorer.calc(c, monster);
+            status.attackMagic  += AttackMagicScorer.calc(c, monster);
+            status.recoverMagic += RecoverMagicScorer.calc(c, monster);
+            status.speed        += SpeedScorer.calc(c, monster);
+            status.dexterity    += DexterityScorer.calc(c, monster);
+        }
+        if (isNaN(maximumCost)) {
+            text("cost", `${cost} / ??? + ${additionalMaximumCost}`);
+            elem("cost").classList.remove("bold");
+        } else {
+            text("cost", `${cost} / ${maximumCost} + ${additionalMaximumCost}`);
+                    elem("cost").classList.remove("bold");
+            if (asLimitCost) {
+                if (cost > maximumCost) {
+                    elem("cost").classList.add("bold");
+                }
+            } else if (cost > maximumCost + additionalMaximumCost) {
+                elem("cost").classList.add("bold");
+            }
+        }
+        text("maximumhp", `${status.maximumHP}`);
+        text("maximummp", `${status.maximumMP}`);
+        text("power", `${status.power}`);
+        text("defence", `${status.defence}`);
+        text("attackmagic", `${status.attackMagic}`);
+        text("recovermagic", `${status.recoverMagic}`);
+        text("speed", `${status.speed}`);
+        text("dexterity", `${status.dexterity}`);
+        powerUp = oldPowerUp;
+        return;
+    }
+}
+
+
+// マニュアルこころセットのフォームにて
+// こころ枠1のこころが変更された場合の処理
+document.getElementById("manualset_heart1_name")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    showManualHeartset();
+});
+
+
+// マニュアルこころセットのフォームにて
+// こころ枠2のこころが変更された場合の処理
+document.getElementById("manualset_heart2_name")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    showManualHeartset();
+});
+
+
+// マニュアルこころセットのフォームにて
+// こころ枠3のこころが変更された場合の処理
+document.getElementById("manualset_heart3_name")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    showManualHeartset();
+});
+
+
+// マニュアルこころセットのフォームにて
+// こころ枠4のこころが変更された場合の処理
+document.getElementById("manualset_heart4_name")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    showManualHeartset();
+});
+
+
+// マニュアルこころセットのフォームにて
+// こころ最大コストが変更された場合の処理
+document.getElementById("manualset_heart_maximum_cost")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    showManualHeartset();
+});
+
+// マニュアルこころセットのフォームにて
+// こころ最大コストの扱いが変更された場合の処理
+document.getElementById("manualset_as_limit_heart_cost")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("change", () => {
+    showManualHeartset();
+});
+
+
+// マニュアルこころセットのフォームにて
+// 職業ごとのこころ枠の組み合わせをフォームに設定する
+document.getElementById("manualset_job")!.addEventListener("change", () => {
+    const sel = document.getElementById("manualset_job") as HTMLSelectElement;
+    const value = parseInt(sel.value ?? "0");
+    for (const job of JobPreset) {
+        if (job.id !== value) {
+            continue;
+        }
+        const maximumCostList = document.getElementById("manualset_job_preset_maximum_cost_list")!;
+        maximumCostList.innerHTML = "";
+        for (const x of JobPresetMaximumCost) {
+            if (job.id < x.id || x.id + 100 <= job.id) {
+                continue;
+            }
+            for (const item of x.maximumCostList) {
+                const op = maximumCostList.appendChild(document.createElement("option"));
+                op.value = `${item.maximumCost}`;
+                op.textContent = ` Lv ${item.level}`;
+            }
+        }
+        const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
+        for (let i = 0; i < 4; i++) {
+            const e = document.getElementById(`manualset_heart${i+1}`)!;
+            e.innerHTML = "";
+            let foundColor = false;
+            if (i < job.colors.length) {
+                const color = job.colors[i];
+                for (const c of COLORS) {
+                    if ((c & color) === 0) {
+                        continue;
+                    }
+                    foundColor = true;
+                    const info = SingleColorInfoMap.get(c)!;
+                    const span = e.appendChild(document.createElement("span"));
+                    span.classList.add(info.colorName);
+                    span.textContent = info.text;
+                }
+            }
+            const t = document.getElementById(`manualset_heart${i+1}_name`) as HTMLInputElement;
+            if (!foundColor) {
+                e.textContent = "－";
+                t.disabled = true;
+            } else {
+                t.disabled = false;
+            }
+        }
+        document.getElementById("manualset_power_up")!.textContent = `${job.powerUp}`;
+        showManualHeartset();
+        return;
+    }
+    dialogAlert(`Unknown ID: ${value}`);
+});
+
+// マニュアルこころセットのフォームにて
+// 初期値の職業のこころ枠の組み合わせをフォームに設定する
+(function () {
+    const sel = document.getElementById("manualset_job") as HTMLSelectElement;
+    const value = parseInt(sel.value ?? "0");
+    for (const job of JobPreset) {
+        if (job.id !== value) {
+            continue;
+        }
+        const maximumCostList = document.getElementById("manualset_job_preset_maximum_cost_list")!;
+        maximumCostList.innerHTML = "";
+        for (const x of JobPresetMaximumCost) {
+            if (job.id < x.id || x.id + 100 <= job.id) {
+                continue;
+            }
+            for (const item of x.maximumCostList) {
+                const op = maximumCostList.appendChild(document.createElement("option"));
+                op.value = `${item.maximumCost}`;
+                op.textContent = ` Lv ${item.level}`;
+            }
+        }
+        const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
+        for (let i = 0; i < 4; i++) {
+            const e = document.getElementById(`manualset_heart${i+1}`)!;
+            e.innerHTML = "";
+            let foundColor = false;
+            if (i < job.colors.length) {
+                const color = job.colors[i];
+                for (const c of COLORS) {
+                    if ((c & color) === 0) {
+                        continue;
+                    }
+                    foundColor = true;
+                    const info = SingleColorInfoMap.get(c)!;
+                    const span = e.appendChild(document.createElement("span"));
+                    span.classList.add(info.colorName);
+                    span.textContent = info.text;
+                }
+            }
+            const t = document.getElementById(`manualset_heart${i+1}_name`) as HTMLInputElement;
+            if (!foundColor) {
+                e.textContent = "－";
+                t.value = "";
+                t.disabled = true;
+            } else {
+                t.disabled = false;
+            }
+        }
+        document.getElementById("manualset_power_up")!.textContent = `${job.powerUp}`;
+        return;
+    }
+})();
+
 
 
 /////////////////////////////////////////////////////////////////////////////////////

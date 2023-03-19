@@ -81,6 +81,7 @@
 
     <datalist id="job_preset_maximum_cost_list"></datalist>
     <datalist id="reallyneeded_job_preset_maximum_cost_list"></datalist>
+    <datalist id="manualset_job_preset_maximum_cost_list"></datalist>
 
     <datalist id="monster_name_list"></datalist>
 
@@ -616,6 +617,63 @@
           <span><button type="button" id="return_default_rank">ランク変更を既定に戻す</button></span>
           <span><button type="button" id="set_default_rank">現在のランク変更を既定とする</button></span>
         </div>
+      </section>
+
+      <hr />
+
+      <section class="manualset">
+        <h5>マニュアルこころセット</h5>
+        <details>
+          <div class="outline manualset">
+            <div class="small">設定</div>
+            <div>
+              <label for="manualset_job">職業:</label>
+              <select name="manualset_job" id="manualset_job">
+                <option value="101" selected>戦士</option>
+                <option value="102"         >魔法使い</option>
+                <option value="103"         >僧侶</option>
+                <option value="104"         >武闘家</option>
+                <option value="105"         >盗賊</option>
+                <option value="106"         >踊り子</option>
+                <option value="107"         >遊び人</option>
+                <option value="201"         >バトルマスター</option>
+                <option value="202"         >賢者</option>
+                <option value="203"         >レンジャー</option>
+                <option value="204"         >魔法戦士</option>
+                <option value="205"         >パラディン</option>
+                <option value="206"         >スーパースター</option>
+                <option value="207"         >海賊</option>
+                <option value="208"         >まものマスター</option>
+                <option value="301"         >ゴッドハンド</option>
+                <option value="302"         >大魔道士</option>
+                <option value="303"         >大神官</option>
+                <option value="304"         >ニンジャ</option>
+                <option value="305"         >魔剣士</option>
+              </select>
+            </div>
+            <div>
+              <table>
+                <tr><td>こころ枠1:</td> <td id="manualset_heart1"></td> <td><input type="text" list="monster_name_list" name="manualset_heart1_name" id="manualset_heart1_name" /></td></tr>
+                <tr><td>こころ枠2:</td> <td id="manualset_heart2"></td> <td><input type="text" list="monster_name_list" name="manualset_heart2_name" id="manualset_heart2_name" /></td></tr>
+                <tr><td>こころ枠3:</td> <td id="manualset_heart3"></td> <td><input type="text" list="monster_name_list" name="manualset_heart3_name" id="manualset_heart3_name" /></td></tr>
+                <tr><td>こころ枠4:</td> <td id="manualset_heart4"></td> <td><input type="text" list="monster_name_list" name="manualset_heart4_name" id="manualset_heart4_name" /></td></tr>
+              </table>
+              <div><span>色適合時の変化:</span> <span id="manualset_power_up"></span>倍</div>
+            </div>
+            <div>
+              <label for="manualset_heart_maximum_cost">こころ最大コスト:</label>
+              <input type="number" name="manualset_heart_maximum_cost" id="manualset_heart_maximum_cost" min="0" max="1000" list="manualset_job_preset_maximum_cost_list" />
+              <span class="small">
+                <input type="checkbox" name="manualset_as_limit_heart_cost" id="manualset_as_limit_heart_cost" />
+                <label for="manualset_as_limit_heart_cost">上限コストとして扱う</label>
+              </span>
+            </div>
+          </div>
+          <div class="outline manualset">
+            <div class="small">結果</div>
+            <div id="manualset_result"></div>
+          </div>
+        </details>
       </section>
 
       <hr />
