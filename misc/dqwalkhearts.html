@@ -101,18 +101,22 @@
         <div>
           <span class="very-small">※同名の別種こころは登録できません(名前変えて登録して頂戴)</span>
           <br />
-          <label for="add_monster_name">名前:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" pattern="[^\(\)\s]+" title="半角丸括弧や空白文字は使用できません" required />
+          <label for="add_monster_name">登録名:</label><input type="text" name="add_monster_name" id="add_monster_name" list="monster_name_list" pattern="[^\(\)\s]+" title="半角丸括弧や空白文字は使用できません" required />
         </div>
         <div>
-          <span>色:</span>
-          <input type="radio" name="add_color" id="add_color_yellow"  value="Yellow"  required /><label for="add_color_yellow"  >黄(戦)</label>
-          <input type="radio" name="add_color" id="add_color_purple"  value="Purple"  required /><label for="add_color_purple"  >紫(魔)</label>
-          <input type="radio" name="add_color" id="add_color_green"   value="Green"   required /><label for="add_color_green"   >緑(僧)</label>
-          <input type="radio" name="add_color" id="add_color_red"     value="Red"     required /><label for="add_color_red"     >赤(武)</label>
-          <input type="radio" name="add_color" id="add_color_blue"    value="Blue"    required /><label for="add_color_blue"    >青(盗)</label>
-          <input type="radio" name="add_color" id="add_color_rainbow" value="Rainbow" required /><label for="add_color_rainbow" >虹(？)</label>
+          <span class="very-small">※S+の表示のみに使用(式の<code>NAME</code>などでの指定不可)(未指定の場合は登録名を使用)</span>
+          <br />
+          <label for="add_monster_splus_name">S+表示名:</label><input type="text" name="add_monster_splus_name" id="add_monster_splus_name" pattern="[^\(\)\s]+" title="半角丸括弧や空白文字は使用できません" />
         </div>
         <fieldset>
+          <div>
+            <span>色:</span>
+            <input type="checkbox" name="add_color_yellow" id="add_color_yellow" /><label for="add_color_yellow"  >黄(戦)</label>
+            <input type="checkbox" name="add_color_purple" id="add_color_purple" /><label for="add_color_purple"  >紫(魔)</label>
+            <input type="checkbox" name="add_color_green"  id="add_color_green"  /><label for="add_color_green"   >緑(僧)</label>
+            <input type="checkbox" name="add_color_red"    id="add_color_red"    /><label for="add_color_red"     >赤(武)</label>
+            <input type="checkbox" name="add_color_blue"   id="add_color_blue"   /><label for="add_color_blue"    >青(盗)</label>
+          </div>
           <div><label for="add_cost">コスト:</label><input type="number" name="add_cost" id="add_cost" required /></div>
           <div>
             <span>ランク:</span>
@@ -384,10 +388,10 @@
                           <td>計算順序で掛け算より足し算を優先したいときに使う</td>
                         </tr>
                         <tr>
-                          <td>名前</td>
+                          <td>登録名</td>
                           <td><code>NAME( )</code></td>
                           <td><code>HP+NAME(キメラ)*1000</code></td>
-                          <td>指定の名前のこころのとき<code>NAME</code>の値は<code>1</code>になる<br />
+                          <td>指定の登録名のこころのとき<code>NAME</code>の値は<code>1</code>になる<br />
                               それ以外のこころのとき<code>NAME</code>の値は<code>0</code>になる</td>
                         </tr>
                       </tbody>
@@ -410,9 +414,17 @@
                             <td>色</td>
                             <td><code>COLOR( )</code></td>
                             <td><code>PWR+COLOR(黄)*5</code></td>
-                            <td>こころが指定の色のとき<code>COLOR</code>の値は<code>1</code>になる<br />
+                            <td>こころの色が指定の色に適合するとき<code>COLOR</code>の値は<code>1</code>になる<br />
                                 それ以外のとき<code>COLOR</code>の値は<code>0</code>になる<br />
                                 <code>COLOR</code>に指定できる色は<code>黄</code>,<code>紫</code>,<code>緑</code>,<code>赤</code>,<code>青</code>のいずれか</td>
+                          </tr>
+                          <tr>
+                            <td>枠の色</td>
+                            <td><code>PLACE( )</code></td>
+                            <td><code>PWR+PLACE(黄)*5</code></td>
+                            <td>こころ枠が指定の色を適合とするとき<code>PLACE</code>の値は<code>1</code>になる<br />
+                                それ以外のとき<code>PLACE</code>の値は<code>0</code>になる<br />
+                                <code>PLACE</code>に指定できる色は<code>黄</code>,<code>紫</code>,<code>緑</code>,<code>赤</code>,<code>青</code>のいずれか</td>
                           </tr>
                           <tr>
                             <td>コスト</td>
@@ -1318,7 +1330,7 @@
           <div><span>こころ最大コスト:</span> <span class="monster-maximumcost"></span></div>
           <div><span>スキル・特殊効果:</span> <span class="monster-effects"></span></div>
           <div>
-            <button type="button" class="monster-change-name">名前の変更</button>
+            <button type="button" class="monster-change-name">登録名の変更</button>
             <button type="button" class="monster-add-or-edit">追加・編集</button>
           </div>
           <div>

@@ -475,6 +475,69 @@ function updateChangedRankCount() {
     document.getElementById("changed_rank_count").textContent = `${count}`;
     document.getElementById("changed_default_count").textContent = `${defaultCount}`;
 }
+// こころの色に関する表示部分
+function showHeartColor(elem, color) {
+    elem.innerHTML = "";
+    elem.classList.remove("yellow", "purple", "green", "red", "blue", "rainbow");
+    switch (color) {
+        case Color.Yellow:
+        case Color.Purple:
+        case Color.Green:
+        case Color.Red:
+        case Color.Blue:
+            const csi = SingleColorInfoMap.get(color);
+            elem.textContent = csi.text;
+            elem.classList.add(csi.colorName);
+            break;
+        case Color.Rainbow:
+            elem.textContent = RainbowColorInfo.text;
+            elem.classList.add(RainbowColorInfo.colorName);
+            break;
+        default:
+            const yellow = elem.appendChild(document.createElement("span"));
+            if ((Color.Yellow & color) === Color.Yellow) {
+                yellow.classList.add("yellow");
+                yellow.textContent = "Y";
+            }
+            else {
+                yellow.textContent = "-";
+            }
+            const purple = elem.appendChild(document.createElement("span"));
+            if ((Color.Purple & color) === Color.Purple) {
+                purple.classList.add("purple");
+                purple.textContent = "P";
+            }
+            else {
+                purple.textContent = "-";
+            }
+            const green = elem.appendChild(document.createElement("span"));
+            if ((Color.Green & color) === Color.Green) {
+                green.classList.add("green");
+                green.textContent = "G";
+            }
+            else {
+                green.textContent = "-";
+            }
+            const red = elem.appendChild(document.createElement("span"));
+            if ((Color.Red & color) === Color.Red) {
+                red.classList.add("red");
+                red.textContent = "R";
+            }
+            else {
+                red.textContent = "-";
+            }
+            const blue = elem.appendChild(document.createElement("span"));
+            if ((Color.Blue & color) === Color.Blue) {
+                blue.classList.add("blue");
+                blue.textContent = "B";
+            }
+            else {
+                blue.textContent = "-";
+            }
+            elem.appendChild(document.createElement("span")).textContent = "-";
+            break;
+    }
+}
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
 function showNewHeart(monster) {
     const template = document.getElementById("heart_list_item");
@@ -484,12 +547,11 @@ function showNewHeart(monster) {
         e.textContent = `${value}`;
         return e;
     };
-    text(".monster-name", monster.name);
+    const name = (monster.target === Rank.S_plus && monster.splusName !== null)
+        ? monster.splusName : monster.name;
+    text(".monster-name", name);
     text(".monster-cost", monster.curCost);
-    const csi = (monster.color === Color.Rainbow)
-        ? RainbowColorInfo
-        : SingleColorInfoMap.get(monster.color);
-    text(".monster-color", csi.text).classList.add(csi.colorName);
+    showHeartColor(fragment.querySelector(".monster-color"), monster.curColor);
     const radios = fragment.querySelectorAll("input.monster-rank");
     const monsterRankRadioName = `monster_${monster.id}_rank`;
     for (const radio of radios) {
@@ -512,6 +574,8 @@ function showNewHeart(monster) {
             elm.addEventListener("change", () => {
                 // type="radio"はONに変更された場合だけchangeイベントが発行される
                 monster.target = rank;
+                const newCurColor = monster.hearts.find(h => h.rank === rank).color;
+                monster.curColor = newCurColor;
                 let reorder = false;
                 const newCurCost = monster.hearts.find(h => h.rank === rank).cost;
                 if (monster.curCost !== newCurCost) {
@@ -591,6 +655,9 @@ function showNewHeart(monster) {
         form.reset();
         document.getElementById("add_monster_name").readOnly = true;
         const elements = form.elements;
+        const cbox = (name, checked) => {
+            elements.namedItem(name).checked = checked;
+        };
         const rad = (name, value) => {
             elements.namedItem(name).value = value;
         };
@@ -598,8 +665,13 @@ function showNewHeart(monster) {
             elements.namedItem(name).value = value;
         };
         elem("add_monster_name", monster.name);
+        elem("add_monster_splus_name", monster.splusName ?? "");
         elem("add_cost", `${monster.curCost}`);
-        rad("add_color", `${Color[monster.color]}`);
+        cbox("add_color_yellow", (monster.curColor & Color.Yellow) === Color.Yellow);
+        cbox("add_color_purple", (monster.curColor & Color.Purple) === Color.Purple);
+        cbox("add_color_green", (monster.curColor & Color.Green) === Color.Green);
+        cbox("add_color_red", (monster.curColor & Color.Red) === Color.Red);
+        cbox("add_color_blue", (monster.curColor & Color.Blue) === Color.Blue);
         if (monster.target !== null) {
             rad("add_rank", `${Rank[monster.target]}`);
             const h = monster.hearts.find(h => h.rank === monster.target);
@@ -666,17 +738,11 @@ function showUpdatedHeart(monster, reorder) {
         e.textContent = `${value}`;
         return e;
     };
-    text(".monster-name", monster.name);
+    const name = (monster.target === Rank.S_plus && monster.splusName !== null)
+        ? monster.splusName : monster.name;
+    text(".monster-name", name);
     text(".monster-cost", monster.curCost);
-    const csi = (monster.color === Color.Rainbow)
-        ? RainbowColorInfo
-        : SingleColorInfoMap.get(monster.color);
-    const classList = text(".monster-color", csi.text).classList;
-    SingleColorInfoMap.forEach((v) => {
-        classList.remove(v.colorName);
-    });
-    classList.remove(RainbowColorInfo.colorName);
-    classList.add(csi.colorName);
+    showHeartColor(item.querySelector(".monster-color"), monster.curColor);
     item.querySelector(".monster-with-s_plus")
         .checked = monster.withSplus;
     const radios = item.querySelectorAll("input.monster-rank");
@@ -791,8 +857,12 @@ function addHeart(newMonster) {
             monster.target = newMonster.target;
             updated = true;
         }
-        if (monster.color !== newMonster.color) {
-            monster.color = newMonster.color;
+        if (monster.splusName !== newMonster.splusName) {
+            monster.splusName = newMonster.splusName;
+            updated = true;
+        }
+        if (monster.curColor !== newMonster.curColor) {
+            monster.curColor = newMonster.curColor;
             updated = true;
         }
         if (monster.withSplus !== newMonster.withSplus) {
@@ -906,7 +976,8 @@ function isMonster(anyobj) {
     const monster1 = {
         id: 0,
         name: "str",
-        color: Color.Red,
+        splusName: "splus",
+        curColor: Color.Red,
         curCost: 1,
         hearts: [{
                 maximumHP: 1,
@@ -918,6 +989,7 @@ function isMonster(anyobj) {
                 speed: 1,
                 dexterity: 1,
                 rank: Rank.S_plus,
+                color: Color.Red,
                 cost: 1,
                 maximumCost: 1,
                 effects: "str",
@@ -930,7 +1002,8 @@ function isMonster(anyobj) {
     const monster2 = {
         id: 0,
         name: "str",
-        color: Color.Red,
+        splusName: null,
+        curColor: Color.Red,
         curCost: 1,
         hearts: [],
         target: null,
@@ -938,6 +1011,7 @@ function isMonster(anyobj) {
         defaultTarget: null,
         defaultWithSplus: false,
     };
+    let isOldFormatColor = false; // 色情報の保持方法が古いフォーマットか否か
     let isOldFormatCost = false; // コスト情報の保持方法が古いフォーマットか否か
     let nothingDefault = false; // デフォルト情報がない古いフォーマットか否か
     for (const param in monster1) {
@@ -950,8 +1024,16 @@ function isMonster(anyobj) {
                 nothingDefault = true;
                 obj["defaultWithSplus"] = true;
             }
+            else if (param === "splusName") {
+                obj["splusName"] = null;
+            }
             else if (param === "withSplus") {
                 obj["withSplus"] = true;
+            }
+            else if (param === "curColor" && ("color" in obj)) {
+                obj["curColor"] = obj["color"];
+                delete obj["color"];
+                isOldFormatColor = true;
             }
             else if (param === "curCost" && ("cost" in obj)) {
                 obj["curCost"] = obj["cost"];
@@ -975,8 +1057,8 @@ function isMonster(anyobj) {
         }
     }
     const m = obj; // ここキャストできる理由わからない
-    if (m.color in Color === false) {
-        console.log("Colorに存在しない値が設定されている");
+    if ((m.curColor ^ (m.curColor & Color.Rainbow)) !== Color.Unset) {
+        console.log("Colorに指定できない値が設定されている");
         console.log(obj);
         return false;
     }
@@ -1008,6 +1090,9 @@ function isMonster(anyobj) {
                     h["dexterity"] = h["deftness"];
                     delete h["deftness"];
                 }
+                else if (isOldFormatColor && param === "color") {
+                    h["color"] = m.curColor;
+                }
                 else if (isOldFormatCost && param === "cost") {
                     h["cost"] = m.curCost;
                 }
@@ -1037,8 +1122,8 @@ function isMonster(anyobj) {
     }
     // ここ以下はたぶん普通はバリデータの役割。型検査の役割じゃないと思う。
     {
-        if (m.color === Color.Unset || m.color === Color.Omit) {
-            console.log("こころの色の指定として不正 ${Color[m.color]}");
+        if (m.curColor === Color.Unset || m.curColor === Color.Omit) {
+            console.log("こころの色の指定として不正 ${Color[m.curColor]}");
             console.log(m);
             return false;
         }
@@ -1101,9 +1186,10 @@ function mergeMonsterList(list) {
             if (monster.hearts.length === 0) {
                 continue;
             }
-            monster.color = orig.color;
+            monster.curColor = orig.curColor;
             monster.curCost = orig.curCost;
             monster.target = orig.target;
+            monster.splusName = orig.splusName;
             monster.withSplus = orig.withSplus;
             monster.defaultTarget = orig.defaultTarget;
             monster.defaultWithSplus = orig.defaultWithSplus;
@@ -1129,7 +1215,7 @@ function makeSimpleScorer(param) {
                 return 0;
             }
             const heart = monster.hearts.find(h => h.rank === monster.target);
-            if ((color & monster.color) !== 0) {
+            if ((color & monster.curColor) !== 0) {
                 return Math.ceil(powerUp * heart[param]);
             }
             else {
@@ -1479,7 +1565,54 @@ class ExprParser {
                 if (m.target === null) {
                     return 0;
                 }
-                return m.color === color ? 1 : 0;
+                const heart = m.hearts.find(h => h.rank === m.target);
+                return (heart.color & color) !== 0 ? 1 : 0;
+            }
+        };
+    }
+    // PLACE
+    placeScorer() {
+        if (this.next() !== "(") {
+            this.errDetail = "PLACEの開き括弧がない";
+            return null;
+        }
+        const pos0 = this.pos;
+        const ch = this.next();
+        if (ch === null) {
+            this.errDetail = "PLACEの引数がない";
+            return null;
+        }
+        const wd = this.parseName(ch);
+        if (wd === null) {
+            this.errDetail = "不正な文字";
+            return null;
+        }
+        const pos1 = this.pos;
+        let color = null;
+        for (const info of SingleColorInfoMap.values()) {
+            if (info.text.startsWith(wd)) {
+                color = info.color;
+                break;
+            }
+        }
+        if (RainbowColorInfo.text.startsWith(wd)) {
+            color = RainbowColorInfo.color;
+        }
+        if (color === null) {
+            this.worderr = [pos0, pos1];
+            this.errDetail = "PLACEで指定できない色";
+            return null;
+        }
+        if (this.next() !== ")") {
+            this.errDetail = "PLACEの閉じ括弧がない";
+            return null;
+        }
+        return {
+            calc: (c, m) => {
+                if (m.target === null) {
+                    return 0;
+                }
+                return (c & color) !== 0 ? 1 : 0;
             }
         };
     }
@@ -1700,10 +1833,16 @@ class ExprParser {
                 return this.lessScorer();
             case "COST":
                 return { calc: (c, m) => {
-                        return (m.target === null) ? 0 : m.curCost;
+                        if (m.target === null) {
+                            return 0;
+                        }
+                        const heart = m.hearts.find(h => h.rank === m.target);
+                        return heart.cost;
                     } };
             case "COLOR":
                 return this.colorScorer();
+            case "PLACE":
+                return this.placeScorer();
             case "ABS":
                 return this.absScorer();
             case "FIT":
@@ -1711,7 +1850,8 @@ class ExprParser {
                         if (m.target === null) {
                             return 0;
                         }
-                        return ((c & m.color) !== 0) ? 1 : 0;
+                        const heart = m.hearts.find(h => h.rank === m.target);
+                        return ((c & heart.color) !== 0) ? 1 : 0;
                     } };
             default:
                 if (DEBUG) {
@@ -2199,13 +2339,16 @@ function calcNumOfBestHeartSet(target) {
                 && monster.hearts.some(h => h.rank === Rank.S_plus);
             if (withSplus) {
                 const heart = monster.hearts.find(h => h.rank === Rank.S_plus);
+                const tmpCurColor = monster.curColor;
                 const tmpCurCost = monster.curCost;
                 const tmpTarget = monster.target;
+                monster.curColor = heart.color;
                 monster.curCost = heart.cost;
                 monster.target = Rank.S_plus;
                 cost = getCost(monster);
                 scores = target.colors.map(c => target.scorer.calc(c, monster));
                 dpSubProc(false, monster, cost, scores);
+                monster.curColor = tmpCurColor;
                 monster.curCost = tmpCurCost;
                 monster.target = tmpTarget;
             }
@@ -2418,13 +2561,16 @@ function searchHeartSet(target) {
                 && monster.hearts.some(h => h.rank === Rank.S_plus);
             if (withSplus) {
                 const heart = monster.hearts.find(h => h.rank === Rank.S_plus);
+                const tmpCurColor = monster.curColor;
                 const tmpCurCost = monster.curCost;
                 const tmpTarget = monster.target;
+                monster.curColor = heart.color;
                 monster.curCost = heart.cost;
                 monster.target = Rank.S_plus;
                 cost = getCost(monster);
                 scores = target.colors.map(c => target.scorer.calc(c, monster));
                 dpSubProc(false, monster, cost, scores);
+                monster.curColor = tmpCurColor;
                 monster.curCost = tmpCurCost;
                 monster.target = tmpTarget;
             }
@@ -2532,8 +2678,10 @@ function searchHeartSet(target) {
             const m = hs.monster;
             const tmpTarget = m.target;
             const tmpCurCost = m.curCost;
+            const tmpCurColor = m.curColor;
             m.target = hs.rank;
             m.curCost = m.hearts.find(h => h.rank === hs.rank).cost;
+            m.curColor = m.hearts.find(h => h.rank === hs.rank).color;
             st.score += target.scorer.calc(c, m);
             st.maximumHP += MaximumHPScorer.calc(c, m);
             st.maximumMP += MaximumMPScorer.calc(c, m);
@@ -2545,6 +2693,7 @@ function searchHeartSet(target) {
             st.dexterity += DexterityScorer.calc(c, m);
             st.cost += m.curCost;
             st.maximumCost += m.hearts.find(h => h.rank === m.target).maximumCost;
+            m.curColor = tmpCurColor;
             m.curCost = tmpCurCost;
             m.target = tmpTarget;
         }
@@ -2579,17 +2728,17 @@ function searchHeartSet(target) {
             const m = hs.monster;
             const tmpTarget = m.target;
             const tmpCurCost = m.curCost;
+            const tmpCurColor = m.curColor;
             m.target = hs.rank;
             m.curCost = m.hearts.find(h => h.rank === hs.rank).cost;
+            m.curColor = m.hearts.find(h => h.rank === hs.rank).color;
             const h = fragment.querySelector(`.result-item-heart${p + 1}`);
-            const info = (m.color === Color.Rainbow)
-                ? RainbowColorInfo
-                : SingleColorInfoMap.get(m.color);
             const colorSpan = h.appendChild(document.createElement("span"));
-            colorSpan.classList.add(info.colorName);
-            colorSpan.textContent = info.text;
+            showHeartColor(colorSpan, m.curColor);
             h.appendChild(document.createElement("span")).textContent = `${m.curCost}`;
-            h.appendChild(document.createElement("span")).textContent = m.name;
+            const name = (m.target === Rank.S_plus && m.splusName !== null)
+                ? m.splusName : m.name;
+            h.appendChild(document.createElement("span")).textContent = name;
             h.appendChild(document.createElement("span")).textContent = Rank[m.target].replace("_plus", "+");
             const hsc = h.appendChild(document.createElement("span"));
             hsc.classList.add("result-item-heart-score");
@@ -2598,6 +2747,7 @@ function searchHeartSet(target) {
                 .textContent = m.hearts.find(h => h.rank === m.target).effects;
             m.target = tmpTarget;
             m.curCost = tmpCurCost;
+            m.curColor = tmpCurColor;
         }
         result.appendChild(fragment);
     }
@@ -2677,6 +2827,47 @@ document.getElementById("heart4_omit")
     elem("heart4_red");
     elem("heart4_blue");
 });
+// 色指定のバリデーション
+function validateHeartColor() {
+    const checked = document.getElementById("add_color_yellow").checked
+        || document.getElementById("add_color_purple").checked
+        || document.getElementById("add_color_green").checked
+        || document.getElementById("add_color_red").checked
+        || document.getElementById("add_color_blue").checked;
+    if (checked) {
+        document.getElementById("add_color_yellow")
+            .setCustomValidity("");
+    }
+    else {
+        document.getElementById("add_color_yellow")
+            .setCustomValidity("色を指定する必要があります");
+    }
+}
+// 色指定のバリデーションのトリガー
+document.getElementById("add_color_yellow")
+    .addEventListener("change", () => {
+    validateHeartColor();
+});
+// 色指定のバリデーションのトリガー
+document.getElementById("add_color_purple")
+    .addEventListener("change", () => {
+    validateHeartColor();
+});
+// 色指定のバリデーションのトリガー
+document.getElementById("add_color_green")
+    .addEventListener("change", () => {
+    validateHeartColor();
+});
+// 色指定のバリデーションのトリガー
+document.getElementById("add_color_red")
+    .addEventListener("change", () => {
+    validateHeartColor();
+});
+// 色指定のバリデーションのトリガー
+document.getElementById("add_color_blue")
+    .addEventListener("change", () => {
+    validateHeartColor();
+});
 // こころ追加フォームを開く
 document.getElementById("add_heart")
     .addEventListener("click", () => {
@@ -2687,6 +2878,7 @@ document.getElementById("add_heart")
     document.getElementById("add_monster_name").readOnly = false;
     dialog.querySelector("form").reset();
     dialog.returnValue = "";
+    validateHeartColor();
     dialog.showModal();
 });
 // こころ追加フォームにおいて登録済みモンスター名を入れたときにコストや色を自動補完する
@@ -2697,8 +2889,13 @@ document.getElementById("add_monster_name")
         const monster = monsterMap.get(name);
         const dialog = document.getElementById("add_heart_dialog");
         const elements = dialog.querySelector("form").elements;
+        elements.namedItem("add_monster_splus_name").value = `${monster.splusName ?? ""}`;
         elements.namedItem("add_cost").value = `${monster.curCost}`;
-        elements.namedItem("add_color").value = `${Color[monster.color]}`;
+        elements.namedItem("add_color_yellow").checked = (monster.curColor & Color.Yellow) === Color.Yellow;
+        elements.namedItem("add_color_purple").checked = (monster.curColor & Color.Purple) === Color.Purple;
+        elements.namedItem("add_color_green").checked = (monster.curColor & Color.Green) === Color.Green;
+        elements.namedItem("add_color_red").checked = (monster.curColor & Color.Red) === Color.Red;
+        elements.namedItem("add_color_blue").checked = (monster.curColor & Color.Blue) === Color.Blue;
     }
 });
 // こころ追加フォームでキャンセルしたとき
@@ -2724,14 +2921,30 @@ document.getElementById("add_heart_dialog")
     const elements = dialog.querySelector("form").elements;
     const rad = (name) => elements.namedItem(name).value;
     const str = (name) => elements.namedItem(name).value;
+    const cbox = (name) => elements.namedItem(name).checked;
     const noNaN = (v) => isNaN(v) ? 0 : v;
     const num = (name) => noNaN(parseInt(str(name)));
     const rank = Rank[rad("add_rank")];
     const cost = num("add_cost");
+    let color = (cbox("add_color_yellow") ? Color.Yellow : Color.Unset)
+        | (cbox("add_color_purple") ? Color.Purple : Color.Unset)
+        | (cbox("add_color_green") ? Color.Green : Color.Unset)
+        | (cbox("add_color_red") ? Color.Red : Color.Unset)
+        | (cbox("add_color_blue") ? Color.Blue : Color.Unset);
+    if (color === Color.Unset) {
+        if (event.cancelable) {
+            // dialogのcloseイベントはキャンセルできないぽい
+            event.preventDefault();
+        }
+        dialogAlert("エラー！ 色を指定する必要があります");
+        return;
+    }
+    const splusName = str("add_monster_splus_name").trim();
     const monster = {
         id: 0,
         name: str("add_monster_name").trim(),
-        color: Color[rad("add_color")],
+        splusName: splusName === "" ? null : splusName,
+        curColor: color,
         curCost: cost,
         hearts: [{
                 maximumHP: num("add_maximumhp"),
@@ -2743,6 +2956,7 @@ document.getElementById("add_heart_dialog")
                 speed: num("add_speed"),
                 dexterity: num("add_dexterity"),
                 rank: rank,
+                color: color,
                 cost: cost,
                 maximumCost: num("add_maximumcost"),
                 effects: str("add_effects").trim(),
@@ -2763,7 +2977,7 @@ document.getElementById("add_heart_dialog")
     if (DEBUG) {
         console.log(`add heart: updated: ${updated}`);
     }
-    dialogAlert(`${monster.name} ${Rank[monster.hearts[0].rank]} を追加しました`);
+    dialogAlert(`${monster.name} ${Rank[monster.hearts[0].rank].replace("_plus", "+")} を追加しました`);
     if (updated) {
         saveMonsterList(Trigger.UpdateStatus);
     }
@@ -3083,18 +3297,16 @@ document.getElementById("check_expression")
                 if (m.target === null) {
                     continue;
                 }
-                const info = (m.color === Color.Rainbow)
-                    ? RainbowColorInfo
-                    : SingleColorInfoMap.get(m.color);
                 const tr = tbody.appendChild(document.createElement("tr"));
                 const c = tr.appendChild(document.createElement("td"));
-                c.classList.add(info.colorName);
-                c.textContent = info.text;
+                showHeartColor(c.appendChild(document.createElement("span")), m.curColor);
                 tr.appendChild(document.createElement("td")).textContent = `${m.curCost}`;
-                tr.appendChild(document.createElement("td")).textContent = m.name;
+                const name = (m.target === Rank.S_plus && m.splusName !== null)
+                    ? m.splusName : m.name;
+                tr.appendChild(document.createElement("td")).textContent = name;
                 tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
-                tr.appendChild(document.createElement("td")).textContent = `${expr.calc(m.color, m)}`;
+                tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Rainbow, m)}`;
             }
         }
         catch (err) {
@@ -3143,15 +3355,13 @@ function checkRequireSkillExpression(exprElemId) {
                 if (m.target === null) {
                     continue;
                 }
-                const info = (m.color === Color.Rainbow)
-                    ? RainbowColorInfo
-                    : SingleColorInfoMap.get(m.color);
                 const tr = tbody.appendChild(document.createElement("tr"));
                 const c = tr.appendChild(document.createElement("td"));
-                c.classList.add(info.colorName);
-                c.textContent = info.text;
+                showHeartColor(c.appendChild(document.createElement("span")), m.curColor);
                 tr.appendChild(document.createElement("td")).textContent = `${m.curCost}`;
-                tr.appendChild(document.createElement("td")).textContent = m.name;
+                const name = (m.target === Rank.S_plus && m.splusName !== null)
+                    ? m.splusName : m.name;
+                tr.appendChild(document.createElement("td")).textContent = name;
                 tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
                 tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
                 tr.appendChild(document.createElement("td")).textContent = "-";
@@ -3459,27 +3669,23 @@ document.getElementById("calc_status_distance").addEventListener("click", () => 
         const tr = tbody.appendChild(document.createElement("tr"));
         const targetTd = tr.appendChild(document.createElement("td"));
         const targetSpan = targetTd.appendChild(document.createElement("span"));
-        const targetInfo = m1.color === Color.Rainbow
-            ? RainbowColorInfo
-            : SingleColorInfoMap.get(m1.color);
-        targetSpan.classList.add(targetInfo.colorName);
-        targetSpan.textContent = targetInfo.text;
+        showHeartColor(targetSpan, m1.curColor);
+        const name1 = (m1.target === Rank.S_plus && m1.splusName !== null)
+            ? m1.splusName : m1.name;
         targetTd.appendChild(document.createElement("span")).textContent =
-            `${m1.curCost} ${m1.name} ${Rank[m1.target].replace("_plus", "+")}`;
+            `${m1.curCost} ${name1} ${Rank[m1.target].replace("_plus", "+")}`;
         function append(ds) {
             const td = tr.appendChild(document.createElement("td"));
             if (ds.monster === null) {
                 td.textContent = "－";
                 return;
             }
-            const info = ds.monster.color === Color.Rainbow
-                ? RainbowColorInfo
-                : SingleColorInfoMap.get(ds.monster.color);
             const span = td.appendChild(document.createElement("span"));
-            span.classList.add(info.colorName);
-            span.textContent = info.text;
+            showHeartColor(span, ds.monster.curColor);
+            const name = (ds.monster.target === Rank.S_plus && ds.monster.splusName !== null)
+                ? ds.monster.splusName : ds.monster.name;
             td.appendChild(document.createElement("span")).textContent =
-                `${ds.monster.curCost} ${ds.monster.name} ${Rank[ds.monster.target].replace("_plus", "+")} (${Math.ceil(ds.distance)})`;
+                `${ds.monster.curCost} ${name} ${Rank[ds.monster.target].replace("_plus", "+")} (${Math.ceil(ds.distance)})`;
         }
         append(upwardMinCost);
         append(upwardEuclidean);
@@ -3806,6 +4012,7 @@ function showRNHeartset(target, heartsets) {
             speed: 0,
             dexterity: 0,
             rank: Rank.D,
+            color: Color.Unset,
             cost: heartset.cost,
             maximumCost: 0,
             effects: ""
@@ -3821,14 +4028,12 @@ function showRNHeartset(target, heartsets) {
             h.monster.target = h.heart.rank;
             const he = elem(`heart${i + 1}`);
             he.innerHTML = "";
-            const info = (h.monster.color === Color.Rainbow)
-                ? RainbowColorInfo
-                : SingleColorInfoMap.get(h.monster.color);
             const colorSpan = he.appendChild(document.createElement("span"));
-            colorSpan.classList.add(info.colorName);
-            colorSpan.textContent = info.text;
+            showHeartColor(colorSpan, h.heart.color);
             he.appendChild(document.createElement("span")).textContent = `${h.heart.cost}`;
-            he.appendChild(document.createElement("span")).textContent = h.monster.name;
+            const name = (h.heart.rank === Rank.S_plus && h.monster.splusName !== null)
+                ? h.monster.splusName : h.monster.name;
+            he.appendChild(document.createElement("span")).textContent = name;
             he.appendChild(document.createElement("span")).textContent = Rank[h.heart.rank].replace("_plus", "+");
             elem(`effects${i + 1}`).textContent = h.heart.effects;
             const c = target.job.colors[i];
@@ -3857,7 +4062,8 @@ function showRNHeartset(target, heartsets) {
         const refMonster = {
             id: 0,
             name: "参考値",
-            color: Color.Red,
+            splusName: null,
+            curColor: Color.Unset,
             curCost: status.cost,
             hearts: [status],
             target: status.rank,
@@ -3869,27 +4075,27 @@ function showRNHeartset(target, heartsets) {
             target.scoreres[z].refSetter(status, statusValues[z]);
         }
         if (target.useRefExpr) {
-            const refScore = target.refExpr.calc(Color.Blue, refMonster);
+            const refScore = target.refExpr.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値1: ${refScore}`;
         }
         if (target.useRefExpr2) {
-            const refScore2 = target.refExpr2.calc(Color.Blue, refMonster);
+            const refScore2 = target.refExpr2.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値2: ${refScore2}`;
         }
         if (target.useRefExpr3) {
-            const refScore3 = target.refExpr3.calc(Color.Blue, refMonster);
+            const refScore3 = target.refExpr3.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値3: ${refScore3}`;
         }
         if (target.useRefExpr4) {
-            const refScore4 = target.refExpr4.calc(Color.Blue, refMonster);
+            const refScore4 = target.refExpr4.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値4: ${refScore4}`;
         }
         if (target.useRefExpr5) {
-            const refScore5 = target.refExpr5.calc(Color.Blue, refMonster);
+            const refScore5 = target.refExpr5.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値5: ${refScore5}`;
         }
         if (target.useRefExpr6) {
-            const refScore6 = target.refExpr6.calc(Color.Blue, refMonster);
+            const refScore6 = target.refExpr6.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値6: ${refScore6}`;
         }
         elem("score").textContent = scoreStr;
@@ -5218,14 +5424,12 @@ function showManualHeartset() {
             const heart = monster.hearts.find(h => h.rank === monster.target);
             cost += heart.cost;
             additionalMaximumCost += heart.maximumCost;
-            const info = (monster.color === Color.Rainbow)
-                ? RainbowColorInfo
-                : SingleColorInfoMap.get(monster.color);
             const colorSpan = he.appendChild(document.createElement("span"));
-            colorSpan.classList.add(info.colorName);
-            colorSpan.textContent = info.text;
+            showHeartColor(colorSpan, heart.color);
             he.appendChild(document.createElement("span")).textContent = `${heart.cost}`;
-            he.appendChild(document.createElement("span")).textContent = monster.name;
+            const monsterName = (heart.rank === Rank.S_plus && monster.splusName !== null)
+                ? monster.splusName : monster.name;
+            he.appendChild(document.createElement("span")).textContent = monsterName;
             he.appendChild(document.createElement("span")).textContent = Rank[heart.rank].replace("_plus", "+");
             text(`effects${i + 1}`, heart.effects);
             const c = job.colors[i];
