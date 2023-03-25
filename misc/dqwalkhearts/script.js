@@ -4455,6 +4455,214 @@ function searchRNHeartsetHC(target) {
             }
         }
     }
+    const hIndexes = new Array(target.setSize).fill(new Array(heartList.length));
+    const hhIndexes = new Array(target.setSize).fill(0);
+    for (const indexes of hIndexes) {
+        for (let i = 0; i < indexes.length; i++) {
+            indexes[i] = i;
+        }
+        shuffle(indexes);
+    }
+    const used = new Array(maxID + 1).fill(false);
+    let time = 0;
+    const LIMIT = 60;
+    let pos = 0;
+    let cycle = 0;
+    const CYCLE = target.setSize * heartList.length;
+    let noChange = true;
+    let changed = 0;
+    const proc = () => {
+        if (cycle >= CYCLE) {
+            cycle = 0;
+            time++;
+            if (time >= LIMIT) {
+                return "OK";
+            }
+            else {
+                for (const indexes of hIndexes) {
+                    shuffle(indexes);
+                }
+            }
+            if (!noChange) {
+                changed++;
+                if (changed > 2) {
+                    changed = 0;
+                    noChange = true;
+                }
+            }
+            if (noChange) {
+                currentState.hearts.fill(null);
+                used.fill(false);
+                if (Math.random() < 0.8) {
+                    // KICK???
+                    let kickPos = 0;
+                    for (const hi of hIndexes[0]) {
+                        if (hi >= heartList.length) {
+                            continue;
+                        }
+                        const h = heartList[hi];
+                        if (used[h.monster.id]) {
+                            continue;
+                        }
+                        currentState.hearts[kickPos] = h;
+                        used[h.monster.id] = true;
+                        kickPos++;
+                        if (kickPos >= target.setSize) {
+                            break;
+                        }
+                    }
+                }
+                calcRNHeartsetScore(target, currentState);
+            }
+            noChange = true;
+        }
+        cycle++;
+        pos = (pos + 1) % target.setSize;
+        let h = null;
+        const hhi = hhIndexes[pos];
+        if (hhi >= heartList.length) {
+            hhIndexes[pos] = 0;
+            if (currentState.hearts[pos] === null) {
+                return null;
+            }
+        }
+        else {
+            hhIndexes[pos] = hhi + 1;
+            const hi = hIndexes[pos][hhi];
+            h = heartList[hi];
+            if (used[h.monster.id]) {
+                return null;
+            }
+        }
+        const tmpState = copy(currentState);
+        tmpState.hearts[pos] = h;
+        calcRNHeartsetScore(target, tmpState);
+        let tmpBetter = copy(tmpState);
+        for (const p of perm) {
+            tmpState.order = p;
+            calcRNHeartsetScore(target, tmpState);
+            if (tmpState.penalty < tmpBetter.penalty
+                || (tmpState.penalty === tmpBetter.penalty && tmpState.bonus > tmpBetter.bonus)) {
+                tmpBetter = copy(tmpState);
+            }
+        }
+        if (tmpBetter.penalty === 0 && currentState.penalty === 0) {
+            if (tmpBetter.bonus < currentState.bonus) {
+                return null;
+            }
+        }
+        else if (tmpBetter.penalty > currentState.penalty) {
+            return null;
+        }
+        noChange = false;
+        if (currentState.hearts[pos] !== null) {
+            used[currentState.hearts[pos].monster.id] = false;
+        }
+        if (tmpBetter.hearts[pos] !== null) {
+            used[tmpBetter.hearts[pos].monster.id] = true;
+        }
+        currentState = tmpBetter;
+        if (currentState.cost <= target.maximumCost) {
+            if (update(currentState)) {
+                currentState = copy(currentState);
+                showRNHeartset(target, bests);
+            }
+        }
+        return null;
+    };
+    const close = (res) => {
+        if (res === null) {
+            dialogAlert("探索を中止しました");
+        }
+    };
+    const task = {
+        interval: 1,
+        proc: proc,
+        close: close
+    };
+    dialogWait(task, "探索中です･･･");
+}
+// ReallyNeededのこころセットを探索する (Hill Climbing with Greedy)
+function searchRNHeartsetHCG(target) {
+    const perm = permutation(target.setSize);
+    const copy = (hs) => {
+        const res = {
+            hearts: hs.hearts.slice(),
+            order: hs.order,
+            penalty: hs.penalty,
+            bonus: hs.bonus,
+            cost: hs.cost
+        };
+        return res;
+    };
+    let currentState = {
+        hearts: new Array(target.setSize).fill(null),
+        order: perm[0],
+        penalty: 0,
+        bonus: 0,
+        cost: 0
+    };
+    calcRNHeartsetScore(target, currentState);
+    const bests = [];
+    const update = (state) => {
+        let changed = false;
+        for (let i = 0; i < bests.length; i++) {
+            const b = bests[i];
+            if (state.penalty > b.penalty) {
+                continue;
+            }
+            if (state.penalty === b.penalty && state.bonus < b.bonus) {
+                continue;
+            }
+            if (state.penalty === b.penalty && state.bonus === b.bonus) {
+                if (state.cost === b.cost) {
+                    const h1 = b.hearts
+                        .map(h => h === null ? "*" : `${h.monster.id} ${h.heart.rank}`)
+                        .sort()
+                        .join(",");
+                    const h2 = state.hearts
+                        .map(h => h === null ? "*" : `${h.monster.id} ${h.heart.rank}`)
+                        .sort()
+                        .join(",");
+                    if (h1 === h2) {
+                        return false;
+                    }
+                }
+                continue;
+            }
+            bests[i] = state;
+            state = b;
+            changed = true;
+        }
+        if (bests.length < 10) {
+            bests.push(state);
+            changed = true;
+        }
+        return changed;
+    };
+    const heartList = [];
+    let maxID = 0;
+    for (const m of monsterList) {
+        if (m.target === null) {
+            continue;
+        }
+        maxID = Math.max(maxID, m.id);
+        const heart = {
+            monster: m,
+            heart: m.hearts.find(h => h.rank === m.target)
+        };
+        heartList.push(heart);
+        if (m.withSplus && m.target !== Rank.S_plus) {
+            const sph = m.hearts.find(h => h.rank === Rank.S_plus);
+            if (sph) {
+                const spHeart = {
+                    monster: m,
+                    heart: sph
+                };
+                heartList.push(spHeart);
+            }
+        }
+    }
     shuffle(heartList);
     const used = new Array(maxID + 1).fill(false);
     let time = 0;
@@ -5352,6 +5560,9 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             break;
         case "hc":
             searchRNHeartsetHC(target);
+            break;
+        case "hcg":
+            searchRNHeartsetHCG(target);
             break;
         case "sa":
             searchRNHeartsetSA(target);
