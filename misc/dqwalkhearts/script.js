@@ -1128,7 +1128,7 @@ function isMonster(anyobj) {
     // ここ以下はたぶん普通はバリデータの役割。型検査の役割じゃないと思う。
     {
         if (m.curColor === Color.Unset || m.curColor === Color.Omit) {
-            console.log("こころの色の指定として不正 ${Color[m.curColor]}");
+            console.log(`こころの色の指定として不正 ${Color[m.curColor]}`);
             console.log(m);
             return false;
         }
@@ -5406,7 +5406,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             refExpr = parseExpression(refExprSrc);
         }
         catch (ex) {
-            dialogAlert("参考値1の式にエラー: ${ex.getMessage()}");
+            dialogAlert(`参考値1の式にエラー: ${ex.getMessage()}`);
             return;
         }
     }
@@ -5418,7 +5418,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             refExpr2 = parseExpression(refExpr2Src);
         }
         catch (ex) {
-            dialogAlert("参考値2の式にエラー: ${ex.getMessage()}");
+            dialogAlert(`参考値2の式にエラー: ${ex.getMessage()}`);
             return;
         }
     }
@@ -5430,7 +5430,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             refExpr3 = parseExpression(refExpr3Src);
         }
         catch (ex) {
-            dialogAlert("参考値3の式にエラー: ${ex.getMessage()}");
+            dialogAlert(`参考値3の式にエラー: ${ex.getMessage()}`);
             return;
         }
     }
@@ -5442,7 +5442,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             refExpr4 = parseExpression(refExpr4Src);
         }
         catch (ex) {
-            dialogAlert("参考値4の式にエラー: ${ex.getMessage()}");
+            dialogAlert(`参考値4の式にエラー: ${ex.getMessage()}`);
             return;
         }
     }
@@ -5454,7 +5454,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             refExpr5 = parseExpression(refExpr5Src);
         }
         catch (ex) {
-            dialogAlert("参考値5の式にエラー: ${ex.getMessage()}");
+            dialogAlert(`参考値5の式にエラー: ${ex.getMessage()}`);
             return;
         }
     }
@@ -5466,7 +5466,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             refExpr6 = parseExpression(refExpr6Src);
         }
         catch (ex) {
-            dialogAlert("参考値6の式にエラー: ${ex.getMessage()}");
+            dialogAlert(`参考値6の式にエラー: ${ex.getMessage()}`);
             return;
         }
     }
