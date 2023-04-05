@@ -648,11 +648,12 @@ function showNewHeart(monster) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
-        if (monster.target !== Rank.S_plus) {
-            if (monster.hearts.some(h => h.rank === Rank.S_plus)) {
-                withSplusElem.disabled = false;
-            }
-        }
+        // S+のときもチェック変更できるようにしたいのでコメントアウト
+        // if (monster.target !== Rank.S_plus) {
+        //    if (monster.hearts.some(h => h.rank === Rank.S_plus)) {
+        //        withSplusElem.disabled = false;
+        //    }
+        // }
     }
     fragment.querySelector("button.monster-add-or-edit").addEventListener("click", () => {
         const dialog = document.getElementById("add_heart_dialog");
@@ -804,9 +805,10 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
-        item.querySelector(".monster-with-s_plus")
-            .disabled = monster.target === Rank.S_plus
-            || !monster.hearts.some(h => h.rank === Rank.S_plus);
+        // S+のときもチェック変更できるようにしたいのでコメントアウト
+        // (item.querySelector(".monster-with-s_plus") as HTMLInputElement)
+        //     .disabled = monster.target === Rank.S_plus
+        //        || !monster.hearts.some(h => h.rank === Rank.S_plus);
     }
     const withSplus = monster.withSplus
         && monster.target !== Rank.S_plus
