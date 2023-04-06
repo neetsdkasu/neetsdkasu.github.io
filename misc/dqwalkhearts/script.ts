@@ -4,6 +4,11 @@
 // author: Leonardone @ NEETSDKASU
 //
 
+// TypeScriptのバージョン3.8.3が古いせい（？）か、Array.prototype.atの存在を知らないらしくエラーになる・・・？
+interface Array<T> {
+    at(index: number): T | undefined;
+}
+
 const DEVELOP = false;
 
 const DEBUG: boolean = DEVELOP || new URLSearchParams(window.location.search).has("DEBUG");
@@ -11,6 +16,8 @@ const DEBUG: boolean = DEVELOP || new URLSearchParams(window.location.search).ha
 if (DEBUG) {
     console.log("DEBUG MODE");
 }
+
+let EXPOSE_MODE = false;
 
 const LocalStoragePath = "dqwalkhearts";
 
@@ -621,6 +628,61 @@ function showHeartColor(elem: HTMLElement, color: Color): void {
         elem.appendChild(document.createElement("span")).textContent = "-";
         break;
     }
+}
+
+interface AdoptionHeartSet {
+    powerUp: number;
+    colors: Color[];
+    hearts: ({monster: Monster, heart: Heart} | null)[];
+}
+
+const adoptionHeartSetList: AdoptionHeartSet[] = [];
+
+const adoptionHeartSet: AdoptionHeartSet = {
+    powerUp: 0,
+    colors: [],
+    hearts: []
+};
+
+// こころセットの採用
+function adoptHeartSet(): void {
+    if (adoptionHeartSet.hearts.every(mah => mah === null)) {
+        return;
+    }
+    const dialog = document.getElementById("adoption_heartset_dialog") as HTMLDialogElement;
+    const elems = dialog.querySelectorAll(".adoption-monster");
+    for (let i = 0; i < elems.length; i++) {
+        const elem = elems[i];
+        const nameElem = elem.querySelector(".monster-name")!;
+        const rankElems = elem.querySelectorAll(".monster-rank");
+        const withSplusElem = elem.querySelector(".monster-with-s_plus") as HTMLInputElement;
+        const mah = adoptionHeartSet.hearts.at(i) ?? null;
+        if (mah === null) {
+            nameElem.textContent = "－";
+            for (const re of rankElems) {
+                (re as HTMLInputElement).checked = false;
+                (re as HTMLInputElement).disabled = true;
+            }
+            withSplusElem.checked = false;
+            withSplusElem.disabled = true;
+        } else {
+            nameElem.textContent = mah.heart.rank === Rank.S_plus ? mah.monster.splusName : mah.monster.name;
+            for (const re of rankElems) {
+                const value = (re as HTMLInputElement).value ?? "omit";
+                if (value === "omit") {
+                    (re as HTMLInputElement).checked = mah.monster.target === null;
+                    (re as HTMLInputElement).disabled = false;
+                } else {
+                    const rank = Rank[value as keyof typeof Rank];
+                    (re as HTMLInputElement).checked = rank === mah.monster.target;
+                    (re as HTMLInputElement).disabled = !mah.monster.hearts.some(h => h.rank === rank);
+                }
+            }
+            withSplusElem.checked = mah.monster.withSplus;
+            withSplusElem.disabled = !mah.monster.hearts.some(h => h.rank === Rank.S_plus);
+        }
+    }
+    dialog.showModal();
 }
 
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
@@ -2833,6 +2895,11 @@ function searchHeartSet(target: Target): void {
         }
         omitDuplicate.set(key, true);
         const fragment = template.content.cloneNode(true) as DocumentFragment;
+        if (EXPOSE_MODE) {
+            for (const sec of fragment.querySelectorAll(".secret")) {
+                sec.classList.remove("secret");
+            }
+        }
         const text = (cname: string, value: any): HTMLElement => {
             const e = fragment.querySelector(cname) as HTMLElement;
             e.textContent = `${value}`;
@@ -3729,6 +3796,75 @@ document.getElementById("change_monster_name_dialog")!
     dialogAlert(`こころの名前を『 ${oldName} 』から『 ${newName} 』に変更しました`);
 });
 
+// こころの採用のダイアログのキャンセル
+document.querySelector(`#adoption_heartset_dialog button[value="cancel"]`)!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click adoption_heartset_dialog CANCEL button");
+    }
+    const dialog = document.getElementById("adoption_heartset_dialog") as HTMLDialogElement;
+    dialog.returnValue = "cancel";
+    dialog.close();
+});
+
+// こころの採用のダイアログと閉じた時
+document.getElementById("adoption_heartset_dialog")!
+.addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close adoption_heartset_dialog");
+    }
+    const dialog = document.getElementById("adoption_heartset_dialog") as HTMLDialogElement;
+    if (dialog.returnValue !== "change") {
+        return;
+    }
+    const elems = dialog.querySelectorAll(".adoption-monster");
+    let changed = false;
+    for (let i = 0; i < elems.length; i++) {
+        const mah = adoptionHeartSet.hearts.at(i) ?? null;
+        if (mah === null) {
+            continue;
+        }
+        const elem = elems[i];
+        const rankElems = elem.querySelectorAll(".monster-rank");
+        const withSplusElem = elem.querySelector(".monster-with-s_plus") as HTMLInputElement;
+        const oldCurCost = mah.monster.curCost;
+        const oldWithSplus = mah.monster.withSplus;
+        const oldTarget = mah.monster.target;
+        for (const re of rankElems) {
+            if (!(re as HTMLInputElement).checked) {
+                continue;
+            }
+            const value = (re as HTMLInputElement).value ?? "omit";
+            if (value === "omit") {
+                mah.monster.target = null;
+            } else {
+                const rank = Rank[value as keyof typeof Rank];
+                mah.monster.target = rank;
+                const heart = mah.monster.hearts.find(h => h.rank === rank)!;
+                mah.monster.curCost = heart.cost;
+                mah.monster.curColor = heart.color;
+            }
+            break;
+        }
+        if (!withSplusElem.disabled) {
+            mah.monster.withSplus = withSplusElem.checked;
+        }
+        if (mah.monster.target !== oldTarget || mah.monster.withSplus !== oldWithSplus) {
+            let reorder = false;
+            if (oldCurCost !== mah.monster.curCost) {
+                monsterList.sort((a, b) => b.curCost - a.curCost);
+                reorder = true;
+            }
+            showUpdatedHeart(mah.monster, reorder);
+            changed = true;
+        }
+    }
+    if (changed) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+});
+
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス距離
 /////////////////////////////////////////////////////////////////////////////////////
@@ -4236,6 +4372,11 @@ function showRNHeartset(target: RNTarget, heartsets: RNHeartset[]): void {
         if (pos >= items.length) {
             const template = document.getElementById("result_item") as HTMLTemplateElement;
             const fragment = template.content.cloneNode(true) as DocumentFragment;
+            if (EXPOSE_MODE) { // 常に真な気がするが
+                for (const sec of fragment.querySelectorAll(".secret")) {
+                    sec.classList.remove("secret");
+                }
+            }
             res.appendChild(fragment);
             items = res.querySelectorAll(":scope > div.outline");
         }
@@ -5852,12 +5993,20 @@ function showManualHeartset(): void {
         }
         const oldPowerUp = powerUp;
         powerUp = job.powerUp;
+        adoptionHeartSet.powerUp = powerUp;
+        adoptionHeartSet.colors = job.colors;
         const res = document.getElementById("manualset_result")!;
         const elem = (name: string) => res.querySelector(`.result-item-${name}`)!;
         const text = (name: string, value: any) => elem(name).textContent = `${value}`;
         if (res.children.length === 0) {
             const template = document.getElementById("result_item") as HTMLTemplateElement;
             const fragment = template.content.cloneNode(true) as DocumentFragment;
+            if (EXPOSE_MODE) {
+                for (const sec of fragment.querySelectorAll(".secret")) {
+                    sec.classList.remove("secret");
+                }
+                fragment.querySelector(".result-item-adoption")!.addEventListener("click", adoptHeartSet);
+            }
             res.appendChild(fragment);
             elem("number").parentElement!.hidden = true;
             elem("score").parentElement!.hidden = true;
@@ -5876,30 +6025,36 @@ function showManualHeartset(): void {
         };
         let cost = 0;
         let additionalMaximumCost = 0;
+        adoptionHeartSet.hearts = [];
         for (let i = 0; i < 4; i++) {
             const t = document.getElementById(`manualset_heart${i+1}_name`) as HTMLInputElement;
             if (t.disabled) {
                 text(`heart${i+1}`, "－");
                 text(`effects${i+1}`, "");
+                adoptionHeartSet.hearts.push(null);
                 continue;
             }
             const name = t.value;
             if (!monsterMap.has(name)) {
                 text(`heart${i+1}`, "");
                 text(`effects${i+1}`, "");
+                adoptionHeartSet.hearts.push(null);
                 continue;
             }
             const monster = monsterMap.get(name)!;
             const he = elem(`heart${i+1}`);
             he.innerHTML = "";
             if (monster.target === null) {
-                he.appendChild(document.createElement("span")).textContent = "-";
+                he.appendChild(document.createElement("span")).textContent = "------";
+                he.appendChild(document.createElement("span")).textContent = "--";
                 he.appendChild(document.createElement("span")).textContent = monster.name;
-                he.appendChild(document.createElement("span")).textContent = "－";
+                he.appendChild(document.createElement("span")).textContent = "(ランク未指定)";
                 text(`effects${i+1}`, "");
+                adoptionHeartSet.hearts.push(null);
                 continue;
             }
             const heart = monster.hearts.find(h => h.rank === monster.target)!;
+            adoptionHeartSet.hearts.push({monster: monster, heart: heart});
             cost += heart.cost;
             additionalMaximumCost += heart.maximumCost;
             const colorSpan = he.appendChild(document.createElement("span"));
@@ -6132,6 +6287,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         if (DEBUG) {
             console.log("expose secrets");
         }
+        EXPOSE_MODE = true;
         const secrets = document.querySelectorAll(".secret");
         for (const sec of secrets) {
             sec.classList.remove("secret");

@@ -95,11 +95,13 @@ input[id$="_omit"]:checked + label
     background-color: khaki;
 }
 
+#adoption_heartset_dialog .adoption-monster > span,
 fieldset > details > summary > span
 {
     display: block;
 }
 
+#adoption_heartset_dialog .adoption-monster,
 fieldset > details > summary
 {
     display: flex;

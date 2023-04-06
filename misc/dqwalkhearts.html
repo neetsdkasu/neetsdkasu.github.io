@@ -73,7 +73,72 @@
         </div>
         <hr />
         <div>
-          <button type="submit" value="change"  >変更を適用する</button>
+          <button type="submit" value="change">変更を適用する</button>
+          <button type="button" value="cancel">キャンセル</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="adoption_heartset_dialog">
+      <div>こころセットの採用</div>
+      <hr />
+      <form method="dialog">
+        <div class="small">次のこころセット検索のためのランク設定変更(※必要があれば)</div>
+        <div class="outline adoption-monster">
+            <span class="monster-name">こころ1</span>
+            <span>
+              <label><input type="radio" class="monster-rank" value="S_plus"  name="adoption-monster1-rank" /><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"       name="adoption-monster1-rank" /><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"       name="adoption-monster1-rank" /><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"       name="adoption-monster1-rank" /><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"       name="adoption-monster1-rank" /><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"       name="adoption-monster1-rank" /><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"    name="adoption-monster1-rank" /><span>－</span></label>
+              <label><input type="checkbox" class="monster-with-s_plus" name="adoption-monster1-with-s_plus" /><span class="small">S+同時</span></label>
+            </span>
+        </div>
+        <div class="outline adoption-monster">
+            <span class="monster-name">こころ2</span>
+            <span>
+              <label><input type="radio" class="monster-rank" value="S_plus"  name="adoption-monster2-rank" /><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"       name="adoption-monster2-rank" /><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"       name="adoption-monster2-rank" /><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"       name="adoption-monster2-rank" /><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"       name="adoption-monster2-rank" /><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"       name="adoption-monster2-rank" /><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"    name="adoption-monster2-rank" /><span>－</span></label>
+              <label><input type="checkbox" class="monster-with-s_plus" name="adoption-monster2-with-s_plus" /><span class="small">S+同時</span></label>
+            </span>
+        </div>
+        <div class="outline adoption-monster">
+            <span class="monster-name">こころ3</span>
+            <span>
+              <label><input type="radio" class="monster-rank" value="S_plus"  name="adoption-monster3-rank" /><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"       name="adoption-monster3-rank" /><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"       name="adoption-monster3-rank" /><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"       name="adoption-monster3-rank" /><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"       name="adoption-monster3-rank" /><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"       name="adoption-monster3-rank" /><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"    name="adoption-monster3-rank" /><span>－</span></label>
+              <label><input type="checkbox" class="monster-with-s_plus" name="adoption-monster3-with-s_plus" /><span class="small">S+同時</span></label>
+            </span>
+        </div>
+        <div class="outline adoption-monster">
+            <span class="monster-name">こころ4</span>
+            <span>
+              <label><input type="radio" class="monster-rank" value="S_plus"  name="adoption-monster4-rank" /><span>S+</span></label>
+              <label><input type="radio" class="monster-rank" value="S"       name="adoption-monster4-rank" /><span>S</span></label>
+              <label><input type="radio" class="monster-rank" value="A"       name="adoption-monster4-rank" /><span>A</span></label>
+              <label><input type="radio" class="monster-rank" value="B"       name="adoption-monster4-rank" /><span>B</span></label>
+              <label><input type="radio" class="monster-rank" value="C"       name="adoption-monster4-rank" /><span>C</span></label>
+              <label><input type="radio" class="monster-rank" value="D"       name="adoption-monster4-rank" /><span>D</span></label>
+              <label><input type="radio" class="monster-rank" value="omit"    name="adoption-monster4-rank" /><span>－</span></label>
+              <label><input type="checkbox" class="monster-with-s_plus" name="adoption-monster4-with-s_plus" /><span class="small">S+同時</span></label>
+            </span>
+        </div>
+        <hr />
+        <div>
+          <button type="submit" value="change">オーケイ</button>
           <button type="button" value="cancel">キャンセル</button>
         </div>
       </form>
@@ -1366,6 +1431,7 @@
         <div><span>スキル・特殊効果2:</span> <span class="result-item-effects2"></span></div>
         <div><span>スキル・特殊効果3:</span> <span class="result-item-effects3"></span></div>
         <div><span>スキル・特殊効果4:</span> <span class="result-item-effects4"></span></div>
+        <div><button type="button" class="result-item-adoption secret">このこころセットを採用</button></div>
       </div>
     </template>
 
