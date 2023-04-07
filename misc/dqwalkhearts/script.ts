@@ -631,6 +631,7 @@ function showHeartColor(elem: HTMLElement, color: Color): void {
 }
 
 interface AdoptionHeartSet {
+    score: string;
     powerUp: number;
     colors: Color[];
     hearts: ({monster: Monster, heart: Heart} | null)[];
@@ -638,17 +639,14 @@ interface AdoptionHeartSet {
 
 const adoptionHeartSetList: AdoptionHeartSet[] = [];
 
-const adoptionHeartSet: AdoptionHeartSet = {
-    powerUp: 0,
-    colors: [],
-    hearts: []
-};
+let currentAdoptionHeartSet: AdoptionHeartSet | null = null;
 
 // こころセットの採用
-function adoptHeartSet(): void {
+function adoptHeartSet(adoptionHeartSet: AdoptionHeartSet): void {
     if (adoptionHeartSet.hearts.every(mah => mah === null)) {
         return;
     }
+    currentAdoptionHeartSet = adoptionHeartSet;
     const dialog = document.getElementById("adoption_heartset_dialog") as HTMLDialogElement;
     const elems = dialog.querySelectorAll(".adoption-monster");
     for (let i = 0; i < elems.length; i++) {
@@ -3805,6 +3803,7 @@ document.querySelector(`#adoption_heartset_dialog button[value="cancel"]`)!
     const dialog = document.getElementById("adoption_heartset_dialog") as HTMLDialogElement;
     dialog.returnValue = "cancel";
     dialog.close();
+    dialogAlert("キャンセルしました");
 });
 
 // こころの採用のダイアログと閉じた時
@@ -3817,10 +3816,13 @@ document.getElementById("adoption_heartset_dialog")!
     if (dialog.returnValue !== "change") {
         return;
     }
+    if (currentAdoptionHeartSet === null) {
+        throw "BUG";
+    }
     const elems = dialog.querySelectorAll(".adoption-monster");
     let changed = false;
     for (let i = 0; i < elems.length; i++) {
-        const mah = adoptionHeartSet.hearts.at(i) ?? null;
+        const mah = currentAdoptionHeartSet.hearts.at(i) ?? null;
         if (mah === null) {
             continue;
         }
@@ -5983,7 +5985,12 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
 // マニュアルこころセット
 /////////////////////////////////////////////////////////////////////////////////////
 
-
+const manualAdoptionHeartSet: AdoptionHeartSet = {
+    score: "",
+    powerUp: 0,
+    colors: [],
+    hearts: []
+};
 function showManualHeartset(): void {
     const sel = document.getElementById("manualset_job") as HTMLSelectElement;
     const value = parseInt(sel.value ?? "0");
@@ -5993,8 +6000,8 @@ function showManualHeartset(): void {
         }
         const oldPowerUp = powerUp;
         powerUp = job.powerUp;
-        adoptionHeartSet.powerUp = powerUp;
-        adoptionHeartSet.colors = job.colors;
+        manualAdoptionHeartSet.powerUp = powerUp;
+        manualAdoptionHeartSet.colors = job.colors;
         const res = document.getElementById("manualset_result")!;
         const elem = (name: string) => res.querySelector(`.result-item-${name}`)!;
         const text = (name: string, value: any) => elem(name).textContent = `${value}`;
@@ -6005,7 +6012,8 @@ function showManualHeartset(): void {
                 for (const sec of fragment.querySelectorAll(".secret")) {
                     sec.classList.remove("secret");
                 }
-                fragment.querySelector(".result-item-adoption")!.addEventListener("click", adoptHeartSet);
+                fragment.querySelector(".result-item-adoption")!
+                    .addEventListener("click", () => adoptHeartSet(manualAdoptionHeartSet));
             }
             res.appendChild(fragment);
             elem("number").parentElement!.hidden = true;
@@ -6025,20 +6033,20 @@ function showManualHeartset(): void {
         };
         let cost = 0;
         let additionalMaximumCost = 0;
-        adoptionHeartSet.hearts = [];
+        manualAdoptionHeartSet.hearts = [];
         for (let i = 0; i < 4; i++) {
             const t = document.getElementById(`manualset_heart${i+1}_name`) as HTMLInputElement;
             if (t.disabled) {
                 text(`heart${i+1}`, "－");
                 text(`effects${i+1}`, "");
-                adoptionHeartSet.hearts.push(null);
+                manualAdoptionHeartSet.hearts.push(null);
                 continue;
             }
             const name = t.value;
             if (!monsterMap.has(name)) {
                 text(`heart${i+1}`, "");
                 text(`effects${i+1}`, "");
-                adoptionHeartSet.hearts.push(null);
+                manualAdoptionHeartSet.hearts.push(null);
                 continue;
             }
             const monster = monsterMap.get(name)!;
@@ -6050,11 +6058,11 @@ function showManualHeartset(): void {
                 he.appendChild(document.createElement("span")).textContent = monster.name;
                 he.appendChild(document.createElement("span")).textContent = "(ランク未指定)";
                 text(`effects${i+1}`, "");
-                adoptionHeartSet.hearts.push(null);
+                manualAdoptionHeartSet.hearts.push(null);
                 continue;
             }
             const heart = monster.hearts.find(h => h.rank === monster.target)!;
-            adoptionHeartSet.hearts.push({monster: monster, heart: heart});
+            manualAdoptionHeartSet.hearts.push({monster: monster, heart: heart});
             cost += heart.cost;
             additionalMaximumCost += heart.maximumCost;
             const colorSpan = he.appendChild(document.createElement("span"));
