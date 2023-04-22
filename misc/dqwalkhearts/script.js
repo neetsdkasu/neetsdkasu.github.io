@@ -546,6 +546,99 @@ function showHeartColor(elem, color) {
 }
 const adoptionHeartSetList = [];
 let currentAdoptionHeartSet = null;
+// 採用したこころセットをリストに追加して表示
+function addToAdoptionHeartSetList() {
+    if (currentAdoptionHeartSet === null) {
+        throw "BUG (addToAdoptionHeartSetList)";
+    }
+    adoptionHeartSetList.push(currentAdoptionHeartSet);
+    const list = document.getElementById("adoption_heartset_list");
+    const template = document.getElementById("result_item");
+    const fragment = template.content.cloneNode(true);
+    const elem = (name) => fragment.querySelector(`.result-item-${name}`);
+    const text = (name, value) => elem(name).textContent = `${value}`;
+    text("number", currentAdoptionHeartSet.jobName);
+    text("score", currentAdoptionHeartSet.score);
+    const oldPowerUp = powerUp;
+    powerUp = currentAdoptionHeartSet.powerUp;
+    const status = {
+        maximumHP: 0,
+        maximumMP: 0,
+        power: 0,
+        defence: 0,
+        attackMagic: 0,
+        recoverMagic: 0,
+        speed: 0,
+        dexterity: 0
+    };
+    let cost = 0;
+    let additionalMaximumCost = 0;
+    for (let i = 0; i < currentAdoptionHeartSet.colors.length; i++) {
+        const cs = elem(`heart${i + 1}`).parentElement.firstElementChild;
+        cs.appendChild(document.createElement("span")).textContent = "[";
+        showHeartColor(cs.appendChild(document.createElement("span")), currentAdoptionHeartSet.colors[i]);
+        cs.appendChild(document.createElement("span")).textContent = "]:";
+        if (currentAdoptionHeartSet.hearts.length <= i) {
+            break;
+        }
+        const mh = currentAdoptionHeartSet.hearts[i];
+        if (mh === null) {
+            text(`heart${i + 1}`, "－");
+            text(`effects${i + 1}`, "");
+            continue;
+        }
+        const he = elem(`heart${i + 1}`);
+        he.innerHTML = "";
+        const oldTarget = mh.monster.target;
+        const oldCurCost = mh.monster.curCost;
+        const oldCurColor = mh.monster.curColor;
+        mh.monster.target = mh.heart.rank;
+        mh.monster.curCost = mh.heart.cost;
+        mh.monster.curColor = mh.heart.color;
+        cost += mh.heart.cost;
+        additionalMaximumCost += mh.heart.maximumCost;
+        const colorSpan = he.appendChild(document.createElement("span"));
+        showHeartColor(colorSpan, mh.heart.color);
+        he.appendChild(document.createElement("span")).textContent = `${mh.heart.cost}`;
+        const monsterName = (mh.heart.rank === Rank.S_plus && mh.monster.splusName !== null)
+            ? mh.monster.splusName : mh.monster.name;
+        he.appendChild(document.createElement("span")).textContent = monsterName;
+        he.appendChild(document.createElement("span")).textContent = Rank[mh.heart.rank].replace("_plus", "+");
+        text(`effects${i + 1}`, mh.heart.effects);
+        const c = currentAdoptionHeartSet.colors[i];
+        status.maximumHP += MaximumHPScorer.calc(c, mh.monster);
+        status.maximumMP += MaximumMPScorer.calc(c, mh.monster);
+        status.power += PowerScorer.calc(c, mh.monster);
+        status.defence += DefenceScorer.calc(c, mh.monster);
+        status.attackMagic += AttackMagicScorer.calc(c, mh.monster);
+        status.recoverMagic += RecoverMagicScorer.calc(c, mh.monster);
+        status.speed += SpeedScorer.calc(c, mh.monster);
+        status.dexterity += DexterityScorer.calc(c, mh.monster);
+        mh.monster.target = oldTarget;
+        mh.monster.curCost = oldCurCost;
+        mh.monster.curColor = oldCurColor;
+    }
+    powerUp = oldPowerUp;
+    if (currentAdoptionHeartSet.maximumCost < 0) {
+        text("cost", `${cost} / ??? + ${additionalMaximumCost}`);
+    }
+    else {
+        text("cost", `${cost} / ${currentAdoptionHeartSet.maximumCost} + ${additionalMaximumCost}`);
+        if (cost > currentAdoptionHeartSet.maximumCost + additionalMaximumCost) {
+            elem("cost").classList.add("bold");
+        }
+    }
+    text("maximumhp", `${status.maximumHP}`);
+    text("maximummp", `${status.maximumMP}`);
+    text("power", `${status.power}`);
+    text("defence", `${status.defence}`);
+    text("attackmagic", `${status.attackMagic}`);
+    text("recovermagic", `${status.recoverMagic}`);
+    text("speed", `${status.speed}`);
+    text("dexterity", `${status.dexterity}`);
+    list.appendChild(fragment);
+    currentAdoptionHeartSet = null;
+}
 // こころセットの採用
 function adoptHeartSet(adoptionHeartSet) {
     if (adoptionHeartSet.hearts.every(mah => mah === null)) {
@@ -3686,6 +3779,13 @@ document.getElementById("adoption_heartset_dialog")
         saveMonsterList(Trigger.ChooseRank);
         updateChangedRankCount();
     }
+    addToAdoptionHeartSetList();
+    if (changed) {
+        dialogAlert("ランク変更を反映しました。採用こころセットのリストに追加しました。");
+    }
+    else {
+        dialogAlert("採用こころセットのリストに追加しました。");
+    }
 });
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス距離
@@ -5712,7 +5812,9 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
 // マニュアルこころセット
 /////////////////////////////////////////////////////////////////////////////////////
 const manualAdoptionHeartSet = {
-    score: "",
+    jobName: "",
+    score: "－",
+    maximumCost: 0,
     powerUp: 0,
     colors: [],
     hearts: []
@@ -5724,6 +5826,7 @@ function showManualHeartset() {
         if (job.id !== value) {
             continue;
         }
+        manualAdoptionHeartSet.jobName = job.name;
         const oldPowerUp = powerUp;
         powerUp = job.powerUp;
         manualAdoptionHeartSet.powerUp = powerUp;
@@ -5812,6 +5915,7 @@ function showManualHeartset() {
         if (isNaN(maximumCost)) {
             text("cost", `${cost} / ??? + ${additionalMaximumCost}`);
             elem("cost").classList.remove("bold");
+            manualAdoptionHeartSet.maximumCost = -1;
         }
         else {
             text("cost", `${cost} / ${maximumCost} + ${additionalMaximumCost}`);
@@ -5824,6 +5928,7 @@ function showManualHeartset() {
             else if (cost > maximumCost + additionalMaximumCost) {
                 elem("cost").classList.add("bold");
             }
+            manualAdoptionHeartSet.maximumCost = maximumCost;
         }
         text("maximumhp", `${status.maximumHP}`);
         text("maximummp", `${status.maximumMP}`);
