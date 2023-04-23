@@ -544,7 +544,7 @@ function showHeartColor(elem, color) {
             break;
     }
 }
-const adoptionHeartSetList = [];
+let adoptionHeartSetList = [];
 let currentAdoptionHeartSet = null;
 // 採用したこころセットをリストに追加して表示
 function addToAdoptionHeartSetList() {
@@ -3738,6 +3738,12 @@ document.getElementById("change_monster_name_dialog")
     replaceMonsterList(monsterList);
     saveMonsterList(Trigger.UpdateStatus);
     dialogAlert(`こころの名前を『 ${oldName} 』から『 ${newName} 』に変更しました`);
+});
+// こころの採用リストのクリア
+document.getElementById("clear_adoption_heartset_list")
+    .addEventListener("click", () => {
+    adoptionHeartSetList = [];
+    document.getElementById("adoption_heartset_list").innerHTML = "";
 });
 // こころの採用のダイアログのキャンセル
 document.querySelector(`#adoption_heartset_dialog button[value="cancel"]`)

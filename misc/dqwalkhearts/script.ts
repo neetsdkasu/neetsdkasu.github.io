@@ -639,7 +639,7 @@ interface AdoptionHeartSet {
     hearts: ({monster: Monster, heart: Heart} | null)[];
 }
 
-const adoptionHeartSetList: AdoptionHeartSet[] = [];
+let adoptionHeartSetList: AdoptionHeartSet[] = [];
 
 let currentAdoptionHeartSet: AdoptionHeartSet | null = null;
 
@@ -3919,6 +3919,14 @@ document.getElementById("change_monster_name_dialog")!
     saveMonsterList(Trigger.UpdateStatus);
     dialogAlert(`こころの名前を『 ${oldName} 』から『 ${newName} 』に変更しました`);
 });
+
+// こころの採用リストのクリア
+document.getElementById("clear_adoption_heartset_list")!
+.addEventListener("click", () => {
+    adoptionHeartSetList = [];
+    document.getElementById("adoption_heartset_list")!.innerHTML = "";
+});
+
 
 // こころの採用のダイアログのキャンセル
 document.querySelector(`#adoption_heartset_dialog button[value="cancel"]`)!
