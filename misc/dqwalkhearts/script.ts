@@ -648,16 +648,26 @@ function addToAdoptionHeartSetList(): void {
     if (currentAdoptionHeartSet === null) {
         throw "BUG (addToAdoptionHeartSetList)";
     }
-    adoptionHeartSetList.push(currentAdoptionHeartSet);
+    // 念のためコピーしとく
+    const heartset: AdoptionHeartSet = {
+        jobName: currentAdoptionHeartSet.jobName,
+        score: currentAdoptionHeartSet.score,
+        maximumCost: currentAdoptionHeartSet.maximumCost,
+        powerUp: currentAdoptionHeartSet.powerUp,
+        colors: currentAdoptionHeartSet.colors.slice(),
+        hearts: currentAdoptionHeartSet.hearts.slice()
+    };
+    currentAdoptionHeartSet = null;
+    adoptionHeartSetList.push(heartset);
     const list = document.getElementById("adoption_heartset_list")!;
     const template = document.getElementById("result_item") as HTMLTemplateElement;
     const fragment = template.content.cloneNode(true) as DocumentFragment;
     const elem = (name: string) => fragment.querySelector(`.result-item-${name}`)!;
     const text = (name: string, value: any) => elem(name).textContent = `${value}`;
-    text("number", currentAdoptionHeartSet.jobName);
-    text("score", currentAdoptionHeartSet.score);
+    text("number", heartset.jobName);
+    text("score", heartset.score);
     const oldPowerUp = powerUp;
-    powerUp = currentAdoptionHeartSet.powerUp;
+    powerUp = heartset.powerUp;
     const status: Status = {
         maximumHP: 0,
         maximumMP: 0,
@@ -670,15 +680,15 @@ function addToAdoptionHeartSetList(): void {
     };
     let cost = 0;
     let additionalMaximumCost = 0;
-    for (let i = 0; i < currentAdoptionHeartSet.colors.length; i++) {
+    for (let i = 0; i < heartset.colors.length; i++) {
         const cs = elem(`heart${i+1}`).parentElement!.firstElementChild!;
         cs.appendChild(document.createElement("span")).textContent = "[";
-        showHeartColor(cs.appendChild(document.createElement("span")), currentAdoptionHeartSet.colors[i]);
+        showHeartColor(cs.appendChild(document.createElement("span")), heartset.colors[i]);
         cs.appendChild(document.createElement("span")).textContent = "]:";
-        if (currentAdoptionHeartSet.hearts.length <= i) {
+        if (heartset.hearts.length <= i) {
             break;
         }
-        const mh = currentAdoptionHeartSet.hearts[i];
+        const mh = heartset.hearts[i];
         if (mh === null) {
             text(`heart${i+1}`, "－");
             text(`effects${i+1}`, "");
@@ -702,7 +712,7 @@ function addToAdoptionHeartSetList(): void {
         he.appendChild(document.createElement("span")).textContent = monsterName;
         he.appendChild(document.createElement("span")).textContent = Rank[mh.heart.rank].replace("_plus", "+");
         text(`effects${i+1}`, mh.heart.effects);
-        const c = currentAdoptionHeartSet.colors[i];
+        const c = heartset.colors[i];
         status.maximumHP    += MaximumHPScorer.calc(c, mh.monster);
         status.maximumMP    += MaximumMPScorer.calc(c, mh.monster);
         status.power        += PowerScorer.calc(c, mh.monster);
@@ -716,11 +726,11 @@ function addToAdoptionHeartSetList(): void {
         mh.monster.curColor = oldCurColor;
     }
     powerUp = oldPowerUp;
-    if (currentAdoptionHeartSet.maximumCost < 0) {
+    if (heartset.maximumCost < 0) {
         text("cost", `${cost} / ??? + ${additionalMaximumCost}`);
     } else {
-        text("cost", `${cost} / ${currentAdoptionHeartSet.maximumCost} + ${additionalMaximumCost}`);
-        if (cost > currentAdoptionHeartSet.maximumCost + additionalMaximumCost) {
+        text("cost", `${cost} / ${heartset.maximumCost} + ${additionalMaximumCost}`);
+        if (cost > heartset.maximumCost + additionalMaximumCost) {
             elem("cost").classList.add("bold");
         }
     }
@@ -733,7 +743,6 @@ function addToAdoptionHeartSetList(): void {
     text("speed", `${status.speed}`);
     text("dexterity", `${status.dexterity}`);
     list.appendChild(fragment);
-    currentAdoptionHeartSet = null;
 }
 
 // こころセットの採用
