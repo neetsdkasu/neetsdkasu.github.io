@@ -2998,9 +2998,31 @@ function searchHeartSet(target: Target): void {
         omitDuplicate.set(key, true);
         const fragment = template.content.cloneNode(true) as DocumentFragment;
         if (EXPOSE_MODE) {
+            // 非公開機能を利用
             for (const sec of fragment.querySelectorAll(".secret")) {
                 sec.classList.remove("secret");
             }
+            const adoptionHeartSet: AdoptionHeartSet = {
+                jobName: target.setname,
+                score: `${st.score}`,
+                maximumCost: target.maximumCost,
+                powerUp: powerUp,
+                colors: target.colors,
+                hearts: new Array(target.colors.length).fill(null),
+            };
+            for (let p = 0; p < COUNT; p++) {
+                const c = target.colors[p];
+                const hs = heartSet[p];
+                if (hs === null) {
+                    continue;
+                }
+                adoptionHeartSet.hearts[p] = {
+                    monster: hs.monster,
+                    heart: hs.monster.hearts.find(h => h.rank === hs.rank)!
+                };
+            }
+            fragment.querySelector(".result-item-adoption")!
+                .addEventListener("click", () => adoptHeartSet(adoptionHeartSet));
         }
         const text = (cname: string, value: any): HTMLElement => {
             const e = fragment.querySelector(cname) as HTMLElement;
