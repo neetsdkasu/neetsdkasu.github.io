@@ -4365,6 +4365,27 @@ function showRNHeartset(target, heartsets) {
             scoreStr += `, 参考値6: ${refScore6}`;
         }
         elem("score").textContent = scoreStr;
+        if (EXPOSE_MODE) {
+            const adoptionHeartSet = {
+                jobName: target.job.name,
+                score: scoreStr,
+                maximumCost: target.maximumCost,
+                powerUp: target.job.powerUp,
+                colors: target.job.colors,
+                hearts: new Array(target.job.colors.length).fill(null)
+            };
+            for (let i = 0; i < target.setSize; i++) {
+                const h = heartset.hearts[heartset.order[i]];
+                if (h === null) {
+                    continue;
+                }
+                adoptionHeartSet.hearts[i] = {
+                    monster: h.monster,
+                    heart: h.heart
+                };
+            }
+            elem("adoption").onclick = () => adoptHeartSet(adoptionHeartSet);
+        }
     }
 }
 // ReallyNeededのこころセットのスコア計算
