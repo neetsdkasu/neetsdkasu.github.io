@@ -467,13 +467,10 @@ function updateChangedRankCount() {
             count++;
             continue;
         }
-        // if (!monster.withSplus) {
-        //     // S+の情報が登録されている場合でS以下も登録されているときのみにwithSplusの変更が可能であり
-        //     // 現在がS+のとき、withSplusの情報に意味がなく(セット検索時では不要情報で、また、ランク変更時には変更が自明となるため)
-        //     // 現在がS+以外のときも、withSplusの情報に意味がない(ランク自体が変更されていることが自明となるため)
-        //     count++;
-        //     continue;
-        // }
+        if (!monster.withSplus) {
+            count++;
+            continue;
+        }
         if (monster.hearts.length === 1) {
             continue;
         }
@@ -858,7 +855,6 @@ function showNewHeart(monster) {
         dialog.showModal();
     });
     const withSplus = monster.withSplus
-        && monster.target !== Rank.S_plus
         && monster.hearts.some(h => h.rank === monster.target);
     if (withSplus) {
         fragment.querySelector("input.monster-rank + span").classList.add("monster-rank-with-s_plus");
@@ -962,7 +958,6 @@ function showUpdatedHeart(monster, reorder) {
         //        || !monster.hearts.some(h => h.rank === Rank.S_plus);
     }
     const withSplus = monster.withSplus
-        && monster.target !== Rank.S_plus
         && monster.hearts.some(h => h.rank === monster.target);
     if (withSplus) {
         item.querySelector("input.monster-rank + span").classList.add("monster-rank-with-s_plus");
@@ -4450,6 +4445,7 @@ function calcRNHeartsetScore(target, heartset) {
     heartset.cost = cost;
 }
 // ReallyNeededのこころセットを探索する (Simulated Annealing)
+// TODO 配列初期化バグを修正した影響で挙動が変わるかも、パラメータ等の見直しが必要かも？
 function searchRNHeartsetSA(target) {
     const perm = permutation(target.setSize);
     const copy = (hs) => {
