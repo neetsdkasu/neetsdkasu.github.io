@@ -9,6 +9,7 @@ const DEBUG = DEVELOP || new URLSearchParams(window.location.search).has("DEBUG"
 if (DEBUG) {
     console.log("DEBUG MODE");
 }
+let EXPOSE_MODE = false;
 const LocalStoragePath = "dqwalkhearts";
 function dialogAlert(msg) {
     if (DEBUG) {
@@ -542,6 +543,153 @@ function showHeartColor(elem, color) {
             elem.appendChild(document.createElement("span")).textContent = "-";
             break;
     }
+}
+let adoptionHeartSetList = [];
+let currentAdoptionHeartSet = null;
+// 採用したこころセットをリストに追加して表示
+function addToAdoptionHeartSetList() {
+    if (currentAdoptionHeartSet === null) {
+        throw "BUG (addToAdoptionHeartSetList)";
+    }
+    // 念のためコピーしとく
+    const heartset = {
+        jobName: currentAdoptionHeartSet.jobName,
+        score: currentAdoptionHeartSet.score,
+        maximumCost: currentAdoptionHeartSet.maximumCost,
+        powerUp: currentAdoptionHeartSet.powerUp,
+        colors: currentAdoptionHeartSet.colors.slice(),
+        hearts: currentAdoptionHeartSet.hearts.slice()
+    };
+    currentAdoptionHeartSet = null;
+    adoptionHeartSetList.push(heartset);
+    const list = document.getElementById("adoption_heartset_list");
+    const template = document.getElementById("result_item");
+    const fragment = template.content.cloneNode(true);
+    const elem = (name) => fragment.querySelector(`.result-item-${name}`);
+    const text = (name, value) => elem(name).textContent = `${value}`;
+    text("number", heartset.jobName);
+    text("score", heartset.score);
+    const oldPowerUp = powerUp;
+    powerUp = heartset.powerUp;
+    const status = {
+        maximumHP: 0,
+        maximumMP: 0,
+        power: 0,
+        defence: 0,
+        attackMagic: 0,
+        recoverMagic: 0,
+        speed: 0,
+        dexterity: 0
+    };
+    let cost = 0;
+    let additionalMaximumCost = 0;
+    for (let i = 0; i < heartset.colors.length; i++) {
+        const cs = elem(`heart${i + 1}`).parentElement.firstElementChild;
+        cs.appendChild(document.createElement("span")).textContent = "[";
+        showHeartColor(cs.appendChild(document.createElement("span")), heartset.colors[i]);
+        cs.appendChild(document.createElement("span")).textContent = "]:";
+        if (heartset.hearts.length <= i) {
+            break;
+        }
+        const mh = heartset.hearts[i];
+        if (mh === null) {
+            text(`heart${i + 1}`, "－");
+            text(`effects${i + 1}`, "");
+            continue;
+        }
+        const he = elem(`heart${i + 1}`);
+        he.innerHTML = "";
+        const oldTarget = mh.monster.target;
+        const oldCurCost = mh.monster.curCost;
+        const oldCurColor = mh.monster.curColor;
+        mh.monster.target = mh.heart.rank;
+        mh.monster.curCost = mh.heart.cost;
+        mh.monster.curColor = mh.heart.color;
+        cost += mh.heart.cost;
+        additionalMaximumCost += mh.heart.maximumCost;
+        const colorSpan = he.appendChild(document.createElement("span"));
+        showHeartColor(colorSpan, mh.heart.color);
+        he.appendChild(document.createElement("span")).textContent = `${mh.heart.cost}`;
+        const monsterName = (mh.heart.rank === Rank.S_plus && mh.monster.splusName !== null)
+            ? mh.monster.splusName : mh.monster.name;
+        he.appendChild(document.createElement("span")).textContent = monsterName;
+        he.appendChild(document.createElement("span")).textContent = Rank[mh.heart.rank].replace("_plus", "+");
+        text(`effects${i + 1}`, mh.heart.effects);
+        const c = heartset.colors[i];
+        status.maximumHP += MaximumHPScorer.calc(c, mh.monster);
+        status.maximumMP += MaximumMPScorer.calc(c, mh.monster);
+        status.power += PowerScorer.calc(c, mh.monster);
+        status.defence += DefenceScorer.calc(c, mh.monster);
+        status.attackMagic += AttackMagicScorer.calc(c, mh.monster);
+        status.recoverMagic += RecoverMagicScorer.calc(c, mh.monster);
+        status.speed += SpeedScorer.calc(c, mh.monster);
+        status.dexterity += DexterityScorer.calc(c, mh.monster);
+        mh.monster.target = oldTarget;
+        mh.monster.curCost = oldCurCost;
+        mh.monster.curColor = oldCurColor;
+    }
+    powerUp = oldPowerUp;
+    if (heartset.maximumCost < 0) {
+        text("cost", `${cost} / ??? + ${additionalMaximumCost}`);
+    }
+    else {
+        text("cost", `${cost} / ${heartset.maximumCost} + ${additionalMaximumCost}`);
+        if (cost > heartset.maximumCost + additionalMaximumCost) {
+            elem("cost").classList.add("bold");
+        }
+    }
+    text("maximumhp", `${status.maximumHP}`);
+    text("maximummp", `${status.maximumMP}`);
+    text("power", `${status.power}`);
+    text("defence", `${status.defence}`);
+    text("attackmagic", `${status.attackMagic}`);
+    text("recovermagic", `${status.recoverMagic}`);
+    text("speed", `${status.speed}`);
+    text("dexterity", `${status.dexterity}`);
+    list.appendChild(fragment);
+}
+// こころセットの採用
+function adoptHeartSet(adoptionHeartSet) {
+    if (adoptionHeartSet.hearts.every(mah => mah === null)) {
+        return;
+    }
+    currentAdoptionHeartSet = adoptionHeartSet;
+    const dialog = document.getElementById("adoption_heartset_dialog");
+    const elems = dialog.querySelectorAll(".adoption-monster");
+    for (let i = 0; i < elems.length; i++) {
+        const elem = elems[i];
+        const nameElem = elem.querySelector(".monster-name");
+        const rankElems = elem.querySelectorAll(".monster-rank");
+        const withSplusElem = elem.querySelector(".monster-with-s_plus");
+        const mah = adoptionHeartSet.hearts.at(i) ?? null;
+        if (mah === null) {
+            nameElem.textContent = "－";
+            for (const re of rankElems) {
+                re.checked = false;
+                re.disabled = true;
+            }
+            withSplusElem.checked = false;
+            withSplusElem.disabled = true;
+        }
+        else {
+            nameElem.textContent = mah.heart.rank === Rank.S_plus ? mah.monster.splusName : mah.monster.name;
+            for (const re of rankElems) {
+                const value = re.value ?? "omit";
+                if (value === "omit") {
+                    re.checked = mah.monster.target === null;
+                    re.disabled = false;
+                }
+                else {
+                    const rank = Rank[value];
+                    re.checked = rank === mah.monster.target;
+                    re.disabled = !mah.monster.hearts.some(h => h.rank === rank);
+                }
+            }
+            withSplusElem.checked = mah.monster.withSplus;
+            withSplusElem.disabled = !mah.monster.hearts.some(h => h.rank === Rank.S_plus);
+        }
+    }
+    dialog.showModal();
 }
 // 新規のモンスター名になるこころを追加したときのこころ表示処理
 function showNewHeart(monster) {
@@ -2710,6 +2858,33 @@ function searchHeartSet(target) {
         }
         omitDuplicate.set(key, true);
         const fragment = template.content.cloneNode(true);
+        if (EXPOSE_MODE) {
+            // 非公開機能を利用
+            for (const sec of fragment.querySelectorAll(".secret")) {
+                sec.classList.remove("secret");
+            }
+            const adoptionHeartSet = {
+                jobName: target.setname,
+                score: `${st.score}`,
+                maximumCost: target.maximumCost,
+                powerUp: powerUp,
+                colors: target.colors,
+                hearts: new Array(target.colors.length).fill(null),
+            };
+            for (let p = 0; p < COUNT; p++) {
+                const c = target.colors[p];
+                const hs = heartSet[p];
+                if (hs === null) {
+                    continue;
+                }
+                adoptionHeartSet.hearts[p] = {
+                    monster: hs.monster,
+                    heart: hs.monster.hearts.find(h => h.rank === hs.rank)
+                };
+            }
+            fragment.querySelector(".result-item-adoption")
+                .addEventListener("click", () => adoptHeartSet(adoptionHeartSet));
+        }
         const text = (cname, value) => {
             const e = fragment.querySelector(cname);
             e.textContent = `${value}`;
@@ -3564,6 +3739,91 @@ document.getElementById("change_monster_name_dialog")
     saveMonsterList(Trigger.UpdateStatus);
     dialogAlert(`こころの名前を『 ${oldName} 』から『 ${newName} 』に変更しました`);
 });
+// こころの採用リストのクリア
+document.getElementById("clear_adoption_heartset_list")
+    .addEventListener("click", () => {
+    adoptionHeartSetList = [];
+    document.getElementById("adoption_heartset_list").innerHTML = "";
+});
+// こころの採用のダイアログのキャンセル
+document.querySelector(`#adoption_heartset_dialog button[value="cancel"]`)
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click adoption_heartset_dialog CANCEL button");
+    }
+    const dialog = document.getElementById("adoption_heartset_dialog");
+    dialog.returnValue = "cancel";
+    dialog.close();
+    dialogAlert("キャンセルしました");
+});
+// こころの採用のダイアログと閉じた時
+document.getElementById("adoption_heartset_dialog")
+    .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close adoption_heartset_dialog");
+    }
+    const dialog = document.getElementById("adoption_heartset_dialog");
+    if (dialog.returnValue !== "change") {
+        return;
+    }
+    if (currentAdoptionHeartSet === null) {
+        throw "BUG";
+    }
+    const elems = dialog.querySelectorAll(".adoption-monster");
+    let changed = false;
+    for (let i = 0; i < elems.length; i++) {
+        const mah = currentAdoptionHeartSet.hearts.at(i) ?? null;
+        if (mah === null) {
+            continue;
+        }
+        const elem = elems[i];
+        const rankElems = elem.querySelectorAll(".monster-rank");
+        const withSplusElem = elem.querySelector(".monster-with-s_plus");
+        const oldCurCost = mah.monster.curCost;
+        const oldWithSplus = mah.monster.withSplus;
+        const oldTarget = mah.monster.target;
+        for (const re of rankElems) {
+            if (!re.checked) {
+                continue;
+            }
+            const value = re.value ?? "omit";
+            if (value === "omit") {
+                mah.monster.target = null;
+            }
+            else {
+                const rank = Rank[value];
+                mah.monster.target = rank;
+                const heart = mah.monster.hearts.find(h => h.rank === rank);
+                mah.monster.curCost = heart.cost;
+                mah.monster.curColor = heart.color;
+            }
+            break;
+        }
+        if (!withSplusElem.disabled) {
+            mah.monster.withSplus = withSplusElem.checked;
+        }
+        if (mah.monster.target !== oldTarget || mah.monster.withSplus !== oldWithSplus) {
+            let reorder = false;
+            if (oldCurCost !== mah.monster.curCost) {
+                monsterList.sort((a, b) => b.curCost - a.curCost);
+                reorder = true;
+            }
+            showUpdatedHeart(mah.monster, reorder);
+            changed = true;
+        }
+    }
+    if (changed) {
+        saveMonsterList(Trigger.ChooseRank);
+        updateChangedRankCount();
+    }
+    addToAdoptionHeartSetList();
+    if (changed) {
+        dialogAlert("ランク変更を反映しました。採用こころセットのリストに追加しました。");
+    }
+    else {
+        dialogAlert("採用こころセットのリストに追加しました。");
+    }
+});
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス距離
 /////////////////////////////////////////////////////////////////////////////////////
@@ -3993,6 +4253,11 @@ function showRNHeartset(target, heartsets) {
         if (pos >= items.length) {
             const template = document.getElementById("result_item");
             const fragment = template.content.cloneNode(true);
+            if (EXPOSE_MODE) { // 常に真な気がするが
+                for (const sec of fragment.querySelectorAll(".secret")) {
+                    sec.classList.remove("secret");
+                }
+            }
             res.appendChild(fragment);
             items = res.querySelectorAll(":scope > div.outline");
         }
@@ -4106,6 +4371,27 @@ function showRNHeartset(target, heartsets) {
             scoreStr += `, 参考値6: ${refScore6}`;
         }
         elem("score").textContent = scoreStr;
+        if (EXPOSE_MODE) {
+            const adoptionHeartSet = {
+                jobName: target.job.name,
+                score: scoreStr,
+                maximumCost: target.maximumCost,
+                powerUp: target.job.powerUp,
+                colors: target.job.colors,
+                hearts: new Array(target.job.colors.length).fill(null)
+            };
+            for (let i = 0; i < target.setSize; i++) {
+                const h = heartset.hearts[heartset.order[i]];
+                if (h === null) {
+                    continue;
+                }
+                adoptionHeartSet.hearts[i] = {
+                    monster: h.monster,
+                    heart: h.heart
+                };
+            }
+            elem("adoption").onclick = () => adoptHeartSet(adoptionHeartSet);
+        }
     }
 }
 // ReallyNeededのこころセットのスコア計算
@@ -5583,6 +5869,14 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
 /////////////////////////////////////////////////////////////////////////////////////
 // マニュアルこころセット
 /////////////////////////////////////////////////////////////////////////////////////
+const manualAdoptionHeartSet = {
+    jobName: "",
+    score: "－",
+    maximumCost: 0,
+    powerUp: 0,
+    colors: [],
+    hearts: []
+};
 function showManualHeartset() {
     const sel = document.getElementById("manualset_job");
     const value = parseInt(sel.value ?? "0");
@@ -5590,14 +5884,24 @@ function showManualHeartset() {
         if (job.id !== value) {
             continue;
         }
+        manualAdoptionHeartSet.jobName = job.name;
         const oldPowerUp = powerUp;
         powerUp = job.powerUp;
+        manualAdoptionHeartSet.powerUp = powerUp;
+        manualAdoptionHeartSet.colors = job.colors;
         const res = document.getElementById("manualset_result");
         const elem = (name) => res.querySelector(`.result-item-${name}`);
         const text = (name, value) => elem(name).textContent = `${value}`;
         if (res.children.length === 0) {
             const template = document.getElementById("result_item");
             const fragment = template.content.cloneNode(true);
+            if (EXPOSE_MODE) {
+                for (const sec of fragment.querySelectorAll(".secret")) {
+                    sec.classList.remove("secret");
+                }
+                fragment.querySelector(".result-item-adoption")
+                    .addEventListener("click", () => adoptHeartSet(manualAdoptionHeartSet));
+            }
             res.appendChild(fragment);
             elem("number").parentElement.hidden = true;
             elem("score").parentElement.hidden = true;
@@ -5616,30 +5920,36 @@ function showManualHeartset() {
         };
         let cost = 0;
         let additionalMaximumCost = 0;
+        manualAdoptionHeartSet.hearts = [];
         for (let i = 0; i < 4; i++) {
             const t = document.getElementById(`manualset_heart${i + 1}_name`);
             if (t.disabled) {
                 text(`heart${i + 1}`, "－");
                 text(`effects${i + 1}`, "");
+                manualAdoptionHeartSet.hearts.push(null);
                 continue;
             }
             const name = t.value;
             if (!monsterMap.has(name)) {
                 text(`heart${i + 1}`, "");
                 text(`effects${i + 1}`, "");
+                manualAdoptionHeartSet.hearts.push(null);
                 continue;
             }
             const monster = monsterMap.get(name);
             const he = elem(`heart${i + 1}`);
             he.innerHTML = "";
             if (monster.target === null) {
-                he.appendChild(document.createElement("span")).textContent = "-";
+                he.appendChild(document.createElement("span")).textContent = "------";
+                he.appendChild(document.createElement("span")).textContent = "--";
                 he.appendChild(document.createElement("span")).textContent = monster.name;
-                he.appendChild(document.createElement("span")).textContent = "－";
+                he.appendChild(document.createElement("span")).textContent = "(ランク未指定)";
                 text(`effects${i + 1}`, "");
+                manualAdoptionHeartSet.hearts.push(null);
                 continue;
             }
             const heart = monster.hearts.find(h => h.rank === monster.target);
+            manualAdoptionHeartSet.hearts.push({ monster: monster, heart: heart });
             cost += heart.cost;
             additionalMaximumCost += heart.maximumCost;
             const colorSpan = he.appendChild(document.createElement("span"));
@@ -5663,6 +5973,7 @@ function showManualHeartset() {
         if (isNaN(maximumCost)) {
             text("cost", `${cost} / ??? + ${additionalMaximumCost}`);
             elem("cost").classList.remove("bold");
+            manualAdoptionHeartSet.maximumCost = -1;
         }
         else {
             text("cost", `${cost} / ${maximumCost} + ${additionalMaximumCost}`);
@@ -5675,6 +5986,7 @@ function showManualHeartset() {
             else if (cost > maximumCost + additionalMaximumCost) {
                 elem("cost").classList.add("bold");
             }
+            manualAdoptionHeartSet.maximumCost = maximumCost;
         }
         text("maximumhp", `${status.maximumHP}`);
         text("maximummp", `${status.maximumMP}`);
@@ -5857,6 +6169,7 @@ document.getElementById("manualset_job").addEventListener("change", () => {
         if (DEBUG) {
             console.log("expose secrets");
         }
+        EXPOSE_MODE = true;
         const secrets = document.querySelectorAll(".secret");
         for (const sec of secrets) {
             sec.classList.remove("secret");
