@@ -4790,7 +4790,7 @@ function searchRNHeartsetSA(target: RNTarget): void {
             }
         }
     }
-    const hIndexes = new Array(target.setSize).fill(new Array(heartList.length));
+    const hIndexes = Array.from({length: target.setSize}, () => new Array(heartList.length));
     const hhIndexes = new Array(target.setSize).fill(0);
     for (const indexes of hIndexes) {
         for (let i = 0; i < indexes.length; i++) {
@@ -5010,7 +5010,7 @@ function searchRNHeartsetHC(target: RNTarget): void {
             }
         }
     }
-    const hIndexes = new Array(target.setSize).fill(new Array(heartList.length));
+    const hIndexes = Array.from({length: target.setSize}, () => new Array(heartList.length));
     const hhIndexes = new Array(target.setSize).fill(0);
     for (const indexes of hIndexes) {
         for (let i = 0; i < indexes.length; i++) {
