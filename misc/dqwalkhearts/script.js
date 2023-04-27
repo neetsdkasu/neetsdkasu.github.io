@@ -1922,9 +1922,10 @@ class ExprParser {
                 if (skill) {
                     const e = skill.lastIndexOf(wds[1]);
                     const n = skill.slice(0, e).replace(wds[0], "");
-                    if (DEBUG) {
-                        console.log(`pick "${skill}", "${e}", "${n}"`);
-                    }
+                    // ReallyNeededでcalc内でデバッグ出力使うとコンソールに大量出力でメモリ爆発で死ぬ
+                    // if (DEBUG) {
+                    //    console.log(`pick "${skill}", "${e}", "${n}"`);
+                    // }
                     if (n.match(/^\d+$/)) {
                         return parseInt(n);
                     }
