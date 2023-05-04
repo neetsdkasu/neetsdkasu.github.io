@@ -296,7 +296,7 @@ const RainbowColorInfo = {
 let monsterMap = new Map();
 let monsterList = [];
 let monsterNameList = [];
-let noStorage = false;
+let NO_STORAGE = false;
 const IDENT = Date.now();
 if (DEBUG) {
     console.log(`IDENT: ${IDENT}`);
@@ -311,7 +311,7 @@ function saveMonsterList(trigger) {
     if (DEBUG) {
         console.log(`call saveMonsterList(${Trigger[trigger]})`);
     }
-    if (noStorage) {
+    if (NO_STORAGE) {
         if (DEBUG) {
             console.log("no save to storage");
         }
@@ -330,7 +330,7 @@ function saveMonsterList(trigger) {
         }
     }
     catch (err) {
-        noStorage = true;
+        NO_STORAGE = true;
         console.log(err);
     }
 }
@@ -339,7 +339,7 @@ function loadMonsterList() {
     if (DEBUG) {
         console.log("call loadMonsterList");
     }
-    if (noStorage) {
+    if (NO_STORAGE) {
         if (DEBUG) {
             console.log("no load from storage");
         }
@@ -364,7 +364,7 @@ function loadMonsterList() {
         }
     }
     catch (err) {
-        noStorage = true;
+        NO_STORAGE = true;
         console.log(err);
     }
 }
@@ -6208,7 +6208,7 @@ document.getElementById("manualset_job").addEventListener("change", () => {
         if (DEBUG) {
             console.log("load online data");
         }
-        noStorage = true;
+        NO_STORAGE = true;
         fetch("./dqwalkhearts/dqwalkhearts.json")
             .then(r => r.json())
             .then(json => {
@@ -6227,7 +6227,7 @@ document.getElementById("manualset_job").addEventListener("change", () => {
         if (DEBUG) {
             console.log("load demo data");
         }
-        noStorage = true;
+        NO_STORAGE = true;
         fetch("./dqwalkhearts/dqwalkhearts.json")
             .then(r => r.json())
             .then(json => {
@@ -6247,7 +6247,7 @@ document.getElementById("manualset_job").addEventListener("change", () => {
         if (DEBUG) {
             console.log("no storage mode");
         }
-        noStorage = true;
+        NO_STORAGE = true;
     }
     else {
         // ローカルストレージのリストを利用

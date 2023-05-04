@@ -376,7 +376,7 @@ let monsterMap: Map<string, Monster> = new Map();
 let monsterList: Monster[] = [];
 let monsterNameList: string[] = [];
 
-let noStorage: boolean = false;
+let NO_STORAGE: boolean = false;
 
 const IDENT: number = Date.now();
 
@@ -400,7 +400,7 @@ function saveMonsterList(trigger: Trigger): void {
     if (DEBUG) {
         console.log(`call saveMonsterList(${Trigger[trigger]})`);
     }
-    if (noStorage) {
+    if (NO_STORAGE) {
         if (DEBUG) {
             console.log("no save to storage");
         }
@@ -418,7 +418,7 @@ function saveMonsterList(trigger: Trigger): void {
             console.log("saved to storage");
         }
     } catch (err) {
-        noStorage = true;
+        NO_STORAGE = true;
         console.log(err);
     }
 }
@@ -428,7 +428,7 @@ function loadMonsterList(): void {
     if (DEBUG) {
         console.log("call loadMonsterList");
     }
-    if (noStorage) {
+    if (NO_STORAGE) {
         if (DEBUG) {
             console.log("no load from storage");
         }
@@ -451,7 +451,7 @@ function loadMonsterList(): void {
             }
         }
     } catch (err) {
-        noStorage = true;
+        NO_STORAGE = true;
         console.log(err);
     }
 }
@@ -6501,7 +6501,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         if (DEBUG) {
             console.log("load online data");
         }
-        noStorage = true;
+        NO_STORAGE = true;
         fetch("./dqwalkhearts/dqwalkhearts.json")
         .then(r => r.json())
         .then( json => {
@@ -6519,7 +6519,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         if (DEBUG) {
             console.log("load demo data");
         }
-        noStorage = true;
+        NO_STORAGE = true;
         fetch("./dqwalkhearts/dqwalkhearts.json")
         .then(r => r.json())
         .then( json => {
@@ -6538,7 +6538,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         if (DEBUG) {
             console.log("no storage mode");
         }
-        noStorage = true;
+        NO_STORAGE = true;
     } else {
         // ローカルストレージのリストを利用
         loadMonsterList();
