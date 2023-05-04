@@ -300,6 +300,7 @@ const JobPresetMaximumCost: JobMaximumCost[] = [
         ]
     },
     { id: 200, maximumCostList: [
+            { level: 65, maximumCost: 358 },
             { level: 64, maximumCost: 354 },
             { level: 63, maximumCost: 348 },
             { level: 62, maximumCost: 344 },
@@ -643,9 +644,29 @@ let adoptionHeartSetList: AdoptionHeartSet[] = [];
 let currentAdoptionHeartSet: AdoptionHeartSet | null = null;
 
 // 採用したこころセットをリストに追加して表示
-function addToAdoptionHeartSetList(): void {
+function addToAdoptionHeartSetList(): boolean {
     if (currentAdoptionHeartSet === null) {
         throw "BUG (addToAdoptionHeartSetList)";
+    }
+    if (adoptionHeartSetList.some(hs => hs === currentAdoptionHeartSet)) {
+        return false;
+    }
+    for (const hs of adoptionHeartSetList) {
+        if (hs.jobName === currentAdoptionHeartSet.jobName
+                && hs.score === currentAdoptionHeartSet.score // 整数なはず
+                && hs.maximumCost === currentAdoptionHeartSet.maximumCost // 整数なはず
+                && hs.colors.length === currentAdoptionHeartSet.colors.length
+                && hs.hearts.length === currentAdoptionHeartSet.hearts.length
+                && hs.colors.every((e, i) => e === currentAdoptionHeartSet!.colors[i])
+                && hs.hearts.every((e, i) => e === currentAdoptionHeartSet!.hearts[i]
+                    || (e !== null
+                        && currentAdoptionHeartSet!.hearts[i] !== null
+                        && e.monster.id === currentAdoptionHeartSet!.hearts[i]!.monster.id
+                        && e.heart.rank === currentAdoptionHeartSet!.hearts[i]!.heart.rank))
+                && `${hs.powerUp}` === `${currentAdoptionHeartSet.powerUp}`) {
+            // ※雑な同一判定すぎるので、こころの並び順が違っても同一のステータスになるケースは、同一として判定されない
+            return false;
+        }
     }
     // 念のためコピーしとく
     const heartset: AdoptionHeartSet = {
@@ -661,6 +682,13 @@ function addToAdoptionHeartSetList(): void {
     const list = document.getElementById("adoption_heartset_list")!;
     const template = document.getElementById("result_item") as HTMLTemplateElement;
     const fragment = template.content.cloneNode(true) as DocumentFragment;
+    if (EXPOSE_MODE) {
+        // 非公開機能を利用
+        for (const sec of fragment.querySelectorAll(".secret")) {
+            sec.classList.remove("secret");
+        }
+        fragment.querySelector(".result-item-adoption")!.addEventListener("click", () => adoptHeartSet(heartset));
+    }
     const elem = (name: string) => fragment.querySelector(`.result-item-${name}`)!;
     const text = (name: string, value: any) => elem(name).textContent = `${value}`;
     text("number", heartset.jobName);
@@ -742,6 +770,7 @@ function addToAdoptionHeartSetList(): void {
     text("speed", `${status.speed}`);
     text("dexterity", `${status.dexterity}`);
     list.appendChild(fragment);
+    return true;
 }
 
 // こころセットの採用
@@ -3993,16 +4022,16 @@ document.getElementById("adoption_heartset_dialog")!
             changed = true;
         }
     }
+    let message = "";
     if (changed) {
         saveMonsterList(Trigger.ChooseRank);
         updateChangedRankCount();
+        message += "ランク変更を反映しました。";
     }
-    addToAdoptionHeartSetList();
-    if (changed) {
-        dialogAlert("ランク変更を反映しました。採用こころセットのリストに追加しました。");
-    } else {
-        dialogAlert("採用こころセットのリストに追加しました。");
+    if (addToAdoptionHeartSetList()) {
+        message += "採用こころセットのリストに追加しました。";
     }
+    dialogAlert(message === "" ? "ランク変更はありません。こころセットは既にリストにあります。" : message);
 });
 
 
