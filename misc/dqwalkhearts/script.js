@@ -784,6 +784,8 @@ function showNewHeart(monster) {
         showUpdatedHeart(monster, false);
         updateChangedRankCount();
     });
+    // S+が登録済みの場合はwithSplusチェックボックスを有効化
+    withSplusElem.disabled = !monster.hearts.some(h => h.rank === Rank.S_plus);
     if (monster.target === null) {
         fragment.firstElementChild.classList.add("omit");
         for (const radio of radios) {
@@ -825,12 +827,6 @@ function showNewHeart(monster) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
-        // S+のときもチェック変更できるようにしたいのでコメントアウト
-        // if (monster.target !== Rank.S_plus) {
-        //    if (monster.hearts.some(h => h.rank === Rank.S_plus)) {
-        //        withSplusElem.disabled = false;
-        //    }
-        // }
     }
     fragment.querySelector("button.monster-add-or-edit").addEventListener("click", () => {
         const dialog = document.getElementById("add_heart_dialog");
@@ -981,10 +977,9 @@ function showUpdatedHeart(monster, reorder) {
         text(".monster-dexterity", heart.dexterity);
         text(".monster-maximumcost", heart.maximumCost);
         text(".monster-effects", heart.effects);
-        // S+のときもチェック変更できるようにしたいのでコメントアウト
-        // (item.querySelector(".monster-with-s_plus") as HTMLInputElement)
-        //     .disabled = monster.target === Rank.S_plus
-        //        || !monster.hearts.some(h => h.rank === Rank.S_plus);
+        // S+が未登録の場合はwithSplusチェックボックスを無効化
+        item.querySelector(".monster-with-s_plus")
+            .disabled = !monster.hearts.some(h => h.rank === Rank.S_plus);
     }
     const withSplus = monster.withSplus
         && monster.hearts.some(h => h.rank === monster.target);
