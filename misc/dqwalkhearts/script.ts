@@ -3105,6 +3105,7 @@ function convertToDummy(list: Monster[]): void {
     }
     for (let i = 0; i < list.length; i++) {
         list[i].name = `ダミーデータ${i+1}`;
+        list[i].splusName = null;
         for (const h of list[i].hearts) {
             h.effects = h.effects
                 .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)(斬|体|呪|R)/g, "$1属性$2")
@@ -3113,7 +3114,10 @@ function convertToDummy(list: Monster[]): void {
                 .replace(/斬体R/g, "斬体技R")
                 .replace(/斬体/g, "斬・体")
                 .replace(/斬/g, "斬撃")
+                .replace(/特技/g, "とくぎ")
+                .replace(/獣/g, "けもの")
                 .replace(/(鳥|物質|ゾンビ|ドラゴン|スライム|水|けもの|エレメント|マシン|植物|怪人|虫|悪魔|？？？？)/g, "$1系への")
+                .replace(/ゴールド\+(\d)/g, "フィールド通常戦闘時ゴールド+$1")
                 .replace(/回復\+(\d)/g, "回復効果+$1")
                 .replace(/P(\d+)回復/g, "Pを$1回復する")
                 .replace(/呪文/g, "じゅもん")
