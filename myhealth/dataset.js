@@ -1,5 +1,5 @@
-const LAST_YEAR = 2022;
-const LAST_MONTH = 12;
+const LAST_YEAR = 2023;
+const LAST_MONTH = 6;
 
 function csvFileName(id, year, month) {
     return `${id}${year}${leadingZeros(2, month)}.csv`;
@@ -14,7 +14,7 @@ const dataSet = [
         start_month: 9,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omit: [[2020,6],[2020,7],[2020,8],[2020,9],[2020,10],[2020,11]],
+        omit: [[2020,6],[2020,7],[2020,8],[2020,9],[2020,10],[2020,11],[2023,1]],
     },
     {
         title: "wake up",
@@ -24,7 +24,7 @@ const dataSet = [
         start_month: 7,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omit: [],
+        omit: [[2023,1]],
     },
     {
         title: "go to bed",
@@ -34,7 +34,7 @@ const dataSet = [
         start_month: 7,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omit: [],
+        omit: [[2023,1]],
     },
     {
         title: "sleep",
@@ -44,7 +44,7 @@ const dataSet = [
         start_month: 7,
         end_year: LAST_YEAR,
         end_month: LAST_MONTH,
-        omit: [],
+        omit: [[2023,1]],
     },
     {
         title: "interrupt sleep",
@@ -52,8 +52,8 @@ const dataSet = [
         unit: "",
         start_year: 2021,
         start_month: 9,
-        end_year: LAST_YEAR,
-        end_month: LAST_MONTH,
+        end_year: 2022,
+        end_month: 12,
         omit: [],
     },
     {
