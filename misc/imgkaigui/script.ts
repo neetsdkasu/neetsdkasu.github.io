@@ -91,8 +91,6 @@ function resetRetouchImage(): void {
 
 function showOriginalImage(blob: Blob): void {
     createImageBitmap(blob).then( image => {
-        const info = document.getElementById("imginfo") as HTMLElement;
-        info.textContent = `width: ${image.width}, heigth: ${image.height}`;
 
         // 値を0,90,180,270にしている意味なしｗ
         const rotate = parseInt((document.getElementById("rotate") as HTMLInputElement).value);
@@ -111,6 +109,9 @@ function showOriginalImage(blob: Blob): void {
                 canvas.height = image.width;
                 break;
         }
+
+        const info = document.getElementById("imginfo") as HTMLElement;
+        info.textContent = `width: ${canvas.width}, heigth: ${canvas.height}`;
 
         const ctx = canvas.getContext("2d")!;
 
