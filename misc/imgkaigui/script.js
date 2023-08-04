@@ -45,11 +45,11 @@ function resetRetouchImage() {
     const origHeight = orig.height;
     const horizontal = document.getElementById("horizontal");
     horizontal.value = "0";
-    horizontal.max = `${origWidth}`;
+    horizontal.max = `${origWidth * 2}`;
     document.getElementById("horizontal_value").value = horizontal.value;
     const vertical = document.getElementById("vertical");
     vertical.value = "0";
-    vertical.max = `${origHeight}`;
+    vertical.max = `${origHeight * 2}`;
     document.getElementById("vertical_value").value = vertical.value;
     const resize = document.getElementById("resize");
     resize.value = "1000";
