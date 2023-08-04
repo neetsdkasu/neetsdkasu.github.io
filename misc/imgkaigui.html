@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>imgkaigui</title>
+    <link rel="stylesheet" href="./imgkaigui/style.css" />
+    <script src="./imgkaigui/script.js" defer></script>
+  </head>
+  <body>
+
+    <header>
+      <h2>imgkaigui</h2>
+    </header>
+
+    <details open>
+      <summary>Original Image</summary>
+      <hr />
+      <div>
+        <label for="rotate">Rotate:</label>
+        <select id="rotate">
+          <option value="0" selected>No Rotation</option>
+          <option value="90">90 Degrees Clockwise Rotation</option>
+          <option value="180">180 Degrees Clockwise Rotation</option>
+          <option value="270">270 Degrees Clockwise Rotation</option>
+        </select>
+      </div>
+      <hr />
+      <div><input id="imgfile" type="file" accept="image/*" /></div>
+      <hr />
+      <div><span>Info:</span> <span id="imginfo"></span></div>
+      <hr />
+      <div id="origcont"><canvas id="orig" width="240" height="320"></canvas></div>
+      <hr />
+    </details>
+
+    <details>
+      <summary>Retouch Image</summary>
+      <hr />
+      <canvas id="retouch" width="240" height="320"></canvas>
+      <fieldset>
+        <legend>Move</legend>
+        <div>
+          <label for="horizontal">Horizontal:</label>
+          <input id="horizontal" type="range" min="0" max="240" value="0" />
+          <output id="horizontal_value">0</output>
+        </div>
+        <div>
+          <label for="vertical">Vertical:</label>
+          <input id="vertical" type="range" min="0" max="320" value="0" />
+          <output id="vertical_value">0</output>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Scale</legend>
+        <div>
+          <input id="resize" type="range" min="1" max="2000" value="1000" />
+          <output id="resize_value">100%</output>
+        </div>
+      </fieldset>
+      <fieldset>
+        <legend>Target</legend>
+        <div>
+          <select id="target">
+            <option value="0" selected>Fullfill</option>
+            <option value="1">Upper</option>
+            <option value="2">Lower</option>
+            <option value="4">Right</option>
+            <option value="8">Left</option>
+            <option value="5">Upper Right</option>
+            <option value="9">Upper Left</option>
+            <option value="6">Lower Right</option>
+            <option value="10">Lower Left</option>
+          </select>
+        </div>
+      </fieldset>
+    </details>
+
+    <details>
+      <summary>Final Image</summary>
+      <hr />
+      <div><button id="merge_button">Merge Retouched Image</button></div>
+      <hr />
+      <canvas id="merged" width="240" height="320"></canvas>
+      <canvas id="stamped" width="240" height="320"></canvas>
+      <canvas id="phone" width="120" height="160"></canvas>
+      <hr />
+      <div><label for="date">Stamp Date:</label><input id="date" type="date" /></div>
+    </details>
+
+    <footer></footer>
+
+  </body>
+</html>

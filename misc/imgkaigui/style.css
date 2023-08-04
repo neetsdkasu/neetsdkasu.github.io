@@ -1,0 +1,44 @@
+
+body {
+    padding: 1rem 3rem 3rem 3rem;
+}
+
+footer {
+    margin-top: 15rem;
+}
+
+details {
+    border: 3px double black;
+    padding: 10px;
+    margin: 10px;
+}
+
+#origcont {
+    max-width: 100%;
+    overflow-x: scroll;
+    max-height: 25rem;
+    overflow-y: scroll;
+}
+
+summary {
+   font-weight: bold;
+}
+
+canvas {
+    border: 1px dotted black;
+    padding: 2px;
+}
+
+canvas + canvas {
+    margin-left: 1em;
+}
+
+fieldset > div {
+    margin: 0.5em;
+}
+
+output {
+    border: 1px solid black;
+    padding: 2px 1em;
+    margin: auto 1em;
+}
