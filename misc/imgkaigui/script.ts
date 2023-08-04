@@ -71,12 +71,12 @@ function resetRetouchImage(): void {
 
     const horizontal = document.getElementById("horizontal") as HTMLInputElement;
     horizontal.value = "0";
-    horizontal.max = `${origWidth}`;
+    horizontal.max = `${origWidth * 2}`;
     (document.getElementById("horizontal_value") as HTMLOutputElement).value = horizontal.value;
 
     const vertical = document.getElementById("vertical") as HTMLInputElement;
     vertical.value = "0";
-    vertical.max = `${origHeight}`;
+    vertical.max = `${origHeight * 2}`;
     (document.getElementById("vertical_value") as HTMLOutputElement).value = vertical.value;
 
     const resize = document.getElementById("resize") as HTMLInputElement;
