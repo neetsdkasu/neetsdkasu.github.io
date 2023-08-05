@@ -29,7 +29,16 @@ canvas {
     padding: 2px;
 }
 
+img {
+    border: 1px dotted black;
+    padding: 2px;
+}
+
 canvas + canvas {
+    margin-left: 1em;
+}
+
+img + img {
     margin-left: 1em;
 }
 

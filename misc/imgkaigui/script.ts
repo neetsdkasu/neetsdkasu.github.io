@@ -21,6 +21,7 @@ interface String {
     replaceAll(substr: string, newSubstr: string): string;
 }
 
+
 function updateRetouchImage(): void {
     const orig = document.getElementById("orig") as HTMLCanvasElement;
     const origWidth = orig.width;
@@ -63,6 +64,7 @@ function updateRetouchImage(): void {
 
 }
 
+
 function resetRetouchImage(): void {
 
     const orig = document.getElementById("orig") as HTMLCanvasElement;
@@ -88,6 +90,7 @@ function resetRetouchImage(): void {
 
     updateRetouchImage();
 }
+
 
 function showOriginalImage(blob: Blob): void {
     createImageBitmap(blob).then( image => {
@@ -144,6 +147,7 @@ function showOriginalImage(blob: Blob): void {
     });
 }
 
+
 function uploadImage(event: Event): void {
 
     const input = document.getElementById("imgfile") as HTMLInputElement;
@@ -178,9 +182,24 @@ function pasteImage(e: Event): void {
     alert("the paste dose not have a image");
 }
 
+
 function changeTarget(): void {
     updateRetouchImage();
 }
+
+
+function showPhoneImage(): void {
+    const div = document.getElementById("images") as HTMLDivElement;
+    let img: HTMLImageElement | null = div.querySelector("img.phone");
+    if (img === null) {
+        img = div.appendChild(document.createElement("img"));
+        img.width = 120;
+        img.height = 160;
+        img.classList.add("phone");
+    }
+    img.src = (document.getElementById("phone") as HTMLCanvasElement).toDataURL();
+}
+
 
 function resizeToPhoneImage(): void {
 
@@ -197,7 +216,23 @@ function resizeToPhoneImage(): void {
     const stamped = document.getElementById("stamped") as HTMLCanvasElement;
 
     ctx.drawImage(stamped, 0, 0, canvasWidth, canvasHeight);
+
+    showPhoneImage();
 }
+
+
+function showStampedImage(): void {
+    const div = document.getElementById("images") as HTMLDivElement;
+    let img: HTMLImageElement | null = div.querySelector("img.stamped");
+    if (img === null) {
+        img = div.appendChild(document.createElement("img"));
+        img.width = 240;
+        img.height = 320;
+        img.classList.add("stamped");
+    }
+    img.src = (document.getElementById("stamped") as HTMLCanvasElement).toDataURL();
+}
+
 
 function stampDate(): void {
 
@@ -230,8 +265,24 @@ function stampDate(): void {
     ctx.fillStyle = "black";
     ctx.fillText(date, canvasWidth - 3, canvasHeight - 3);
 
+    showStampedImage();
+
     resizeToPhoneImage();
 }
+
+
+function showMergedImage(): void {
+    const div = document.getElementById("images") as HTMLDivElement;
+    let img: HTMLImageElement | null = div.querySelector("img.marged");
+    if (img === null) {
+        img = div.appendChild(document.createElement("img"));
+        img.width = 240;
+        img.height = 320;
+        img.classList.add("marged");
+    }
+    img.src = (document.getElementById("merged") as HTMLCanvasElement).toDataURL();
+}
+
 
 function mergeRetouchedImage(): void {
 
@@ -253,8 +304,11 @@ function mergeRetouchedImage(): void {
 
     ctx.drawImage(retouched, x, y, width, height, x, y, width, height);
 
+    showMergedImage();
+
     stampDate();
 }
+
 
 function moveHorizontalRetouchImage(event: Event): void {
     const input = document.getElementById("horizontal") as HTMLInputElement;
@@ -263,6 +317,7 @@ function moveHorizontalRetouchImage(event: Event): void {
     updateRetouchImage();
 }
 
+
 function moveVerticalRetouchImage(event: Event): void {
     const input = document.getElementById("vertical") as HTMLInputElement;
     const output = document.getElementById("vertical_value") as HTMLOutputElement;
@@ -270,13 +325,13 @@ function moveVerticalRetouchImage(event: Event): void {
     updateRetouchImage();
 }
 
+
 function resizeRetouchImage(event: Event): void {
     const input = document.getElementById("resize") as HTMLInputElement;
     const output = document.getElementById("resize_value") as HTMLOutputElement;
     output.textContent = `${parseFloat(input.value)/10}%`;
     updateRetouchImage();
 }
-
 
 
 document.addEventListener("paste", pasteImage);
