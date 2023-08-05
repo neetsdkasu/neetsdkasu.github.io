@@ -19,7 +19,6 @@ function updateRetouchImage() {
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
     const ctx = canvas.getContext("2d");
-    ctx.reset();
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     const target = parseInt(document.getElementById("target").value);
@@ -27,6 +26,7 @@ function updateRetouchImage() {
     const clipTop = (target & 2) === 0 ? 0 : (canvasHeight / 2);
     const clipWidth = (target & (4 | 8)) === 0 ? canvasWidth : (canvasWidth / 2);
     const clipHeight = (target & (1 | 2)) === 0 ? canvasHeight : (canvasHeight / 2);
+    ctx.save();
     ctx.beginPath();
     ctx.rect(clipLeft, clipTop, clipWidth, clipHeight);
     ctx.clip();
@@ -38,6 +38,7 @@ function updateRetouchImage() {
     const dWidth = origWidth * resize / 1000.0;
     const dHeight = origHeight * resize / 1000.0;
     ctx.drawImage(orig, dx, dy, dWidth, dHeight);
+    ctx.restore();
 }
 function resetRetouchImage() {
     const orig = document.getElementById("orig");
@@ -78,7 +79,7 @@ function showOriginalImage(blob) {
         const info = document.getElementById("imginfo");
         info.textContent = `width: ${canvas.width}, heigth: ${canvas.height}`;
         const ctx = canvas.getContext("2d");
-        ctx.reset();
+        ctx.save();
         switch (rotate) {
             case 0:
                 ctx.drawImage(image, 0, 0);
@@ -96,6 +97,7 @@ function showOriginalImage(blob) {
                 ctx.drawImage(image, -image.width, 0);
                 break;
         }
+        ctx.restore();
         image.close();
         resetRetouchImage();
     }).catch(err => {
@@ -190,7 +192,7 @@ function stampDate() {
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     const merged = document.getElementById("merged");
     ctx.drawImage(merged, 0, 0, canvasWidth, canvasHeight);
-    const date = document.getElementById("date").value.replaceAll("-", ".");
+    const date = document.getElementById("date").value.replace("-", ".").replace("-", ".");
     ctx.font = "bold 18px monospace";
     ctx.textAlign = "right";
     ctx.textBaseline = "bottom";
