@@ -11,17 +11,6 @@
 //  $ tsc --version
 //  Version 3.8.3
 
-// これらがないと何故かtscコンパイルが失敗する
-// script.ts:14:9 - error TS2339: Property 'reset' does not exist on type 'CanvasRenderingContext2D'.
-interface CanvasRenderingContext2D {
-    reset(): void;
-}
-// script.ts:157:78 - error TS2339: Property 'replaceAll' does not exist on type 'string'.
-interface String {
-    replaceAll(substr: string, newSubstr: string): string;
-}
-
-
 function updateRetouchImage(): void {
     const orig = document.getElementById("orig") as HTMLCanvasElement;
     const origWidth = orig.width;
@@ -34,8 +23,6 @@ function updateRetouchImage(): void {
 
     const ctx = canvas.getContext("2d")!;
 
-    ctx.reset();
-
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
 
@@ -45,6 +32,8 @@ function updateRetouchImage(): void {
     const clipTop = (target & 2) === 0 ? 0 : (canvasHeight / 2);
     const clipWidth = (target & (4|8)) === 0 ? canvasWidth : (canvasWidth / 2);
     const clipHeight = (target & (1|2)) === 0 ? canvasHeight : (canvasHeight / 2);
+
+    ctx.save();
 
     ctx.beginPath();
     ctx.rect(clipLeft, clipTop, clipWidth, clipHeight);
@@ -61,6 +50,8 @@ function updateRetouchImage(): void {
     const dHeight = origHeight * resize / 1000.0;
 
     ctx.drawImage(orig, dx, dy, dWidth, dHeight);
+
+    ctx.restore();
 
 }
 
@@ -118,7 +109,7 @@ function showOriginalImage(blob: Blob): void {
 
         const ctx = canvas.getContext("2d")!;
 
-        ctx.reset();
+        ctx.save();
 
         switch (rotate) {
             case 0:
@@ -137,6 +128,8 @@ function showOriginalImage(blob: Blob): void {
                 ctx.drawImage(image, -image.width, 0);
                 break;
         }
+
+        ctx.restore();
 
         image.close();
 
@@ -253,7 +246,7 @@ function stampDate(): void {
     const merged = document.getElementById("merged") as HTMLCanvasElement;
     ctx.drawImage(merged, 0, 0, canvasWidth, canvasHeight);
 
-    const date = (document.getElementById("date") as HTMLInputElement).value.replaceAll("-", ".");
+    const date = (document.getElementById("date") as HTMLInputElement).value.replace("-", ".").replace("-", ".");
 
     ctx.font = "bold 18px monospace";
     ctx.textAlign = "right";
