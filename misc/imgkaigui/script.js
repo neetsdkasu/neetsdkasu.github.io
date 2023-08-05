@@ -144,6 +144,17 @@ function pasteImage(e) {
 function changeTarget() {
     updateRetouchImage();
 }
+function showPhoneImage() {
+    const div = document.getElementById("images");
+    let img = div.querySelector("img.phone");
+    if (img === null) {
+        img = div.appendChild(document.createElement("img"));
+        img.width = 120;
+        img.height = 160;
+        img.classList.add("phone");
+    }
+    img.src = document.getElementById("phone").toDataURL();
+}
 function resizeToPhoneImage() {
     const canvas = document.getElementById("phone");
     const canvasWidth = canvas.width;
@@ -153,6 +164,18 @@ function resizeToPhoneImage() {
     ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     const stamped = document.getElementById("stamped");
     ctx.drawImage(stamped, 0, 0, canvasWidth, canvasHeight);
+    showPhoneImage();
+}
+function showStampedImage() {
+    const div = document.getElementById("images");
+    let img = div.querySelector("img.stamped");
+    if (img === null) {
+        img = div.appendChild(document.createElement("img"));
+        img.width = 240;
+        img.height = 320;
+        img.classList.add("stamped");
+    }
+    img.src = document.getElementById("stamped").toDataURL();
 }
 function stampDate() {
     const canvas = document.getElementById("stamped");
@@ -176,7 +199,19 @@ function stampDate() {
     }
     ctx.fillStyle = "black";
     ctx.fillText(date, canvasWidth - 3, canvasHeight - 3);
+    showStampedImage();
     resizeToPhoneImage();
+}
+function showMergedImage() {
+    const div = document.getElementById("images");
+    let img = div.querySelector("img.marged");
+    if (img === null) {
+        img = div.appendChild(document.createElement("img"));
+        img.width = 240;
+        img.height = 320;
+        img.classList.add("marged");
+    }
+    img.src = document.getElementById("merged").toDataURL();
 }
 function mergeRetouchedImage() {
     const canvas = document.getElementById("merged");
@@ -190,6 +225,7 @@ function mergeRetouchedImage() {
     const width = (target & (4 | 8)) === 0 ? canvasWidth : (canvasWidth / 2);
     const height = (target & (1 | 2)) === 0 ? canvasHeight : (canvasHeight / 2);
     ctx.drawImage(retouched, x, y, width, height, x, y, width, height);
+    showMergedImage();
     stampDate();
 }
 function moveHorizontalRetouchImage(event) {
