@@ -152,6 +152,8 @@ function showPhoneImage() {
         img.width = 120;
         img.height = 160;
         img.classList.add("phone");
+        img.alt = "phone.png";
+        img.title = "phone.png";
     }
     img.src = document.getElementById("phone").toDataURL();
 }
@@ -174,6 +176,8 @@ function showStampedImage() {
         img.width = 240;
         img.height = 320;
         img.classList.add("stamped");
+        img.alt = "stamped.png";
+        img.title = "stamped.png";
     }
     img.src = document.getElementById("stamped").toDataURL();
 }
@@ -210,6 +214,8 @@ function showMergedImage() {
         img.width = 240;
         img.height = 320;
         img.classList.add("marged");
+        img.alt = "marged.png";
+        img.title = "marged.png";
     }
     img.src = document.getElementById("merged").toDataURL();
 }
