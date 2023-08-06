@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>kuronuri</title>
+    <link rel="stylesheet" href="./kuronuri/style.css" />
+    <script src="./kuronuri/script.js" defer></script>
+  </head>
+  <body>
+
+    <header>
+      <h2>kuronuri</h2>
+    </header>
+
+    <main>
+      <hr />
+      <div>
+        <label for="rotate">Rotate:</label>
+        <select id="rotate">
+          <option value="0" selected>No Rotation</option>
+          <option value="90">90 Degrees Clockwise Rotation</option>
+          <option value="180">180 Degrees Clockwise Rotation</option>
+          <option value="270">270 Degrees Clockwise Rotation</option>
+        </select>
+      </div>
+      <hr />
+      <div><input id="imgfile" type="file" accept="image/*" /></div>
+      <hr />
+      <div><span>Info:</span> <span id="imginfo"></span></div>
+      <hr />
+      <div id="box" class="hide"></div>
+      <div id="origcont"><canvas id="orig" width="240" height="320"></canvas></div>
+      <hr />
+
+      <details>
+        <summary>convert canvas to img</summary>
+        <hr />
+        <button id="button">CONVERT</button>
+        <hr />
+        <div id="imgcont"></div>
+      </details>
+
+    </main>
+
+    <footer></footer>
+
+  </body>
+</html>
