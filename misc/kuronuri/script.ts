@@ -123,20 +123,20 @@ let drag = false;
 let startX: number = 0;
 let startY: number = 0;
 
-function onMouseDown(event: MouseEvent): void {
+function onMouseDown(event: PointerEvent): void {
     startX = event.offsetX;
     startY = event.offsetY;
     drag = true;
     document.getElementById("box")!.classList.remove("hide");
 }
 
-function onMouseUp(event: MouseEvent): void {
+function onMouseUp(event: PointerEvent): void {
     drag = false;
     document.getElementById("box")!.classList.add("hide");
     drawRect(startX, startY, event.offsetX, event.offsetY);
 }
 
-function onMouseMove(event: MouseEvent): void {
+function onMouseMove(event: PointerEvent): void {
     if (drag) {
         const box = document.getElementById("box")!;
         box.style.left = `${ window.scrollX + event.clientX + Math.min(startX, event.offsetX) - event.offsetX + 1 }px`;
@@ -146,7 +146,7 @@ function onMouseMove(event: MouseEvent): void {
     }
 }
 
-function onMouseMoveInBox(event: MouseEvent): void {
+function onMouseMoveInBox(event: PointerEvent): void {
     if (drag) {
         const box = document.getElementById("box")!;
         box.style.width = `${Math.max(1,event.offsetX-2)}px`;
@@ -171,8 +171,8 @@ function convertToImage(): void {
 document.addEventListener("paste", pasteImage);
 document.getElementById("imgfile")!.addEventListener("change", uploadImage);
 
-document.getElementById("orig")!.addEventListener("mousedown", onMouseDown);
-document.getElementById("orig")!.addEventListener("mouseup", onMouseUp);
-document.getElementById("orig")!.addEventListener("mousemove", onMouseMove);
-document.getElementById("box")!.addEventListener("mousemove", onMouseMoveInBox);
+document.getElementById("orig")!.addEventListener("pointerdown", onMouseDown);
+document.getElementById("orig")!.addEventListener("pointerup", onMouseUp);
+document.getElementById("orig")!.addEventListener("pointermove", onMouseMove);
+document.getElementById("box")!.addEventListener("pointermove", onMouseMoveInBox);
 document.getElementById("button")!.addEventListener("click", () => convertToImage());

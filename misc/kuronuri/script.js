@@ -149,8 +149,8 @@ function convertToImage() {
 }
 document.addEventListener("paste", pasteImage);
 document.getElementById("imgfile").addEventListener("change", uploadImage);
-document.getElementById("orig").addEventListener("mousedown", onMouseDown);
-document.getElementById("orig").addEventListener("mouseup", onMouseUp);
-document.getElementById("orig").addEventListener("mousemove", onMouseMove);
-document.getElementById("box").addEventListener("mousemove", onMouseMoveInBox);
+document.getElementById("orig").addEventListener("pointerdown", onMouseDown);
+document.getElementById("orig").addEventListener("pointerup", onMouseUp);
+document.getElementById("orig").addEventListener("pointermove", onMouseMove);
+document.getElementById("box").addEventListener("pointermove", onMouseMoveInBox);
 document.getElementById("button").addEventListener("click", () => convertToImage());
