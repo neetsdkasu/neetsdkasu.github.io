@@ -342,5 +342,6 @@ document.getElementById("target")!.addEventListener("input", () => changeTarget(
 document.getElementById("merge_button")!.addEventListener("click", () => mergeRetouchedImage());
 document.getElementById("date")!.addEventListener("change", () => stampDate());
 
-(document.getElementById("date") as HTMLInputElement).value = new Date().toISOString().replace(/\D?(\d{4}-\d{2}-\d{2})T.+$/, "$1");
+(document.getElementById("date") as HTMLInputElement).value = (d => (d.setMinutes(d.getMinutes() - d.getTimezoneOffset()), d))(new Date())
+    .toISOString().replace(/\D?(\d{4}-\d{2}-\d{2})T.+$/, "$1");
 
