@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>TOTP</title>
+    <link rel="stylesheet" href="./totp/style.css" />
+    <script src="./totp/script.js" defer></script>
+  </head>
+  <body>
+
+    <header>
+      <h4>TOTP</h4>
+      <noscript>REQUIRE JavaScript</noscript>
+    </header>
+
+    <hr />
+
+    <main>
+      <div>
+        <span>Secret Token <select id="token_type" name="token_type">
+          <option value="base64" selected>Base64</option>
+          <option value="hex">Hex</option>
+        </select>:</span>
+        <input type="text" id="secret_token" name="secret_token" />
+      </div>
+
+      <div>
+        <span>Time Steps:</span>
+        <input type="number" id="time_steps" name="time_steps" value="30" min="1" />
+      </div>
+
+      <div>
+        <span>Initial Unix Epoch</span>
+        <input type="number" id="initial_unix_epoch" name="initial_unix_epoch" value="0" min="0" />
+      </div>
+
+      <div>
+        <span>TOTP Length:</span>
+        <input type="number" id="totp_length" name="totp_length" value="6" min="1" />
+      </div>
+
+      <div>
+        <span>Hash</span>
+        <select id="hash" name="hash">
+          <option value="SHA-1" selected>SHA-1</option>
+          <option value="SHA-256">SHA-256</option>
+          <option value="SHA-512">SHA-512</option>
+        </select>
+      </div>
+
+      <div>
+        <span><label><input type="checkbox" id="use_special_time" name="use_special_time">Use Special Time (Unix Epoch)</label></span>
+        <input type="number" id="special_time" name="special_time" value="0" min="0" />
+      </div>
+
+      <hr />
+
+      <div>
+        <span></span>
+        <button id="get">GET</button>
+      </div>
+
+      <hr />
+
+      <div class="result">
+        <span>TOTP:</span>
+        <span id="totp"></span>
+      </div>
+
+      <div>
+        <span>Info:</span>
+        <span id="info"></span>
+      </div>
+
+      <hr />
+
+      <div>
+        <span></span>
+        <span id="description">* paste URI ( otpauth://totp/ ) from Clipboard to any textbox in this page</span>
+      </div>
+
+      <div>
+        <span>Saved URIs:</span>
+        <select id="saved" name="saved"></select>
+      </div>
+
+      <div>
+        <span></span>
+        <button id="getBySavedUri">GET</button>
+      </div>
+
+      <div>
+        <span></span>
+        <details>
+          <summary>more commands...</summary>
+          <div>
+            <button id="deleteSavedUri">DELETE URI</button>
+            <button id="showSavedUri">SHOW URI</button>
+          </div>
+        </details>
+      </div>
+
+      <hr />
+
+    </main>
+
+    <footer>
+      <div id="err"></div>
+    </footer>
+
+  </body>
+</html>

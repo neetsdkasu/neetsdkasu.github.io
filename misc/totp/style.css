@@ -1,0 +1,36 @@
+
+body {
+    padding: 2rem 2rem;
+}
+
+main {
+    width: 80%;
+}
+
+main > div {
+    margin-bottom: 1em;
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+}
+
+noscript,
+#err {
+    color: red;
+    font-weight: bold;
+    margin: 1em;
+}
+
+.result {
+    margin-top: 1em;
+    margin-bottom: 1em;
+    font-family: monoscape;
+    font-size: larger;
+}
+
+button + button {
+    margin-left: 4em;
+}
+
+details > div {
+    margin: 2em;
+}
