@@ -110,7 +110,7 @@ interface TotpUri {
 }
 
 function disabledTotpUriListService() {
-    document.getElementById("description")!.textContent = "";
+    document.getElementById("description")!.classList.add("silver");
     (document.getElementById("saved") as HTMLSelectElement).disabled = true;
     (document.getElementById("getBySavedUri") as HTMLButtonElement).disabled = true;
     (document.getElementById("deleteSavedUri") as HTMLButtonElement).disabled = true;
