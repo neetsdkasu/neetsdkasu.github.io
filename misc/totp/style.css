@@ -34,3 +34,7 @@ button + button {
 details > div {
     margin: 2em;
 }
+
+.silver {
+    color: silver;
+}

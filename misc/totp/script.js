@@ -94,7 +94,7 @@ function setValue(id, value) {
 }
 const LOCAL_STORAGE_PATH = "neetsdkasuTOTP";
 function disabledTotpUriListService() {
-    document.getElementById("description").textContent = "";
+    document.getElementById("description").classList.add("silver");
     document.getElementById("saved").disabled = true;
     document.getElementById("getBySavedUri").disabled = true;
     document.getElementById("deleteSavedUri").disabled = true;
