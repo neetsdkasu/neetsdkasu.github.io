@@ -10,7 +10,7 @@ if (DEBUG) {
     console.log("DEBUG MODE");
 }
 let EXPOSE_MODE = false;
-const LocalStoragePath = "dqwalkhearts";
+const LOCAL_STORAGE_PATH = "dqwalkhearts";
 function dialogAlert(msg) {
     if (DEBUG) {
         console.log(`dialogAlert: ${msg}`);
@@ -327,7 +327,7 @@ function saveMonsterList(trigger) {
             monsterList: monsterList
         };
         const json = JSON.stringify(data);
-        window.localStorage.setItem(LocalStoragePath, json);
+        window.localStorage.setItem(LOCAL_STORAGE_PATH, json);
         if (DEBUG) {
             console.log("saved to storage");
         }
@@ -349,7 +349,7 @@ function loadMonsterList() {
         return;
     }
     try {
-        const json = window.localStorage.getItem(LocalStoragePath);
+        const json = window.localStorage.getItem(LOCAL_STORAGE_PATH);
         if (json !== null) {
             const data = JSON.parse(json);
             if (isData(data)) {
@@ -389,7 +389,7 @@ window.addEventListener("storage", e => {
         if (DEBUG) {
             console.log(`storage key: ${e.key}`);
         }
-        if (e.key !== LocalStoragePath) {
+        if (e.key !== LOCAL_STORAGE_PATH) {
             console.log(`not dqwalkhearts data`);
             return;
         }
