@@ -19,7 +19,7 @@ if (DEBUG) {
 
 let EXPOSE_MODE = false;
 
-const LocalStoragePath = "dqwalkhearts";
+const LOCAL_STORAGE_PATH = "dqwalkhearts";
 
 function dialogAlert(msg: string): void {
     if (DEBUG) {
@@ -246,7 +246,9 @@ const JobPreset: Job[] = [
     { id: 304, name: "ニンジャ", powerUp: 1.3,
         colors: [Color.Blue|Color.Yellow, Color.Rainbow, Color.Blue|Color.Yellow, Color.Blue] },
     { id: 305, name: "魔剣士", powerUp: 1.3,
-        colors: [Color.Red|Color.Purple, Color.Rainbow, Color.Red|Color.Purple, Color.Red|Color.Purple] }
+        colors: [Color.Red|Color.Purple, Color.Rainbow, Color.Red|Color.Purple, Color.Red|Color.Purple] },
+    { id: 306, name: "守護天使", powerUp: 1.3,
+        colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow|Color.Blue, Color.Yellow] }
 ];
 
 interface JobMaximumCostItem {
@@ -350,6 +352,9 @@ const JobPresetMaximumCost: JobMaximumCost[] = [
             { level: 21, maximumCost: 126 },
             { level: 20, maximumCost: 121 }
         ]
+    },
+    { id: 300, maximumCostList: [
+        ]
     }
 ];
 
@@ -416,7 +421,7 @@ function saveMonsterList(trigger: Trigger): void {
             monsterList: monsterList
         };
         const json = JSON.stringify(data);
-        window.localStorage.setItem(LocalStoragePath, json);
+        window.localStorage.setItem(LOCAL_STORAGE_PATH, json);
         if (DEBUG) {
             console.log("saved to storage");
         }
@@ -438,7 +443,7 @@ function loadMonsterList(): void {
         return;
     }
     try {
-        const json = window.localStorage.getItem(LocalStoragePath);
+        const json = window.localStorage.getItem(LOCAL_STORAGE_PATH);
         if (json !== null) {
             const data: unknown = JSON.parse(json);
             if (isData(data)) {
@@ -477,7 +482,7 @@ window.addEventListener("storage", e => {
         if (DEBUG) {
             console.log(`storage key: ${e.key}`);
         }
-        if (e.key !== LocalStoragePath) {
+        if (e.key !== LOCAL_STORAGE_PATH) {
             console.log(`not dqwalkhearts data`);
             return;
         }

@@ -10,7 +10,7 @@ if (DEBUG) {
     console.log("DEBUG MODE");
 }
 let EXPOSE_MODE = false;
-const LocalStoragePath = "dqwalkhearts";
+const LOCAL_STORAGE_PATH = "dqwalkhearts";
 function dialogAlert(msg) {
     if (DEBUG) {
         console.log(`dialogAlert: ${msg}`);
@@ -187,7 +187,9 @@ const JobPreset = [
     { id: 304, name: "ニンジャ", powerUp: 1.3,
         colors: [Color.Blue | Color.Yellow, Color.Rainbow, Color.Blue | Color.Yellow, Color.Blue] },
     { id: 305, name: "魔剣士", powerUp: 1.3,
-        colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple] }
+        colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple] },
+    { id: 306, name: "守護天使", powerUp: 1.3,
+        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow] }
 ];
 const JobPresetMaximumCost = [
     { id: 100, maximumCostList: [
@@ -280,6 +282,8 @@ const JobPresetMaximumCost = [
             { level: 21, maximumCost: 126 },
             { level: 20, maximumCost: 121 }
         ]
+    },
+    { id: 300, maximumCostList: []
     }
 ];
 const SingleColorInfoMap = (() => {
@@ -327,7 +331,7 @@ function saveMonsterList(trigger) {
             monsterList: monsterList
         };
         const json = JSON.stringify(data);
-        window.localStorage.setItem(LocalStoragePath, json);
+        window.localStorage.setItem(LOCAL_STORAGE_PATH, json);
         if (DEBUG) {
             console.log("saved to storage");
         }
@@ -349,7 +353,7 @@ function loadMonsterList() {
         return;
     }
     try {
-        const json = window.localStorage.getItem(LocalStoragePath);
+        const json = window.localStorage.getItem(LOCAL_STORAGE_PATH);
         if (json !== null) {
             const data = JSON.parse(json);
             if (isData(data)) {
@@ -389,7 +393,7 @@ window.addEventListener("storage", e => {
         if (DEBUG) {
             console.log(`storage key: ${e.key}`);
         }
-        if (e.key !== LocalStoragePath) {
+        if (e.key !== LOCAL_STORAGE_PATH) {
             console.log(`not dqwalkhearts data`);
             return;
         }
