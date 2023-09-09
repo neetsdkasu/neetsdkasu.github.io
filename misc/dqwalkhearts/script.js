@@ -187,7 +187,9 @@ const JobPreset = [
     { id: 304, name: "ニンジャ", powerUp: 1.3,
         colors: [Color.Blue | Color.Yellow, Color.Rainbow, Color.Blue | Color.Yellow, Color.Blue] },
     { id: 305, name: "魔剣士", powerUp: 1.3,
-        colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple] }
+        colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple] },
+    { id: 306, name: "守護天使", powerUp: 1.3,
+        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow] }
 ];
 const JobPresetMaximumCost = [
     { id: 100, maximumCostList: [
@@ -280,6 +282,8 @@ const JobPresetMaximumCost = [
             { level: 21, maximumCost: 126 },
             { level: 20, maximumCost: 121 }
         ]
+    },
+    { id: 300, maximumCostList: []
     }
 ];
 const SingleColorInfoMap = (() => {
