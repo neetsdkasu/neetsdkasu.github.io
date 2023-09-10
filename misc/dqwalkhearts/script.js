@@ -11,6 +11,8 @@ if (DEBUG) {
 }
 let EXPOSE_MODE = false;
 const LOCAL_STORAGE_PATH = "dqwalkhearts";
+const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
+const STORAGE_KEY_EXPR_RECORD = LOCAL_STORAGE_PATH + ".expr_rec";
 function dialogAlert(msg) {
     if (DEBUG) {
         console.log(`dialogAlert: ${msg}`);
@@ -331,7 +333,7 @@ function saveMonsterList(trigger) {
             monsterList: monsterList
         };
         const json = JSON.stringify(data);
-        window.localStorage.setItem(LOCAL_STORAGE_PATH, json);
+        window.localStorage.setItem(STORAGE_KEY_MONSTER_LIST, json);
         if (DEBUG) {
             console.log("saved to storage");
         }
@@ -353,7 +355,7 @@ function loadMonsterList() {
         return;
     }
     try {
-        const json = window.localStorage.getItem(LOCAL_STORAGE_PATH);
+        const json = window.localStorage.getItem(STORAGE_KEY_MONSTER_LIST);
         if (json !== null) {
             const data = JSON.parse(json);
             if (isData(data)) {
@@ -393,8 +395,8 @@ window.addEventListener("storage", e => {
         if (DEBUG) {
             console.log(`storage key: ${e.key}`);
         }
-        if (e.key !== LOCAL_STORAGE_PATH) {
-            console.log(`not dqwalkhearts data`);
+        if (e.key !== STORAGE_KEY_MONSTER_LIST) {
+            console.log(`not dqwalkhearts monster list data ( key: ${e.key} )`);
             return;
         }
         if (e.newValue === null) {
@@ -462,6 +464,67 @@ function isData(anyobj) {
         return false;
     }
     return true;
+}
+let exprRecordLists = [];
+// 登録済みの式をセーブする
+function saveExprRecord() {
+    if (DEBUG) {
+        console.log("call saveExprRecord");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    // TODO
+}
+// 登録済みの式をロードする
+function loadExprRecord() {
+    if (DEBUG) {
+        console.log("call loadExprRecord");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    // TODO
+}
+// 登録済み式のカテゴリリストの更新
+function updateExprRecordCategoryList() {
+    const sel = document.getElementById("expr_rec_category");
+    const dlist = document.getElementById("expr_rec_category_list");
+    sel.innerHTML = "";
+    dlist.innerHTML = "";
+    for (const erl of exprRecordLists) {
+        const sopt = sel.appendChild(document.createElement("option"));
+        sopt.value = erl.category;
+        sopt.textContent = erl.category;
+        const dopt = dlist.appendChild(document.createElement("option"));
+        dopt.value = erl.category;
+    }
+}
+// 式を登録する
+function addExprRecord(category, exprName, expr) {
+    if (DEBUG) {
+        console.log("call addExprRecord");
+    }
+    const ci = exprRecordLists.findIndex(e => e.category === category);
+    if (ci < 0) {
+        const newList = {
+            category: category,
+            list: [{ name: exprName, expr: expr }]
+        };
+        exprRecordLists.push(newList);
+        exprRecordLists.sort((a, b) => a.category.localeCompare(b.category));
+        updateExprRecordCategoryList();
+    }
+    else {
+        // TOOD
+    }
+    saveExprRecord();
 }
 // ランクの変更箇所を数えて表示する
 function updateChangedRankCount() {
@@ -3857,6 +3920,147 @@ document.getElementById("adoption_heartset_dialog")
     }
     dialogAlert(message === "" ? "ランク変更はありません。こころセットは既にリストにあります。" : message);
 });
+// 登録済みの式を入力する（フォームを閉じたときに発動）
+document.getElementById("expr_rec_dialog")
+    .addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close expr_rec_dialog");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    if (dialog.returnValue !== "input") {
+        return;
+    }
+    // TODO
+});
+// 登録済み式の入力フォームのキャンセル
+document.querySelector(`#expr_rec_dialog button[value="cancel"]`)
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click expr_rec_dialog CANCEL button");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    dialog.returnValue = "cancel";
+    dialog.close();
+});
+// 登録する式のバリデーションのトリガーをセット
+document.getElementById("expr_rec_add_expr")
+    // .addEventListener("blur", () => {
+    // .addEventListener("focusout", () => {
+    .addEventListener("input", () => {
+    checkExpressionValidity("expr_rec_add_expr");
+});
+// 登録済みの式の確認ボタンを押した時の処理
+document.getElementById("check_expr_rec_expr")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_expr_rec_expr");
+    }
+    checkRequireSkillExpression("expr_rec_expr");
+});
+// 登録する式の確認ボタンを押した時の処理
+document.getElementById("check_expr_rec_add_expr")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_expr_rec_add_expr");
+    }
+    checkRequireSkillExpression("expr_rec_add_expr");
+});
+// 登録する式の登録ボタンを押した時の処理
+document.getElementById("expr_rec_add")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click expr_rec_add");
+    }
+    const check = (e) => {
+        e.required = true;
+        const validity = e.checkValidity();
+        e.required = false;
+        return validity;
+    };
+    const categoryElem = document.getElementById("expr_rec_add_category");
+    if (!check(categoryElem)) {
+        dialogAlert("カテゴリ名を入力してください");
+        return;
+    }
+    const exprNameElem = document.getElementById("expr_rec_add_expr_name");
+    if (!check(exprNameElem)) {
+        dialogAlert("登録名を入力してください");
+        return;
+    }
+    const exprElem = document.getElementById("expr_rec_add_expr");
+    if (!check(exprElem)) {
+        dialogAlert("式を入力してください");
+        return;
+    }
+    const category = categoryElem.value;
+    const exprName = exprNameElem.value;
+    const expr = exprElem.value;
+    try {
+        parseExpression(expr);
+    }
+    catch (err) {
+        if (err instanceof ExprSyntaxError) {
+            dialogAlert("式のエラー: " + err.getMessage());
+        }
+        else {
+            console.log(`${err}`);
+            dialogAlert("不明なエラー");
+        }
+        return;
+    }
+    addExprRecord(category, exprName, expr);
+    dialogAlert(`式がカテゴリ ${category} の登録名 ${exprName} として登録されました`);
+});
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、最大化式）
+document.getElementById("expression_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click expression_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "expression";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件1）
+document.getElementById("heart_require_skill_expression_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "heart_require_skill_expression";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件2）
+document.getElementById("heart_require_skill_expression_2_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_2_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "heart_require_skill_expression_2";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件3）
+document.getElementById("heart_require_skill_expression_3_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_3_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "heart_require_skill_expression_3";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件4）
+document.getElementById("heart_require_skill_expression_4_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_4_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "heart_require_skill_expression_4";
+    dialog.showModal();
+});
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス距離
 /////////////////////////////////////////////////////////////////////////////////////
@@ -5899,6 +6103,146 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             break;
     }
     powerUp = oldPowerUp;
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式A）
+document.getElementById("reallyneeded_expr1_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr1_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr1_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式B）
+document.getElementById("reallyneeded_expr2_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr2_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr2_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式C）
+document.getElementById("reallyneeded_expr3_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr3_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr3_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式D）
+document.getElementById("reallyneeded_expr4_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr4_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr4_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式E）
+document.getElementById("reallyneeded_expr5_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr5_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr5_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式F）
+document.getElementById("reallyneeded_expr6_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr6_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr6_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式G）
+document.getElementById("reallyneeded_expr7_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr7_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr7_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式H）
+document.getElementById("reallyneeded_expr8_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr8_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_expr8_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式1）
+document.getElementById("reallyneeded_refexpr_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_refexpr_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式2）
+document.getElementById("reallyneeded_refexpr2_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr2_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_refexpr2_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式3）
+document.getElementById("reallyneeded_refexpr3_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr3_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_refexpr3_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式4）
+document.getElementById("reallyneeded_refexpr4_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr4_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_refexpr4_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式5）
+document.getElementById("reallyneeded_refexpr5_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr5_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_refexpr5_expr";
+    dialog.showModal();
+});
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式6）
+document.getElementById("reallyneeded_refexpr6_from")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr6_from");
+    }
+    const dialog = document.getElementById("expr_rec_dialog");
+    document.getElementById("expr_rec_target_id").value = "reallyneeded_refexpr6_expr";
+    dialog.showModal();
 });
 /////////////////////////////////////////////////////////////////////////////////////
 // マニュアルこころセット
