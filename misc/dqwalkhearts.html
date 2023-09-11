@@ -270,6 +270,7 @@
       <hr />
       <form method="dialog">
         <input type="hidden" name="expr_rec_target_id" id="expr_rec_target_id" value="" />
+        <input type="hidden" name="expr_rec_powerup" id="expr_rec_powerup" value="" />
         <div>登録済みの式の選択</div>
         <div><label for="expr_rec_category" >カテゴリ:</label> <select name="expr_rec_category" id="expr_rec_category" required ></select></div>
         <div><label for="expr_rec_expr_name">登録名:</label> <select name="expr_rec_expr_name" id="expr_rec_expr_name" required ></select></div>
@@ -289,10 +290,22 @@
           </div>
         </details>
         <hr />
+        <details>
+          <summary class="small">式の削除</summary>
+          <div class="pad1 outline">
+            <div><input type="checkbox" name="expr_rec_delete_check" id="expr_rec_delete_check" />
+              <label for="expr_rec_delete_check" >選択されている式を削除します</label>
+            </div>
+            <div>
+              <button type="button" id="expr_rec_delete">削除する</button>
+            </div>
+          </div>
+        </details>
+        <hr />
         <div>入力の方法</div>
         <fieldset>
-          <div><label><input type="radio" name="expr_rec_option" value="overwrite" checked >上書き</label></div>
-          <div><label><input type="radio" name="expr_rec_option" value="append"            >追記</label></div>
+          <div><label><input type="radio" name="expr_rec_option" id="expr_rec_option_overwrite" value="overwrite" checked >上書き</label></div>
+          <div><label><input type="radio" name="expr_rec_option" id="expr_rec_option_append"    value="append"            >追記</label></div>
         </fieldset>
         <hr />
         <div>
@@ -395,7 +408,7 @@
               <div>
                 <label for="expression">式：</label>
                 <input type="text" name="expression" id="expression" placeholder="HP+MP+PWR+DEF+AMG+RMG+SPD+DEX" maxLength="300" size="60" />
-                <button type="button" id="expression_from">…</button>
+                <button type="button" id="expression_from" class="secret">…</button>
               </div>
               <div>
                 <details class="small description-expression">
@@ -632,7 +645,7 @@
                 ※ここで使う式は最大化の項目の式と同じ書式
               </div>
               <input type="text" name="heart_require_skill_expression" id="heart_require_skill_expression" placeholder="SKILL(きあいため)+SKILL(ちからため)" maxlength="300" size="60" />
-              <button type="button" id="heart_require_skill_expression_from">…</button>
+              <button type="button" id="heart_require_skill_expression_from" class="secret">…</button>
               <hr />
               <button type="button" value="check" id="check_require_skill">式の確認</button>
             </fieldset>
@@ -647,7 +660,7 @@
                   ※ここで使う式は最大化の項目の式と同じ書式
                 </div>
                 <input type="text" name="heart_require_skill_expression_2" id="heart_require_skill_expression_2" placeholder="SKILL(ベホイミ)+SKILL(ホイミ)" maxlength="300" size="60" />
-                <button type="button" id="heart_require_skill_expression_2_from">…</button>
+                <button type="button" id="heart_require_skill_expression_2_from" class="secret">…</button>
                 <hr />
                 <button type="button" value="check" id="check_require_skill_2">式の確認</button>
               </fieldset>
@@ -662,7 +675,7 @@
                     ※ここで使う式は最大化の項目の式と同じ書式
                   </div>
                   <input type="text" name="heart_require_skill_expression_3" id="heart_require_skill_expression_3" placeholder="SKILL(ルカニ)+SKILL(かぶとわり)" maxlength="300" size="60" />
-                  <button type="button" id="heart_require_skill_expression_3_from">…</button>
+                  <button type="button" id="heart_require_skill_expression_3_from" class="secret">…</button>
                   <hr />
                   <button type="button" value="check" id="check_require_skill_3">式の確認</button>
                 </fieldset>
@@ -677,7 +690,7 @@
                       ※ここで使う式は最大化の項目の式と同じ書式
                     </div>
                     <input type="text" name="heart_require_skill_expression_4" id="heart_require_skill_expression_4" placeholder="SKILL(メラ)+SKILL(ヒャド)" maxlength="300" size="60" />
-                    <button type="button" id="heart_require_skill_expression_4_from">…</button>
+                    <button type="button" id="heart_require_skill_expression_4_from" class="secret">…</button>
                     <hr />
                     <button type="button" value="check" id="check_require_skill_4">式の確認</button>
                   </fieldset>
