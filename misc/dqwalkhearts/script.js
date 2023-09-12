@@ -310,7 +310,7 @@ const RainbowColorInfo = {
 let monsterMap = new Map();
 let monsterList = [];
 let monsterNameList = [];
-let NO_STORAGE = false;
+let NO_STORAGE = false; // trueならストレージ無効、falseならストレージ有効
 const IDENT = Date.now();
 if (DEBUG) {
     console.log(`IDENT: ${IDENT}`);
@@ -482,7 +482,15 @@ function saveExprRecord() {
         }
         return;
     }
-    // TODO
+    try {
+        const data = exprRecordLists;
+        const json = JSON.stringify(data);
+        window.localStorage.setItem(STORAGE_KEY_EXPR_RECORD, json);
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
 }
 // 登録済みの式をロードする
 function loadExprRecord() {
@@ -495,7 +503,22 @@ function loadExprRecord() {
         }
         return;
     }
-    // TODO
+    try {
+        const json = window.localStorage.getItem(STORAGE_KEY_EXPR_RECORD);
+        if (json !== null) {
+            const data = JSON.parse(json);
+            exprRecordLists = data;
+            updateExprRecordCategoryList();
+            const category = document.getElementById("expr_rec_category").value;
+            updateSelectExprRecordExprNameList(category);
+            const exprName = document.getElementById("expr_rec_expr_name").value;
+            document.getElementById("expr_rec_expr").value = getRecoredExpr(category, exprName);
+        }
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
 }
 function getRecoredExpr(category, exprName) {
     const ci = exprRecordLists.findIndex(e => e.category === category);
@@ -608,7 +631,7 @@ function addExprRecord(category, exprName, expr) {
     document.getElementById("expr_rec_category").value = category;
     updateSelectExprRecordExprNameList(category);
     document.getElementById("expr_rec_expr_name").value = exprName;
-    updateDataListExprRecordExprNameList(exprName);
+    updateDataListExprRecordExprNameList(category);
     document.getElementById("expr_rec_expr").value = expr;
 }
 // ランクの変更箇所を数えて表示する
@@ -6834,6 +6857,7 @@ document.getElementById("manualset_job").addEventListener("change", () => {
         // ローカルストレージのリストを利用
         loadMonsterList();
         updateChangedRankCount();
+        loadExprRecord();
     }
 })();
 // デバッグモードであることの確認

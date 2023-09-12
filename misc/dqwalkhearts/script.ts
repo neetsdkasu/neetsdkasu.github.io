@@ -390,7 +390,7 @@ let monsterMap: Map<string, Monster> = new Map();
 let monsterList: Monster[] = [];
 let monsterNameList: string[] = [];
 
-let NO_STORAGE: boolean = false;
+let NO_STORAGE: boolean = false; // trueならストレージ無効、falseならストレージ有効
 
 const IDENT: number = Date.now();
 
@@ -581,7 +581,14 @@ function saveExprRecord(): void {
         }
         return;
     }
-    // TODO
+    try {
+        const data = exprRecordLists;
+        const json = JSON.stringify(data);
+        window.localStorage.setItem(STORAGE_KEY_EXPR_RECORD, json);
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
 }
 
 // 登録済みの式をロードする
@@ -595,7 +602,21 @@ function loadExprRecord(): void {
         }
         return;
     }
-    // TODO
+    try {
+        const json = window.localStorage.getItem(STORAGE_KEY_EXPR_RECORD);
+        if (json !== null) {
+            const data: ExprRecordList[] = JSON.parse(json);
+            exprRecordLists = data;
+            updateExprRecordCategoryList();
+            const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+            updateSelectExprRecordExprNameList(category);
+            const exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+            (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+        }
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
 }
 
 function getRecoredExpr(category: string, exprName: string): string {
@@ -711,7 +732,7 @@ function addExprRecord(category: string, exprName: string, expr: string): void {
     (document.getElementById("expr_rec_category") as HTMLSelectElement).value = category;
     updateSelectExprRecordExprNameList(category);
     (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value = exprName;
-    updateDataListExprRecordExprNameList(exprName);
+    updateDataListExprRecordExprNameList(category);
     (document.getElementById("expr_rec_expr") as HTMLInputElement).value = expr;
 }
 
@@ -7162,6 +7183,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         // ローカルストレージのリストを利用
         loadMonsterList();
         updateChangedRankCount();
+        loadExprRecord();
     }
 })();
 
