@@ -1367,6 +1367,41 @@
         </details>
       </section>
 
+      <hr class="secret" />
+
+      <section class="secret somefiles">
+        <h5>データファイルの保存・読込</h5>
+        <details>
+          <details class="pad1 outline">
+            <summary>登録した式のデータ</summary>
+            <div class="pad1 outline">
+              <div>保存</div>
+              <div>
+                <button type="button" id="data_file_expr_rec_download">ダウンロード</button>
+                <span id="data_file_expr_rec_downloadlink" hidden>
+                  <a href="" download="expr_record.json" type="application/json">expr_record.json</a>
+                  <span></span>
+                </span>
+              </div>
+            </div>
+            <div class="pad1 outline">
+              <div>読込</div>
+              <div>
+                <input type="file" name="data_file_expr_rec_load_file" id="data_file_expr_rec_load_file" accept=".json,application/json" />
+              </div>
+              <div>
+                <fieldset id="data_file_expr_rec_load_option">
+                  <div><label><input type="radio" name="data_file_expr_rec_load_option" value="truncate"             >現在のデータを全て破棄してファイルのデータを読込む</label></div>
+                  <div><label><input type="radio" name="data_file_expr_rec_load_option" value="file_as_newer"        >ファイルのデータを最新として現在のデータへ追加する</label></div>
+                  <div><label><input type="radio" name="data_file_expr_rec_load_option" value="file_as_older" checked>現在のデータを最新としてファイルのデータを追加する</label></div>
+                </fieldset>
+              </div>
+              <div><button type="button" id="data_file_expr_rec_load">読み込む</button></div>
+            </div>
+          </details>
+        </details>
+      </section>
+
     </main>
 
     <hr />

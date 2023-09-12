@@ -129,6 +129,26 @@ function insert(arr, value, less) {
         return index;
     }
 }
+// リストのマージ（頭悪い実装）
+function mergeList(baseList, additionalList, task) {
+    let tmpList = baseList.slice();
+    let append = [];
+    for (const item1 of additionalList) {
+        let ok = false;
+        for (let i = 0; i < tmpList.length; i++) {
+            const item0 = tmpList[i];
+            if (task.doesMerge(item0, item1)) {
+                tmpList[i] = task.merge(item0, item1);
+                ok = true;
+                break;
+            }
+        }
+        if (!ok) {
+            append.push(item1);
+        }
+    }
+    return tmpList.concat(append);
+}
 var Rank;
 (function (Rank) {
     Rank[Rank["S_plus"] = 0] = "S_plus";
@@ -468,6 +488,9 @@ function isData(anyobj) {
     if (!(("monsterList" in obj) && isMonsterList(obj["monsterList"]))) {
         return false;
     }
+    return true;
+}
+function isValidExprRecordListData(data) {
     return true;
 }
 let exprRecordLists = [];
@@ -4332,6 +4355,107 @@ document.getElementById("heart_require_skill_expression_4_from")
         console.log("click heart_require_skill_expression_4_from");
     }
     showExprRecordDialog("heart_require_skill_expression_4");
+});
+function showDownloadDataLink(linkId, data) {
+    const link = document.getElementById(linkId);
+    link.hidden = true;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+        link.querySelector("a")
+            .href = reader.result;
+        link.querySelector("span").textContent = `(${new Date()})`;
+        link.hidden = false;
+    });
+    const json = JSON.stringify(data);
+    reader.readAsDataURL(new Blob([json]));
+}
+function loadDataFile(fileId, radioId, listener) {
+    const files = document.getElementById(fileId).files;
+    if (files === null || files.length === 0) {
+        dialogAlert("ファイルを選択してください");
+        return;
+    }
+    const file = files[0];
+    let option = "";
+    for (const radio of document.querySelectorAll(`#${radioId} input`)) {
+        if (radio.checked) {
+            option = radio.value;
+            break;
+        }
+    }
+    file.text().then(text => {
+        const data = JSON.parse(text);
+        if (listener.isValid(data)) {
+            switch (option) {
+                case "file_as_newer":
+                    listener.fileAsNewer(data);
+                    break;
+                case "file_as_older":
+                    listener.fileAsOlder(data);
+                    break;
+                default:
+                    listener.truncate(data);
+                    break;
+            }
+        }
+        else {
+            dialogAlert("エラー: ファイル内容が不正です");
+        }
+    }).catch(err => {
+        dialogAlert(`${err}`);
+    });
+}
+// データファイルのダウンロード （登録した式）
+document.getElementById("data_file_expr_rec_download")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_expr_rec_download");
+    }
+    showDownloadDataLink("data_file_expr_rec_downloadlink", exprRecordLists);
+});
+// データファイルの読み込み （登録した式）
+document.getElementById("data_file_expr_rec_load")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_expr_rec_load");
+    }
+    const erMerge = {
+        doesMerge: (oldOne, newOne) => oldOne.name === newOne.name,
+        merge: (oldOne, newOne) => newOne,
+    };
+    const erlMerge = {
+        doesMerge: (oldOne, newOne) => oldOne.category === newOne.category,
+        merge: (oldOne, newOne) => ({
+            category: newOne.category,
+            list: mergeList(oldOne.list, newOne.list, erMerge).sort((a, b) => a.name.localeCompare(b.name))
+        })
+    };
+    const update = () => {
+        saveExprRecord();
+        updateExprRecordCategoryList();
+        const category = document.getElementById("expr_rec_category").value;
+        updateSelectExprRecordExprNameList(category);
+        const exprName = document.getElementById("expr_rec_expr_name").value;
+        document.getElementById("expr_rec_expr").value = getRecoredExpr(category, exprName);
+        dialogAlert("読み込み完了しました");
+    };
+    loadDataFile("data_file_expr_rec_load_file", "data_file_expr_rec_load_option", {
+        isValid: isValidExprRecordListData,
+        truncate: (data) => {
+            exprRecordLists = data;
+            update();
+        },
+        fileAsNewer: (data) => {
+            const newList = mergeList(exprRecordLists, data, erlMerge).sort((a, b) => a.category.localeCompare(b.category));
+            exprRecordLists = newList;
+            update();
+        },
+        fileAsOlder: (data) => {
+            const newList = mergeList(data, exprRecordLists, erlMerge).sort((a, b) => a.category.localeCompare(b.category));
+            exprRecordLists = newList;
+            update();
+        }
+    });
 });
 /////////////////////////////////////////////////////////////////////////////////////
 // ステータス距離

@@ -149,6 +149,32 @@ function insert<T>(arr: Array<T>, value: T, less: (value: T, than: T) => boolean
     }
 }
 
+interface MergeListTask<T> {
+    doesMerge: (itemOfBaseList: T, itemOfAdditionalList: T) => boolean;
+    merge: (itemOfBaseList: T, itemOfAdditionalList: T) => T;
+}
+
+// リストのマージ（頭悪い実装）
+function mergeList<T>(baseList: T[], additionalList: T[], task: MergeListTask<T>): T[] {
+    let tmpList: T[] = baseList.slice();
+    let append: T[] = [];
+    for (const item1 of additionalList) {
+        let ok = false;
+        for (let i = 0; i < tmpList.length; i++) {
+            const item0 = tmpList[i];
+            if (task.doesMerge(item0, item1)) {
+                tmpList[i] = task.merge(item0, item1);
+                ok = true;
+                break;
+            }
+        }
+        if (!ok) {
+            append.push(item1);
+        }
+    }
+    return tmpList.concat(append);
+}
+
 enum Rank {
     S_plus = 0,
     S,
@@ -566,6 +592,11 @@ interface ExprRecord {
 interface ExprRecordList {
     category: string;
     list: ExprRecord[];
+}
+
+function isValidExprRecordListData(data: ExprRecordList[] | unknown): data is ExprRecordList[] {
+    // TODO
+    return true;
 }
 
 let exprRecordLists: ExprRecordList[] = [];
@@ -4536,6 +4567,117 @@ document.getElementById("heart_require_skill_expression_4_from")!
         console.log("click heart_require_skill_expression_4_from");
     }
     showExprRecordDialog("heart_require_skill_expression_4");
+});
+
+function showDownloadDataLink(linkId: string, data: any): void {
+    const link = document.getElementById(linkId)!;
+    link.hidden = true;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+        (link.querySelector("a") as HTMLAnchorElement)
+            .href = reader.result as string;
+        link.querySelector("span")!.textContent = `(${new Date()})`;
+        link.hidden = false;
+    });
+    const json = JSON.stringify(data);
+    reader.readAsDataURL(new Blob([json]));
+}
+
+interface LoadDataFileListener<T> {
+    isValid: (data: T | unknown) => data is T;
+    truncate: (data: T) => void;
+    fileAsNewer: (data: T) => void;
+    fileAsOlder: (data: T) => void;
+}
+
+function loadDataFile<T>(fileId: string, radioId: string, listener: LoadDataFileListener<T>): void {
+    const files = (document.getElementById(fileId) as HTMLInputElement).files;
+    if (files === null || files.length === 0) {
+        dialogAlert("ファイルを選択してください");
+        return;
+    }
+    const file = files[0];
+    let option = "";
+    for (const radio of document.querySelectorAll(`#${radioId} input`)) {
+        if ((radio as HTMLInputElement).checked) {
+            option = (radio as HTMLInputElement).value;
+            break;
+        }
+    }
+    file.text().then( text => {
+        const data = JSON.parse(text);
+        if (listener.isValid(data)) {
+            switch (option) {
+                case "file_as_newer":
+                    listener.fileAsNewer(data);
+                    break;
+                case "file_as_older":
+                    listener.fileAsOlder(data);
+                    break;
+                default:
+                    listener.truncate(data);
+                    break;
+            }
+        } else {
+            dialogAlert("エラー: ファイル内容が不正です");
+        }
+    }).catch( err => {
+        dialogAlert(`${err}`);
+    });
+}
+
+// データファイルのダウンロード （登録した式）
+document.getElementById("data_file_expr_rec_download")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_expr_rec_download");
+    }
+    showDownloadDataLink("data_file_expr_rec_downloadlink", exprRecordLists);
+});
+
+// データファイルの読み込み （登録した式）
+document.getElementById("data_file_expr_rec_load")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_expr_rec_load");
+    }
+    const erMerge: MergeListTask<ExprRecord> = {
+        doesMerge: (oldOne: ExprRecord, newOne: ExprRecord) => oldOne.name === newOne.name,
+        merge: (oldOne: ExprRecord, newOne: ExprRecord) => newOne,
+    };
+    const erlMerge: MergeListTask<ExprRecordList> = {
+        doesMerge: (oldOne: ExprRecordList, newOne: ExprRecordList) => oldOne.category === newOne.category,
+        merge: (oldOne: ExprRecordList, newOne: ExprRecordList) => ({
+            category: newOne.category,
+            list: mergeList(oldOne.list, newOne.list, erMerge).sort((a, b) => a.name.localeCompare(b.name))
+        })
+    };
+    const update = () => {
+        saveExprRecord();
+        updateExprRecordCategoryList();
+        const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+        updateSelectExprRecordExprNameList(category);
+        const exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+        (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+        dialogAlert("読み込み完了しました");
+    };
+    loadDataFile("data_file_expr_rec_load_file", "data_file_expr_rec_load_option", {
+        isValid: isValidExprRecordListData,
+        truncate: (data: ExprRecordList[]) => {
+            exprRecordLists = data;
+            update();
+        },
+        fileAsNewer: (data: ExprRecordList[]) => {
+            const newList = mergeList(exprRecordLists, data, erlMerge).sort((a, b) => a.category.localeCompare(b.category));
+            exprRecordLists = newList;
+            update();
+        },
+        fileAsOlder: (data: ExprRecordList[]) => {
+            const newList = mergeList(data, exprRecordLists, erlMerge).sort((a, b) => a.category.localeCompare(b.category));
+            exprRecordLists = newList;
+            update();
+        }
+    });
 });
 
 
