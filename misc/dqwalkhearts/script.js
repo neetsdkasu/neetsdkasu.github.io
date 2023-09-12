@@ -285,7 +285,12 @@ const JobPresetMaximumCost = [
             { level: 20, maximumCost: 121 }
         ]
     },
-    { id: 300, maximumCostList: []
+    { id: 300, maximumCostList: [
+            { level: 4, maximumCost: 275 },
+            { level: 3, maximumCost: 269 },
+            { level: 2, maximumCost: 264 },
+            { level: 1, maximumCost: 259 }
+        ]
     }
 ];
 const SingleColorInfoMap = (() => {
@@ -543,6 +548,35 @@ function updateDataListExprRecordExprNameList(category) {
         const opt = dlist.appendChild(document.createElement("option"));
         opt.value = er.name;
     }
+}
+// 式を削除する
+function deleteExprRecord(category, exprName) {
+    const ci = exprRecordLists.findIndex(e => e.category === category);
+    if (ci < 0) {
+        return false;
+    }
+    const li = exprRecordLists[ci].list.findIndex(e => e.name === exprName);
+    if (li < 0) {
+        return false;
+    }
+    const list1 = exprRecordLists[ci].list.slice(0, li);
+    const list2 = exprRecordLists[ci].list.slice(li + 1);
+    const newList = list1.concat(list2);
+    if (newList.length === 0) {
+        const erList1 = exprRecordLists.slice(0, ci);
+        const erList2 = exprRecordLists.slice(ci + 1);
+        exprRecordLists = erList1.concat(erList2);
+        updateExprRecordCategoryList();
+        category = document.getElementById("expr_rec_category").value;
+    }
+    else {
+        exprRecordLists[ci].list = newList;
+    }
+    updateSelectExprRecordExprNameList(category);
+    exprName = document.getElementById("expr_rec_expr_name").value;
+    document.getElementById("expr_rec_expr").value = getRecoredExpr(category, exprName);
+    saveExprRecord();
+    return true;
 }
 // 式を登録する
 function addExprRecord(category, exprName, expr) {
@@ -4163,7 +4197,7 @@ document.getElementById("expr_rec_add")
         return;
     }
     addExprRecord(category, exprName, expr);
-    dialogAlert(`式がカテゴリ ${category} の登録名 ${exprName} として登録されました`);
+    dialogAlert(`式がカテゴリ『${category}』の登録名『${exprName}』として登録されました`);
 });
 function showExprRecordDialog(exprId, powerUpStr) {
     const dialog = document.getElementById("expr_rec_dialog");
@@ -4185,6 +4219,8 @@ document.getElementById("expr_rec_category")
     .addEventListener("change", () => {
     const category = document.getElementById("expr_rec_category").value;
     updateSelectExprRecordExprNameList(category);
+    const exprName = document.getElementById("expr_rec_expr_name").value;
+    document.getElementById("expr_rec_expr").value = getRecoredExpr(category, exprName);
 });
 // 式登録ダイアログの式の登録のカテゴリ選択時
 document.getElementById("expr_rec_add_category")
@@ -4216,7 +4252,23 @@ document.getElementById("expr_rec_delete")
     if (DEBUG) {
         console.log("click expr_rec_delete");
     }
-    // TODO
+    const dialog = document.getElementById("expr_rec_dialog");
+    const form = dialog.querySelector(":scope form");
+    if (!form.reportValidity()) {
+        return;
+    }
+    const elems = form.elements;
+    const category = elems.namedItem("expr_rec_category").value;
+    const exprName = elems.namedItem("expr_rec_expr_name").value;
+    const checkElem = elems.namedItem("expr_rec_delete_check");
+    if (!checkElem.checked) {
+        dialogAlert("削除を実行するにはチェックを入れてください");
+        return;
+    }
+    if (deleteExprRecord(category, exprName)) {
+        dialogAlert(`カテゴリ『${category}』の登録名『${exprName}』の式を削除しました`);
+        checkElem.checked = false;
+    }
 });
 // 登録済み式の挿入ダイアログを開く　（こころセット検索、最大化式）
 document.getElementById("expression_from")
