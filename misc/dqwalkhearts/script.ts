@@ -20,6 +20,8 @@ if (DEBUG) {
 let EXPOSE_MODE = false;
 
 const LOCAL_STORAGE_PATH = "dqwalkhearts";
+const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
+const STORAGE_KEY_EXPR_RECORD = LOCAL_STORAGE_PATH + ".expr_rec";
 
 function dialogAlert(msg: string): void {
     if (DEBUG) {
@@ -145,6 +147,32 @@ function insert<T>(arr: Array<T>, value: T, less: (value: T, than: T) => boolean
         arr.splice(index, 0, value);
         return index;
     }
+}
+
+interface MergeListTask<T> {
+    doesMerge: (itemOfBaseList: T, itemOfAdditionalList: T) => boolean;
+    merge: (itemOfBaseList: T, itemOfAdditionalList: T) => T;
+}
+
+// リストのマージ（頭悪い実装）
+function mergeList<T>(baseList: T[], additionalList: T[], task: MergeListTask<T>): T[] {
+    let tmpList: T[] = baseList.slice();
+    let append: T[] = [];
+    for (const item1 of additionalList) {
+        let ok = false;
+        for (let i = 0; i < tmpList.length; i++) {
+            const item0 = tmpList[i];
+            if (task.doesMerge(item0, item1)) {
+                tmpList[i] = task.merge(item0, item1);
+                ok = true;
+                break;
+            }
+        }
+        if (!ok) {
+            append.push(item1);
+        }
+    }
+    return tmpList.concat(append);
 }
 
 enum Rank {
@@ -354,6 +382,12 @@ const JobPresetMaximumCost: JobMaximumCost[] = [
         ]
     },
     { id: 300, maximumCostList: [
+            { level: 6, maximumCost: 284 },
+            { level: 5, maximumCost: 280 },
+            { level: 4, maximumCost: 275 },
+            { level: 3, maximumCost: 269 },
+            { level: 2, maximumCost: 264 },
+            { level: 1, maximumCost: 259 }
         ]
     }
 ];
@@ -384,7 +418,7 @@ let monsterMap: Map<string, Monster> = new Map();
 let monsterList: Monster[] = [];
 let monsterNameList: string[] = [];
 
-let NO_STORAGE: boolean = false;
+let NO_STORAGE: boolean = false; // trueならストレージ無効、falseならストレージ有効
 
 const IDENT: number = Date.now();
 
@@ -421,7 +455,7 @@ function saveMonsterList(trigger: Trigger): void {
             monsterList: monsterList
         };
         const json = JSON.stringify(data);
-        window.localStorage.setItem(LOCAL_STORAGE_PATH, json);
+        window.localStorage.setItem(STORAGE_KEY_MONSTER_LIST, json);
         if (DEBUG) {
             console.log("saved to storage");
         }
@@ -443,7 +477,7 @@ function loadMonsterList(): void {
         return;
     }
     try {
-        const json = window.localStorage.getItem(LOCAL_STORAGE_PATH);
+        const json = window.localStorage.getItem(STORAGE_KEY_MONSTER_LIST);
         if (json !== null) {
             const data: unknown = JSON.parse(json);
             if (isData(data)) {
@@ -482,8 +516,8 @@ window.addEventListener("storage", e => {
         if (DEBUG) {
             console.log(`storage key: ${e.key}`);
         }
-        if (e.key !== LOCAL_STORAGE_PATH) {
-            console.log(`not dqwalkhearts data`);
+        if (e.key !== STORAGE_KEY_MONSTER_LIST) {
+            console.log(`not dqwalkhearts monster list data ( key: ${e.key} )`);
             return;
         }
         if (e.newValue === null) {
@@ -552,8 +586,238 @@ function isData(anyobj: Data | unknown): anyobj is Data {
     return true;
 }
 
+interface ExprRecord {
+    name: string;
+    expr: string;
+}
+
+interface ExprRecordList {
+    category: string;
+    list: ExprRecord[];
+}
+
+function isValidExprRecordListData(data: ExprRecordList[] | unknown): data is ExprRecordList[] {
+    try {
+        if (!Array.isArray(data)) {
+            console.log("ExprRecordList[]じゃないJSONファイル");
+            console.log(data);
+            return false;
+        }
+        const list1 = data as unknown[];
+        for (const item1 of list1) {
+            if (typeof item1 !== "object" || item1 === null) {
+                console.log("object型じゃない");
+                console.log(item1);
+                return false;
+            }
+            const obj1: {[key: string]: any} = item1; // ここキャストできる理由わからない
+            if (!(("category" in obj1) && (typeof obj1["category"] === "string"))) {
+                console.log("string型のcategoryプロパティがない");
+                console.log(obj1);
+                return false;
+            }
+            if (!(("list" in obj1) && (Array.isArray(obj1["list"])))) {
+                console.log("Array型のlistプロパティがない");
+                console.log(item1);
+                return false;
+            }
+            const list2 = obj1["list"] as unknown[];
+            for (const item2 of list2) {
+                if (typeof item2 !== "object" || item2 === null) {
+                    console.log("object型じゃない");
+                    console.log(item2);
+                    return false;
+                }
+                const obj2: {[key: string]: any} = item2; // ここキャストできる理由わからない
+                if (!(("name" in obj2) && (typeof obj2["name"] === "string"))) {
+                    console.log("string型のnameプロパティがない");
+                    console.log(obj2);
+                    return false;
+                }
+                if (!(("expr" in obj2) && (typeof obj2["expr"] === "string"))) {
+                    console.log("string型のexprプロパティがない");
+                    console.log(obj2);
+                    return false;
+                }
+            }
+        }
+        return true;
+    } catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+let exprRecordLists: ExprRecordList[] = [];
+
+// 登録済みの式をセーブする
+function saveExprRecord(): void {
+    if (DEBUG) {
+        console.log("call saveExprRecord");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    try {
+        const data = exprRecordLists;
+        const json = JSON.stringify(data);
+        window.localStorage.setItem(STORAGE_KEY_EXPR_RECORD, json);
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+
+// 登録済みの式をロードする
+function loadExprRecord(): void {
+    if (DEBUG) {
+        console.log("call loadExprRecord");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.localStorage.getItem(STORAGE_KEY_EXPR_RECORD);
+        if (json !== null) {
+            const data: ExprRecordList[] = JSON.parse(json);
+            exprRecordLists = data;
+            updateExprRecordCategoryList();
+            const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+            updateSelectExprRecordExprNameList(category);
+            const exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+            (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+        }
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+
+function getRecoredExpr(category: string, exprName: string): string {
+    const ci = exprRecordLists.findIndex(e => e.category === category);
+    if (ci < 0) {
+        return "";
+    }
+    const li = exprRecordLists[ci].list.findIndex(e => e.name === exprName);
+    if (li < 0) {
+        return "";
+    }
+    return exprRecordLists[ci].list[li].expr;
+}
+
+// 登録済み式のカテゴリリストの更新
+function updateExprRecordCategoryList(): void {
+    const sel = document.getElementById("expr_rec_category") as HTMLSelectElement;
+    const dlist = document.getElementById("expr_rec_category_list")!;
+    sel.innerHTML = "";
+    dlist.innerHTML = "";
+    for (const erl of exprRecordLists) {
+        const sopt = sel.appendChild(document.createElement("option"));
+        sopt.value = erl.category;
+        sopt.textContent = erl.category;
+        const dopt = dlist.appendChild(document.createElement("option"));
+        dopt.value = erl.category;
+    }
+}
+
+function updateSelectExprRecordExprNameList(category: string): void {
+    const sel = document.getElementById("expr_rec_expr_name") as HTMLSelectElement;
+    sel.innerHTML = "";
+    const ci = exprRecordLists.findIndex(e => e.category === category);
+    if (ci < 0) {
+        console.log(`not found category: ${category}`);
+        return;
+    }
+    for (const er of exprRecordLists[ci].list) {
+        const opt = sel.appendChild(document.createElement("option"));
+        opt.value = er.name;
+        opt.textContent = er.name;
+    }
+}
+
+function updateDataListExprRecordExprNameList(category: string): void {
+    const dlist = document.getElementById("expr_rec_expr_name_list")!;
+    dlist.innerHTML = "";
+    const ci = exprRecordLists.findIndex(e => e.category === category);
+    if (ci < 0) {
+        console.log(`not found category: ${category}`);
+        return;
+    }
+    for (const er of exprRecordLists[ci].list) {
+        const opt = dlist.appendChild(document.createElement("option"));
+        opt.value = er.name;
+    }
+}
+
+// 式を削除する
+function deleteExprRecord(category: string, exprName: string): boolean {
+    const ci = exprRecordLists.findIndex(e => e.category === category);
+    if (ci < 0) {
+        return false;
+    }
+    const li = exprRecordLists[ci].list.findIndex(e => e.name === exprName);
+    if (li < 0) {
+        return false;
+    }
+    const list1 = exprRecordLists[ci].list.slice(0, li);
+    const list2 = exprRecordLists[ci].list.slice(li + 1);
+    const newList = list1.concat(list2);
+    if (newList.length === 0) {
+        const erList1 = exprRecordLists.slice(0, ci);
+        const erList2 = exprRecordLists.slice(ci + 1);
+        exprRecordLists = erList1.concat(erList2);
+        updateExprRecordCategoryList();
+        category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+    } else {
+        exprRecordLists[ci].list = newList;
+    }
+    updateSelectExprRecordExprNameList(category);
+    exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+    (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+    saveExprRecord();
+    return true;
+}
+
+// 式を登録する
+function addExprRecord(category: string, exprName: string, expr: string): void {
+    if (DEBUG) {
+        console.log("call addExprRecord");
+    }
+    const ci = exprRecordLists.findIndex(e => e.category === category);
+    if (ci < 0) {
+        const newList: ExprRecordList = {
+            category: category,
+            list: [{name: exprName, expr: expr}]
+        };
+        exprRecordLists.push(newList);
+        exprRecordLists.sort((a, b) => a.category.localeCompare(b.category));
+        updateExprRecordCategoryList();
+    } else {
+        const li = exprRecordLists[ci].list.findIndex(e => e.name === exprName);
+        if (li < 0) {
+            const er: ExprRecord = {name: exprName, expr: expr};
+            exprRecordLists[ci].list.push(er);
+            exprRecordLists[ci].list.sort((a, b) => a.name.localeCompare(b.name));
+        } else {
+            exprRecordLists[ci].list[li].expr = expr;
+        }
+    }
+    saveExprRecord();
+    (document.getElementById("expr_rec_category") as HTMLSelectElement).value = category;
+    updateSelectExprRecordExprNameList(category);
+    (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value = exprName;
+    updateDataListExprRecordExprNameList(category);
+    (document.getElementById("expr_rec_expr") as HTMLInputElement).value = expr;
+}
+
 // ランクの変更箇所を数えて表示する
-function updateChangedRankCount() {
+function updateChangedRankCount(): void {
     let defaultCount = 0;
     let count = 0;
     for (const monster of monsterList) {
@@ -1175,6 +1439,8 @@ function addHeart(newMonster: Monster): boolean {
     return true;
 }
 
+let currentJobPresetMaximumCostId = 0;
+
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
 function setPreset(job: Job): void {
     function update(n: number, c: string, v: number): void {
@@ -1210,17 +1476,22 @@ function setPreset(job: Job): void {
         elem("heart4_blue");
     }
     (document.getElementById("heart_power_up") as HTMLInputElement).value = `${job.powerUp}`;
+    if (currentJobPresetMaximumCostId <= job.id && job.id < currentJobPresetMaximumCostId + 100) {
+        return;
+    }
     const maximumCostList = document.getElementById("job_preset_maximum_cost_list")!;
     maximumCostList.innerHTML = "";
     for (const x of JobPresetMaximumCost) {
         if (job.id < x.id || x.id + 100 <= job.id) {
             continue;
         }
+        currentJobPresetMaximumCostId = x.id;
         for (const item of x.maximumCostList) {
             const op = maximumCostList.appendChild(document.createElement("option"));
             op.value = `${item.maximumCost}`;
             op.textContent = ` Lv ${item.level}`;
         }
+        break;
     }
 }
 
@@ -3601,7 +3872,6 @@ document.getElementById("expression")!
     }
 })();
 
-
 // 覚醒同時検索の有無の切り替え
 document.getElementById("heart_with_s_plus")!
 .addEventListener("change", () => {
@@ -4039,6 +4309,424 @@ document.getElementById("adoption_heartset_dialog")!
         message += "採用こころセットのリストに追加しました。";
     }
     dialogAlert(message === "" ? "ランク変更はありません。こころセットは既にリストにあります。" : message);
+});
+
+// 登録済みの式を入力する（フォームを閉じたときに発動）
+document.getElementById("expr_rec_dialog")!
+.addEventListener("close", () => {
+    if (DEBUG) {
+        console.log("close expr_rec_dialog");
+    }
+    const dialog = document.getElementById("expr_rec_dialog") as HTMLDialogElement;
+    if (dialog.returnValue !== "input") {
+        return;
+    }
+    const elems = (dialog.querySelector(":scope form") as HTMLFormElement).elements;
+    const expr = (elems.namedItem("expr_rec_expr") as HTMLInputElement).value;
+    const isAppend = (elems.namedItem("expr_rec_option") as HTMLInputElement).value === "append";
+    const targetId = (elems.namedItem("expr_rec_target_id") as HTMLInputElement).value;
+    const targetElem = document.getElementById(targetId);
+    if (targetElem === null) {
+        console.log(`not found targetId: ${targetId}`);
+        return;
+    }
+    if (targetElem instanceof HTMLInputElement) {
+        if (isAppend) {
+            targetElem.value += expr;
+        } else {
+            targetElem.value = expr;
+        }
+    } else {
+        if (isAppend) {
+            targetElem.textContent += expr;
+        } else {
+            targetElem.textContent = expr;
+        }
+    }
+});
+
+// 登録済み式の入力フォームのキャンセル
+document.querySelector(`#expr_rec_dialog button[value="cancel"]`)!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click expr_rec_dialog CANCEL button");
+    }
+    const dialog = document.getElementById("expr_rec_dialog") as HTMLDialogElement;
+    dialog.returnValue = "cancel";
+    dialog.close();
+});
+
+// 登録する式のバリデーションのトリガーをセット
+document.getElementById("expr_rec_add_expr")!
+// .addEventListener("blur", () => {
+// .addEventListener("focusout", () => {
+.addEventListener("input", () => {
+    checkExpressionValidity("expr_rec_add_expr");
+});
+
+// 式登録ダイアログの式の確認
+function checkExprRecordSkillExpression(exprId: string): void {
+   if (DEBUG) {
+        console.log("call checkExprRecordSkillExpression");
+    }
+    const exprElem = document.getElementById(exprId) as HTMLInputElement;
+    if (!exprElem.reportValidity()) {
+        return;
+    }
+    const powerUpStr = (document.getElementById("expr_rec_powerup") as HTMLInputElement).value;
+    const oldPowerUp = powerUp;
+    const hasPowerUp = powerUpStr !== "";
+    if (hasPowerUp) {
+        powerUp = parseFloat(powerUpStr);
+    }
+    const dialog = document.getElementById("score_list_dialog") as HTMLDialogElement;
+    const exprSrc = exprElem.value;
+    const msg = dialog.querySelector(".message")!;
+    const tbody = dialog.querySelector("tbody")!;
+    msg.innerHTML = "";
+    tbody.innerHTML = "";
+    if (exprSrc.trim().length === 0) {
+        msg.textContent = "式がありません";
+    } else {
+        try {
+            const expr = parseExpression(exprSrc);
+            if (expr === null) {
+                throw "おそらく式に誤りがあります";
+            }
+            for (const m of monsterList) {
+                if (m.target === null) {
+                    continue;
+                }
+                const tr = tbody.appendChild(document.createElement("tr"));
+                const c = tr.appendChild(document.createElement("td"));
+                showHeartColor(c.appendChild(document.createElement("span")), m.curColor);
+                tr.appendChild(document.createElement("td")).textContent = `${m.curCost}`;
+                const name = (m.target === Rank.S_plus && m.splusName !== null)
+                           ? m.splusName : m.name;
+                tr.appendChild(document.createElement("td")).textContent = name;
+                tr.appendChild(document.createElement("td")).textContent = Rank[m.target].replace("_plus", "+");
+                tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Unset, m)}`;
+                if (hasPowerUp) {
+                    tr.appendChild(document.createElement("td")).textContent = `${expr.calc(Color.Rainbow, m)}`;
+                } else {
+                    tr.appendChild(document.createElement("td")).textContent = "-";
+                }
+            }
+        } catch (err) {
+            if (err instanceof ExprSyntaxError) {
+                msg.appendChild(document.createElement("span")).textContent = msg.textContent = `おそらく${err.pos+1}文字目付近に式の誤りがあります。 `;;
+                msg.appendChild(document.createElement("br"));
+                const code = msg.appendChild(document.createElement("code"));
+                code.classList.add("outline");
+                code.appendChild(document.createElement("span")).textContent = err.strs[0];
+                const span2 = code.appendChild(document.createElement("span"));
+                span2.classList.add("error-expression");
+                span2.textContent = err.strs[1];
+                code.appendChild(document.createElement("span")).textContent = err.strs[2];
+            } else {
+                msg.textContent = `${err}`;
+                console.log(err);
+            }
+        }
+    }
+    powerUp = oldPowerUp;
+    dialog.showModal();
+}
+
+// 登録済みの式の確認ボタンを押した時の処理
+document.getElementById("check_expr_rec_expr")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_expr_rec_expr");
+    }
+    checkExprRecordSkillExpression("expr_rec_expr");
+});
+
+// 登録する式の確認ボタンを押した時の処理
+document.getElementById("check_expr_rec_add_expr")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click check_expr_rec_add_expr");
+    }
+    checkExprRecordSkillExpression("expr_rec_add_expr");
+});
+
+// 登録する式の登録ボタンを押した時の処理
+document.getElementById("expr_rec_add")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click expr_rec_add");
+    }
+    const check = (e: HTMLInputElement): boolean => {
+        e.required = true;
+        const validity = e.checkValidity();
+        e.required = false;
+        return validity;
+    };
+    const categoryElem = (document.getElementById("expr_rec_add_category") as HTMLInputElement);
+    if (!check(categoryElem)) {
+        dialogAlert("カテゴリ名を入力してください");
+        return;
+    }
+    const exprNameElem = (document.getElementById("expr_rec_add_expr_name") as HTMLInputElement);
+    if (!check(exprNameElem)) {
+        dialogAlert("登録名を入力してください");
+        return;
+    }
+    const exprElem = (document.getElementById("expr_rec_add_expr") as HTMLInputElement);
+    if (!check(exprElem)) {
+        dialogAlert("式を入力してください");
+        return;
+    }
+    const category = categoryElem.value;
+    const exprName = exprNameElem.value;
+    const expr = exprElem.value;
+    try {
+        parseExpression(expr);
+    } catch (err) {
+        if (err instanceof ExprSyntaxError) {
+            dialogAlert("式のエラー: " + err.getMessage());
+        } else {
+            console.log(`${err}`);
+            dialogAlert("不明なエラー");
+        }
+        return;
+    }
+    addExprRecord(category, exprName, expr);
+    dialogAlert(`式がカテゴリ『${category}』の登録名『${exprName}』として登録されました`);
+});
+
+function showExprRecordDialog(exprId: string, powerUpStr?: string): void {
+    const dialog = document.getElementById("expr_rec_dialog") as HTMLDialogElement;
+    (document.getElementById("expr_rec_target_id") as HTMLInputElement).value = exprId;
+    (document.getElementById("expr_rec_powerup") as HTMLInputElement).value = powerUpStr ?? "";
+    (dialog.querySelector(":scope form") as HTMLFormElement).reset(); // これはちょっと雑（連続で使いたい場合とか面倒？
+    for (const e of dialog.querySelectorAll(":scope details")) {
+        (e as HTMLDetailsElement).open = false;
+    }
+    const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+    updateSelectExprRecordExprNameList(category);
+    const exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+    (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+    updateDataListExprRecordExprNameList("");
+    dialog.showModal();
+}
+
+// 式登録ダイアログの式選択のカテゴリ選択時
+document.getElementById("expr_rec_category")!
+.addEventListener("change", () => {
+    const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+    updateSelectExprRecordExprNameList(category);
+    const exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+    (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+});
+
+// 式登録ダイアログの式の登録のカテゴリ選択時
+document.getElementById("expr_rec_add_category")!
+.addEventListener("change", () => {
+    const category = (document.getElementById("expr_rec_add_category") as HTMLInputElement).value;
+    updateDataListExprRecordExprNameList(category);
+});
+
+// 式登録ダイアログの式選択の登録名選択時
+document.getElementById("expr_rec_expr_name")!
+.addEventListener("change", () => {
+    const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+    const exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+    (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+});
+
+// 式登録ダイアログの式の登録の登録名選択時
+document.getElementById("expr_rec_add_expr_name")!
+.addEventListener("change", () => {
+    const exprElem = document.getElementById("expr_rec_add_expr") as HTMLInputElement;
+    if (exprElem.value !== "") {
+        return;
+    }
+    const category = (document.getElementById("expr_rec_add_category") as HTMLSelectElement).value;
+    const exprName = (document.getElementById("expr_rec_add_expr_name") as HTMLSelectElement).value;
+    exprElem.value = getRecoredExpr(category, exprName);
+});
+
+// 登録済み式の削除ボタン
+document.getElementById("expr_rec_delete")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click expr_rec_delete");
+    }
+    const dialog = document.getElementById("expr_rec_dialog") as HTMLDialogElement;
+    const form = dialog.querySelector(":scope form") as HTMLFormElement;
+    if (!form.reportValidity()) {
+        return;
+    }
+    const elems = form.elements;
+    const category = (elems.namedItem("expr_rec_category") as HTMLSelectElement).value;
+    const exprName = (elems.namedItem("expr_rec_expr_name") as HTMLSelectElement).value;
+    const checkElem = elems.namedItem("expr_rec_delete_check") as HTMLInputElement;
+    if (!checkElem.checked) {
+        dialogAlert("削除を実行するにはチェックを入れてください");
+        return;
+    }
+    if (deleteExprRecord(category, exprName)) {
+        dialogAlert(`カテゴリ『${category}』の登録名『${exprName}』の式を削除しました`);
+        checkElem.checked = false;
+    }
+});
+
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、最大化式）
+document.getElementById("expression_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click expression_from");
+    }
+    showExprRecordDialog("expression", (document.getElementById("heart_power_up") as HTMLInputElement).value);
+});
+
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件1）
+document.getElementById("heart_require_skill_expression_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_from");
+    }
+    showExprRecordDialog("heart_require_skill_expression");
+});
+
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件2）
+document.getElementById("heart_require_skill_expression_2_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_2_from");
+    }
+    showExprRecordDialog("heart_require_skill_expression_2");
+});
+
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件3）
+document.getElementById("heart_require_skill_expression_3_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_3_from");
+    }
+    showExprRecordDialog("heart_require_skill_expression_3");
+});
+
+// 登録済み式の挿入ダイアログを開く　（こころセット検索、条件4）
+document.getElementById("heart_require_skill_expression_4_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click heart_require_skill_expression_4_from");
+    }
+    showExprRecordDialog("heart_require_skill_expression_4");
+});
+
+function showDownloadDataLink(linkId: string, data: any): void {
+    const link = document.getElementById(linkId)!;
+    link.hidden = true;
+    const reader = new FileReader();
+    reader.addEventListener("load", () => {
+        (link.querySelector("a") as HTMLAnchorElement)
+            .href = reader.result as string;
+        link.querySelector("span")!.textContent = `(${new Date()})`;
+        link.hidden = false;
+    });
+    const json = JSON.stringify(data);
+    reader.readAsDataURL(new Blob([json]));
+}
+
+interface LoadDataFileListener<T> {
+    isValid: (data: T | unknown) => data is T;
+    truncate: (data: T) => void;
+    fileAsNewer: (data: T) => void;
+    fileAsOlder: (data: T) => void;
+}
+
+function loadDataFile<T>(fileId: string, radioId: string, listener: LoadDataFileListener<T>): void {
+    const files = (document.getElementById(fileId) as HTMLInputElement).files;
+    if (files === null || files.length === 0) {
+        dialogAlert("ファイルを選択してください");
+        return;
+    }
+    const file = files[0];
+    let option = "";
+    for (const radio of document.querySelectorAll(`#${radioId} input`)) {
+        if ((radio as HTMLInputElement).checked) {
+            option = (radio as HTMLInputElement).value;
+            break;
+        }
+    }
+    file.text().then( text => {
+        const data = JSON.parse(text);
+        if (listener.isValid(data)) {
+            switch (option) {
+                case "file_as_newer":
+                    listener.fileAsNewer(data);
+                    break;
+                case "file_as_older":
+                    listener.fileAsOlder(data);
+                    break;
+                default:
+                    listener.truncate(data);
+                    break;
+            }
+        } else {
+            dialogAlert("エラー: ファイル内容が不正です");
+        }
+    }).catch( err => {
+        dialogAlert(`${err}`);
+    });
+}
+
+// データファイルのダウンロード （登録した式）
+document.getElementById("data_file_expr_rec_download")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_expr_rec_download");
+    }
+    showDownloadDataLink("data_file_expr_rec_downloadlink", exprRecordLists);
+});
+
+// データファイルの読み込み （登録した式）
+document.getElementById("data_file_expr_rec_load")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_expr_rec_load");
+    }
+    const erMerge: MergeListTask<ExprRecord> = {
+        doesMerge: (oldOne: ExprRecord, newOne: ExprRecord) => oldOne.name === newOne.name,
+        merge: (oldOne: ExprRecord, newOne: ExprRecord) => newOne,
+    };
+    const erlMerge: MergeListTask<ExprRecordList> = {
+        doesMerge: (oldOne: ExprRecordList, newOne: ExprRecordList) => oldOne.category === newOne.category,
+        merge: (oldOne: ExprRecordList, newOne: ExprRecordList) => ({
+            category: newOne.category,
+            list: mergeList(oldOne.list, newOne.list, erMerge).sort((a, b) => a.name.localeCompare(b.name))
+        })
+    };
+    const update = () => {
+        saveExprRecord();
+        updateExprRecordCategoryList();
+        const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
+        updateSelectExprRecordExprNameList(category);
+        const exprName = (document.getElementById("expr_rec_expr_name") as HTMLSelectElement).value;
+        (document.getElementById("expr_rec_expr") as HTMLInputElement).value = getRecoredExpr(category, exprName);
+        dialogAlert("読み込み完了しました");
+    };
+    loadDataFile("data_file_expr_rec_load_file", "data_file_expr_rec_load_option", {
+        isValid: isValidExprRecordListData,
+        truncate: (data: ExprRecordList[]) => {
+            exprRecordLists = data;
+            update();
+        },
+        fileAsNewer: (data: ExprRecordList[]) => {
+            const newList = mergeList(exprRecordLists, data, erlMerge).sort((a, b) => a.category.localeCompare(b.category));
+            exprRecordLists = newList;
+            update();
+        },
+        fileAsOlder: (data: ExprRecordList[]) => {
+            const newList = mergeList(data, exprRecordLists, erlMerge).sort((a, b) => a.category.localeCompare(b.category));
+            exprRecordLists = newList;
+            update();
+        }
+    });
 });
 
 
@@ -5915,6 +6603,8 @@ document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
     dialogAlert(`Unknown ID: ${value}`);
 });
 
+let currentReallyneededJobPresetMaximumCostId = 0;
+
 // ReallyNeededのこころセット探索フォームにて
 // 初期値の職業のこころ枠の組み合わせをフォームに設定する
 (function () {
@@ -5924,16 +6614,20 @@ document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
         if (job.id !== value) {
             continue;
         }
-        const maximumCostList = document.getElementById("reallyneeded_job_preset_maximum_cost_list")!;
-        maximumCostList.innerHTML = "";
-        for (const x of JobPresetMaximumCost) {
-            if (job.id < x.id || x.id + 100 <= job.id) {
-                continue;
-            }
-            for (const item of x.maximumCostList) {
-                const op = maximumCostList.appendChild(document.createElement("option"));
-                op.value = `${item.maximumCost}`;
-                op.textContent = ` Lv ${item.level}`;
+        if (job.id < currentReallyneededJobPresetMaximumCostId || currentReallyneededJobPresetMaximumCostId + 100 <= job.id) {
+            const maximumCostList = document.getElementById("reallyneeded_job_preset_maximum_cost_list")!;
+            maximumCostList.innerHTML = "";
+            for (const x of JobPresetMaximumCost) {
+                if (job.id < x.id || x.id + 100 <= job.id) {
+                    continue;
+                }
+                currentReallyneededJobPresetMaximumCostId = x.id;
+                for (const item of x.maximumCostList) {
+                    const op = maximumCostList.appendChild(document.createElement("option"));
+                    op.value = `${item.maximumCost}`;
+                    op.textContent = ` Lv ${item.level}`;
+                }
+                break;
             }
         }
         const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
@@ -6177,6 +6871,131 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
 
 });
 
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式A）
+document.getElementById("reallyneeded_expr1_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr1_from");
+    }
+    showExprRecordDialog("reallyneeded_expr1_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式B）
+document.getElementById("reallyneeded_expr2_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr2_from");
+    }
+    showExprRecordDialog("reallyneeded_expr2_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式C）
+document.getElementById("reallyneeded_expr3_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr3_from");
+    }
+    showExprRecordDialog("reallyneeded_expr3_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式D）
+document.getElementById("reallyneeded_expr4_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr4_from");
+    }
+    showExprRecordDialog("reallyneeded_expr4_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式E）
+document.getElementById("reallyneeded_expr5_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr5_from");
+    }
+    showExprRecordDialog("reallyneeded_expr5_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式F）
+document.getElementById("reallyneeded_expr6_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr6_from");
+    }
+    showExprRecordDialog("reallyneeded_expr6_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式G）
+document.getElementById("reallyneeded_expr7_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr7_from");
+    }
+    showExprRecordDialog("reallyneeded_expr7_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式H）
+document.getElementById("reallyneeded_expr8_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_expr8_from");
+    }
+    showExprRecordDialog("reallyneeded_expr8_expr", document.getElementById("reallyneeded_power_up")!.textContent ?? "");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式1）
+document.getElementById("reallyneeded_refexpr_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr_from");
+    }
+    showExprRecordDialog("reallyneeded_refexpr_expr");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式2）
+document.getElementById("reallyneeded_refexpr2_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr2_from");
+    }
+    showExprRecordDialog("reallyneeded_refexpr2_expr");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式3）
+document.getElementById("reallyneeded_refexpr3_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr3_from");
+    }
+    showExprRecordDialog("reallyneeded_refexpr3_expr");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式4）
+document.getElementById("reallyneeded_refexpr4_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr4_from");
+    }
+    showExprRecordDialog("reallyneeded_refexpr4_expr");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式5）
+document.getElementById("reallyneeded_refexpr5_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr5_from");
+    }
+    showExprRecordDialog("reallyneeded_refexpr5_expr");
+});
+
+// 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、参考式6）
+document.getElementById("reallyneeded_refexpr6_from")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click reallyneeded_refexpr6_from");
+    }
+    showExprRecordDialog("reallyneeded_refexpr6_expr");
+});
 
 /////////////////////////////////////////////////////////////////////////////////////
 // マニュアルこころセット
@@ -6371,6 +7190,7 @@ document.getElementById("manualset_as_limit_heart_cost")!
     showManualHeartset();
 });
 
+let currentManualsetJobPresetMaximumCostId = 0;
 
 // マニュアルこころセットのフォームにて
 // 職業ごとのこころ枠の組み合わせをフォームに設定する
@@ -6381,16 +7201,20 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         if (job.id !== value) {
             continue;
         }
-        const maximumCostList = document.getElementById("manualset_job_preset_maximum_cost_list")!;
-        maximumCostList.innerHTML = "";
-        for (const x of JobPresetMaximumCost) {
-            if (job.id < x.id || x.id + 100 <= job.id) {
-                continue;
-            }
-            for (const item of x.maximumCostList) {
-                const op = maximumCostList.appendChild(document.createElement("option"));
-                op.value = `${item.maximumCost}`;
-                op.textContent = ` Lv ${item.level}`;
+        if (job.id < currentManualsetJobPresetMaximumCostId || currentManualsetJobPresetMaximumCostId + 100 <= job.id) {
+            const maximumCostList = document.getElementById("manualset_job_preset_maximum_cost_list")!;
+            maximumCostList.innerHTML = "";
+            for (const x of JobPresetMaximumCost) {
+                if (job.id < x.id || x.id + 100 <= job.id) {
+                    continue;
+                }
+                currentManualsetJobPresetMaximumCostId = x.id;
+                for (const item of x.maximumCostList) {
+                    const op = maximumCostList.appendChild(document.createElement("option"));
+                    op.value = `${item.maximumCost}`;
+                    op.textContent = ` Lv ${item.level}`;
+                }
+                break;
             }
         }
         const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
@@ -6550,6 +7374,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         // ローカルストレージのリストを利用
         loadMonsterList();
         updateChangedRankCount();
+        loadExprRecord();
     }
 })();
 
