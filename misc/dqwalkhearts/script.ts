@@ -22,6 +22,7 @@ let EXPOSE_MODE = false;
 const LOCAL_STORAGE_PATH = "dqwalkhearts";
 const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
 const STORAGE_KEY_EXPR_RECORD = LOCAL_STORAGE_PATH + ".expr_rec";
+const STORAGE_KEY_ADOPT_HEARTSET = LOCAL_STORAGE_PATH + ".adopt_heartset";
 
 function dialogAlert(msg: string): void {
     if (DEBUG) {
@@ -686,6 +687,7 @@ function loadExprRecord(): void {
         const json = window.localStorage.getItem(STORAGE_KEY_EXPR_RECORD);
         if (json !== null) {
             const data: ExprRecordList[] = JSON.parse(json);
+            // isValidExprRecordListData(data) でチェックしたほうがいいかどうかは分からない(データが壊れる可能性あるか知らん)
             exprRecordLists = data;
             updateExprRecordCategoryList();
             const category = (document.getElementById("expr_rec_category") as HTMLSelectElement).value;
@@ -914,6 +916,51 @@ interface AdoptionHeartSet {
 let adoptionHeartSetList: AdoptionHeartSet[] = [];
 
 let currentAdoptionHeartSet: AdoptionHeartSet | null = null;
+
+function saveAdoptionHeartSetList(): void {
+    if (DEBUG) {
+        console.log("call saveAdoptionHeartSetList");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    try {
+        const data = adoptionHeartSetList;
+        const json = JSON.stringify(data);
+        window.localStorage.setItem(STORAGE_KEY_ADOPT_HEARTSET, json);
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+
+function loadAdoptionHeartSetList(): void {
+    if (DEBUG) {
+        console.log("call loadAdoptionHeartSetList");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.localStorage.getItem(STORAGE_KEY_ADOPT_HEARTSET);
+        if (json !== null) {
+            const data: AdoptionHeartSet[] = JSON.parse(json);
+            for (const hs of data) {
+                currentAdoptionHeartSet = hs;
+                addToAdoptionHeartSetList();
+            }
+        }
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
 
 // 採用したこころセットをリストに追加して表示
 function addToAdoptionHeartSetList(): boolean {
@@ -4228,6 +4275,7 @@ document.getElementById("change_monster_name_dialog")!
 document.getElementById("clear_adoption_heartset_list")!
 .addEventListener("click", () => {
     adoptionHeartSetList = [];
+    saveAdoptionHeartSetList();
     document.getElementById("adoption_heartset_list")!.innerHTML = "";
 });
 
@@ -4307,6 +4355,7 @@ document.getElementById("adoption_heartset_dialog")!
     }
     if (addToAdoptionHeartSetList()) {
         message += "採用こころセットのリストに追加しました。";
+        saveAdoptionHeartSetList();
     }
     dialogAlert(message === "" ? "ランク変更はありません。こころセットは既にリストにあります。" : message);
 });
@@ -7375,6 +7424,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         loadMonsterList();
         updateChangedRankCount();
         loadExprRecord();
+        loadAdoptionHeartSetList();
     }
 })();
 
