@@ -306,6 +306,8 @@ const JobPresetMaximumCost = [
         ]
     },
     { id: 300, maximumCostList: [
+            { level: 6, maximumCost: 284 },
+            { level: 5, maximumCost: 280 },
             { level: 4, maximumCost: 275 },
             { level: 3, maximumCost: 269 },
             { level: 2, maximumCost: 264 },
@@ -491,7 +493,56 @@ function isData(anyobj) {
     return true;
 }
 function isValidExprRecordListData(data) {
-    return true;
+    try {
+        if (!Array.isArray(data)) {
+            console.log("ExprRecordList[]じゃないJSONファイル");
+            console.log(data);
+            return false;
+        }
+        const list1 = data;
+        for (const item1 of list1) {
+            if (typeof item1 !== "object" || item1 === null) {
+                console.log("object型じゃない");
+                console.log(item1);
+                return false;
+            }
+            const obj1 = item1; // ここキャストできる理由わからない
+            if (!(("category" in obj1) && (typeof obj1["category"] === "string"))) {
+                console.log("string型のcategoryプロパティがない");
+                console.log(obj1);
+                return false;
+            }
+            if (!(("list" in obj1) && (Array.isArray(obj1["list"])))) {
+                console.log("Array型のlistプロパティがない");
+                console.log(item1);
+                return false;
+            }
+            const list2 = obj1["list"];
+            for (const item2 of list2) {
+                if (typeof item2 !== "object" || item2 === null) {
+                    console.log("object型じゃない");
+                    console.log(item2);
+                    return false;
+                }
+                const obj2 = item2; // ここキャストできる理由わからない
+                if (!(("name" in obj2) && (typeof obj2["name"] === "string"))) {
+                    console.log("string型のnameプロパティがない");
+                    console.log(obj2);
+                    return false;
+                }
+                if (!(("expr" in obj2) && (typeof obj2["expr"] === "string"))) {
+                    console.log("string型のexprプロパティがない");
+                    console.log(obj2);
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    catch (err) {
+        console.log(err);
+        return false;
+    }
 }
 let exprRecordLists = [];
 // 登録済みの式をセーブする
