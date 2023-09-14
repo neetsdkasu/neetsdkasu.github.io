@@ -14,6 +14,7 @@ const LOCAL_STORAGE_PATH = "dqwalkhearts";
 const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
 const STORAGE_KEY_EXPR_RECORD = LOCAL_STORAGE_PATH + ".expr_rec";
 const STORAGE_KEY_ADOPT_HEARTSET = LOCAL_STORAGE_PATH + ".adopt_heartset";
+const STORAGE_KEY_HEARTSET_SEARCH = LOCAL_STORAGE_PATH + ".heartset_search";
 function dialogAlert(msg) {
     if (DEBUG) {
         console.log(`dialogAlert: ${msg}`);
@@ -307,6 +308,7 @@ const JobPresetMaximumCost = [
         ]
     },
     { id: 300, maximumCostList: [
+            { level: 7, maximumCost: 292 },
             { level: 6, maximumCost: 284 },
             { level: 5, maximumCost: 280 },
             { level: 4, maximumCost: 275 },
@@ -2717,6 +2719,142 @@ function parseTarget(elements) {
     document.getElementById("result_require_skill_4").textContent = target.reqSkill4Expr;
     return target;
 }
+function saveHeartSetSearchForm() {
+    if (DEBUG) {
+        console.log("call saveHeartSetSearchForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    const elements = document.querySelector("#search_heart_dialog form").elements;
+    const elem = (name) => elements.namedItem(name);
+    const checked = (name) => elem(name).checked;
+    const check = (name, value) => checked(name) ? value : 0;
+    const value = (name) => elem(name).value;
+    const form = {
+        jobId: elements.namedItem("preset_heartset").value,
+        heart1Checks: check("heart1_yellow", Color.Yellow) | check("heart1_purple", Color.Purple)
+            | check("heart1_green", Color.Green) | check("heart1_red", Color.Red) | check("heart1_blue", Color.Blue),
+        heart2Checks: check("heart2_yellow", Color.Yellow) | check("heart2_purple", Color.Purple)
+            | check("heart2_green", Color.Green) | check("heart2_red", Color.Red) | check("heart2_blue", Color.Blue),
+        heart3Checks: check("heart3_yellow", Color.Yellow) | check("heart3_purple", Color.Purple)
+            | check("heart3_green", Color.Green) | check("heart3_red", Color.Red) | check("heart3_blue", Color.Blue),
+        heart4Checks: check("heart4_yellow", Color.Yellow) | check("heart4_purple", Color.Purple)
+            | check("heart4_green", Color.Green) | check("heart4_red", Color.Red) | check("heart4_blue", Color.Blue)
+            | check("heart4_omit", Color.Omit),
+        powerUp: value("heart_power_up"),
+        maximumCost: value("heart_maximum_cost"),
+        asLimit: checked("as_limit_heart_cost"),
+        goal: value("goal"),
+        expression: value("expression"),
+        withSplus: checked("heart_with_s_plus"),
+        reqSkill: checked("heart_require_skill"),
+        reqSkillCount: value("heart_require_skill_expression_count"),
+        reqSkillExpr: value("heart_require_skill_expression"),
+        reqSkill2: checked("heart_require_skill_2"),
+        reqSkill2Expr: value("heart_require_skill_expression_2"),
+        reqSkill3: checked("heart_require_skill_3"),
+        reqSkill3Expr: value("heart_require_skill_expression_3"),
+        reqSkill4: checked("heart_require_skill_4"),
+        reqSkill4Expr: value("heart_require_skill_expression_4")
+    };
+    if (DEBUG) {
+        console.log(form);
+    }
+    try {
+        const data = form;
+        const json = JSON.stringify(data);
+        window.sessionStorage.setItem(STORAGE_KEY_HEARTSET_SEARCH, json);
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+function loadHeartSetSearchForm() {
+    if (DEBUG) {
+        console.log("call loadHeartSetSearchForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.sessionStorage.getItem(STORAGE_KEY_HEARTSET_SEARCH);
+        if (json !== null) {
+            const data = JSON.parse(json);
+            // フォーマットの確認してないな…必要かどうかはわからんが
+            if (DEBUG) {
+                console.log(data);
+            }
+            const elements = document.querySelector("#search_heart_dialog form").elements;
+            const elem = (name) => elements.namedItem(name);
+            const checked = (name, ch) => elem(name).checked = ch;
+            const check = (name, test, v) => checked(name, (test & v) !== 0);
+            const value = (name, v) => elem(name).value = v;
+            elements.namedItem("preset_heartset").value = data.jobId;
+            check("heart1_yellow", Color.Yellow, data.heart1Checks);
+            check("heart1_purple", Color.Purple, data.heart1Checks);
+            check("heart1_green", Color.Green, data.heart1Checks);
+            check("heart1_red", Color.Red, data.heart1Checks);
+            check("heart1_blue", Color.Blue, data.heart1Checks);
+            check("heart2_yellow", Color.Yellow, data.heart2Checks);
+            check("heart2_purple", Color.Purple, data.heart2Checks);
+            check("heart2_green", Color.Green, data.heart2Checks);
+            check("heart2_red", Color.Red, data.heart2Checks);
+            check("heart2_blue", Color.Blue, data.heart2Checks);
+            check("heart3_yellow", Color.Yellow, data.heart3Checks);
+            check("heart3_purple", Color.Purple, data.heart3Checks);
+            check("heart3_green", Color.Green, data.heart3Checks);
+            check("heart3_red", Color.Red, data.heart3Checks);
+            check("heart3_blue", Color.Blue, data.heart3Checks);
+            check("heart4_yellow", Color.Yellow, data.heart4Checks);
+            check("heart4_purple", Color.Purple, data.heart4Checks);
+            check("heart4_green", Color.Green, data.heart4Checks);
+            check("heart4_red", Color.Red, data.heart4Checks);
+            check("heart4_blue", Color.Blue, data.heart4Checks);
+            check("heart4_omit", Color.Omit, data.heart4Checks);
+            value("heart_power_up", data.powerUp);
+            value("heart_maximum_cost", data.maximumCost);
+            checked("as_limit_heart_cost", data.asLimit);
+            value("goal", data.goal);
+            value("expression", data.expression);
+            checked("heart_with_s_plus", data.withSplus);
+            checked("heart_require_skill", data.reqSkill);
+            value("heart_require_skill_expression_count", data.reqSkillCount);
+            value("heart_require_skill_expression", data.reqSkillExpr);
+            checked("heart_require_skill_2", data.reqSkill2);
+            value("heart_require_skill_expression_2", data.reqSkill2Expr);
+            checked("heart_require_skill_3", data.reqSkill3);
+            value("heart_require_skill_expression_3", data.reqSkill3Expr);
+            checked("heart_require_skill_4", data.reqSkill4);
+            value("heart_require_skill_expression_4", data.reqSkill4Expr);
+            // チェック項目による入力要素の有効/無効/必須の切り替え処理
+            const heart4IsOmit = (data.heart4Checks & Color.Omit) !== 0;
+            elem("heart4_yellow").disabled = heart4IsOmit;
+            elem("heart4_purple").disabled = heart4IsOmit;
+            elem("heart4_green").disabled = heart4IsOmit;
+            elem("heart4_red").disabled = heart4IsOmit;
+            elem("heart4_blue").disabled = heart4IsOmit;
+            elem("expression").required = data.goal === "expression";
+            elem("heart_with_s_plus").disabled = data.reqSkill;
+            elem("heart_require_skill").disabled = data.withSplus;
+            elem("heart_require_skill_expression").required = data.reqSkill;
+            elem("heart_require_skill_expression_2").required = data.reqSkill && data.reqSkill2;
+            elem("heart_require_skill_expression_3").required = data.reqSkill && data.reqSkill2 && data.reqSkill3;
+            elem("heart_require_skill_expression_4").required = data.reqSkill && data.reqSkill2 && data.reqSkill3 && data.reqSkill4;
+        }
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
 // 組み合わせ爆発回避用
 // TODO 最終的なベストの組み合わせ数だけじゃなく、
@@ -3748,6 +3886,7 @@ document.getElementById("search_heart_dialog")
     if (DEBUG) {
         console.log("close check_heart_dialog");
     }
+    saveHeartSetSearchForm(); // キャンセル時も保存？
     const dialog = document.getElementById("search_heart_dialog");
     if (dialog.returnValue !== "start") {
         return;
@@ -7083,6 +7222,7 @@ document.getElementById("manualset_job").addEventListener("change", () => {
         updateChangedRankCount();
         loadExprRecord();
         loadAdoptionHeartSetList();
+        loadHeartSetSearchForm();
     }
 })();
 // デバッグモードであることの確認
