@@ -24,6 +24,7 @@ const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
 const STORAGE_KEY_EXPR_RECORD = LOCAL_STORAGE_PATH + ".expr_rec";
 const STORAGE_KEY_ADOPT_HEARTSET = LOCAL_STORAGE_PATH + ".adopt_heartset";
 const STORAGE_KEY_HEARTSET_SEARCH = LOCAL_STORAGE_PATH + ".heartset_search";
+const STORAGE_KEY_REALLYNEEDED_FORM = LOCAL_STORAGE_PATH + ".reallyneeded_form";
 
 function dialogAlert(msg: string): void {
     if (DEBUG) {
@@ -5399,8 +5400,221 @@ document.getElementById("calc_damages")!.addEventListener("click", () => {
 
 
 /////////////////////////////////////////////////////////////////////////////////////
-// なんか、こころセット検索
+// なんか、こころセット検索 (ReallyNeeded)
 /////////////////////////////////////////////////////////////////////////////////////
+
+interface RNForm {
+    jobId: string;
+    maximumCost: string;
+    asLimit: boolean;
+    maximumCostParams: string[];
+    checks: boolean[];
+    params: string[][];
+    exprs: string[];
+    refChecks: boolean[];
+    refExprs: string[];
+    algorithm: string;
+}
+
+function saveRNForm(): void {
+    if (DEBUG) {
+        console.log("call saveRNForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    const sel = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+    const elem = (id: string) => document.getElementById(id) as HTMLInputElement;
+    const checked = (id: string) => elem(id).checked;
+    const value = (id: string) => elem(id).value;
+
+    const keys = [
+        "maximumhp",
+        "maximummp",
+        "power",
+        "defence",
+        "attackmagic",
+        "recovermagic",
+        "speed",
+        "dexterity",
+        "expr1",
+        "expr2",
+        "expr3",
+        "expr4",
+        "expr5",
+        "expr6",
+        "expr7",
+        "expr8"
+    ];
+    const paramKeys = [
+        "goal",
+        "lp2",
+        "lp1",
+        "lpc",
+        "hp2",
+        "hp1",
+        "hpc",
+        "bn2",
+        "bn1",
+        "bnc",
+    ];
+
+    const checks: boolean[] = [];
+    const params: string[][] = [];
+    for (const key of keys) {
+        checks.push(checked(`reallyneeded_${key}`));
+        const list: string[] = [];
+        for (const pKey of paramKeys) {
+            list.push(value(`reallyneeded_${key}_${pKey}`));
+        }
+        params.push(list);
+    }
+    const exprs: string[] = [];
+    for (let i = 1; i <= 8; i++) {
+        exprs.push(value(`reallyneeded_expr${i}_expr`));
+    }
+
+    const form: RNForm = {
+        jobId: sel("reallyneeded_job"),
+        maximumCost: value("reallyneeded_heart_maximum_cost"),
+        asLimit: checked("reallyneeded_as_limit_heart_cost"),
+        maximumCostParams: [
+            value("reallyneeded_heart_maximum_cost_hp2"),
+            value("reallyneeded_heart_maximum_cost_hp1"),
+            value("reallyneeded_heart_maximum_cost_hpc")
+        ],
+        checks: checks,
+        params: params,
+        exprs: exprs,
+        refChecks: [
+            checked("reallyneeded_refexpr"),
+            checked("reallyneeded_refexpr2"),
+            checked("reallyneeded_refexpr3"),
+            checked("reallyneeded_refexpr4"),
+            checked("reallyneeded_refexpr5"),
+            checked("reallyneeded_refexpr6")
+        ],
+        refExprs: [
+            value("reallyneeded_refexpr_expr"),
+            value("reallyneeded_refexpr2_expr"),
+            value("reallyneeded_refexpr3_expr"),
+            value("reallyneeded_refexpr4_expr"),
+            value("reallyneeded_refexpr5_expr"),
+            value("reallyneeded_refexpr6_expr")
+        ],
+        algorithm: sel("reallyneeded_algorithm")
+    };
+
+    if (DEBUG) {
+        console.log(form);
+    }
+
+    try {
+        const data = form;
+        const json = JSON.stringify(data);
+        window.sessionStorage.setItem(STORAGE_KEY_REALLYNEEDED_FORM, json);
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+
+function loadRNForm(): void {
+    if (DEBUG) {
+        console.log("call loadRNForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.sessionStorage.getItem(STORAGE_KEY_REALLYNEEDED_FORM);
+        if (json !== null) {
+            const data: RNForm = JSON.parse(json);
+            // フォーマットの確認してないな…必要かどうかはわからんが
+
+            if (DEBUG) {
+                console.log(data)
+            }
+
+            const sel = (id: string, v: string) => (document.getElementById(id) as HTMLSelectElement).value = v;
+            const elem = (id: string) => document.getElementById(id) as HTMLInputElement;
+            const checked = (id: string, ch: boolean) => elem(id).checked = ch;
+            const value = (id: string, v: string) => elem(id).value = v;
+
+            const keys = [
+                "maximumhp",
+                "maximummp",
+                "power",
+                "defence",
+                "attackmagic",
+                "recovermagic",
+                "speed",
+                "dexterity",
+                "expr1",
+                "expr2",
+                "expr3",
+                "expr4",
+                "expr5",
+                "expr6",
+                "expr7",
+                "expr8"
+            ];
+            const paramKeys = [
+                "goal",
+                "lp2",
+                "lp1",
+                "lpc",
+                "hp2",
+                "hp1",
+                "hpc",
+                "bn2",
+                "bn1",
+                "bnc",
+            ];
+
+            sel("reallyneeded_job", data.jobId);
+            value("reallyneeded_heart_maximum_cost", data.maximumCost);
+            checked("reallyneeded_as_limit_heart_cost", data.asLimit);
+            value("reallyneeded_heart_maximum_cost_hp2", data.maximumCostParams[0]);
+            value("reallyneeded_heart_maximum_cost_hp1", data.maximumCostParams[1]);
+            value("reallyneeded_heart_maximum_cost_hpc", data.maximumCostParams[2]);
+
+            for (let k = 0; k < keys.length; k++) {
+                const key = keys[k];
+                checked(`reallyneeded_${key}`, data.checks[k]);
+                const list = data.params[k];
+                for (let p = 0; p < paramKeys.length; p++) {
+                    value(`reallyneeded_${key}_${paramKeys[p]}`, list[p]);
+                }
+            }
+            for (let i = 1; i <= 8; i++) {
+                value(`reallyneeded_expr${i}_expr`, data.exprs[i - 1]);
+            }
+
+            checked("reallyneeded_refexpr", data.refChecks[0]);
+            value("reallyneeded_refexpr_expr", data.refExprs[0]);
+
+            for (let i = 2; i <= 6; i++) {
+                checked(`reallyneeded_refexpr${i}`, data.refChecks[i - 1]);
+                value(`reallyneeded_refexpr${i}_expr`, data.refExprs[i - 1]);
+            }
+
+            sel("reallyneeded_algorithm", data.algorithm);
+
+            // こころ枠や適合倍率の設定
+            setRNJob();
+        }
+    } catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
 
 interface RNCoCo {
     quadratic: number;
@@ -6779,9 +6993,7 @@ function searchRNHeartsetBF(target: RNTarget): void {
     dialogWait(task, "探索中です･･･");
 }
 
-// ReallyNeededのこころセット探索フォームにて
-// 職業ごとのこころ枠の組み合わせをフォームに設定する
-document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
+function setRNJob(): void {
     const sel = document.getElementById("reallyneeded_job") as HTMLSelectElement;
     const value = parseInt(sel.value ?? "0");
     for (const job of JobPreset) {
@@ -6826,6 +7038,12 @@ document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
         return;
     }
     dialogAlert(`Unknown ID: ${value}`);
+}
+
+// ReallyNeededのこころセット探索フォームにて
+// 職業ごとのこころ枠の組み合わせをフォームに設定する
+document.getElementById("reallyneeded_job")!.addEventListener("change", () => {
+    setRNJob();
 });
 
 let currentReallyneededJobPresetMaximumCostId = 0;
@@ -6884,6 +7102,8 @@ let currentReallyneededJobPresetMaximumCostId = 0;
 
 // ReallyNeededのこころセット探索開始ボタン
 document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
+    saveRNForm();
+
     const elem = (id: string) => document.getElementById(id) as HTMLInputElement;
     const num = (id: string) => {
         const x = parseInt(elem(id).value ?? "0");
@@ -7534,6 +7754,10 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
 //
 /////////////////////////////////////////////////////////////////////////////////////
 
+window.addEventListener("pagehide", () => {
+    saveHeartSetSearchForm();
+    saveRNForm();
+});
 
 // ページのURLのパラメータの処理
 (function () {
@@ -7602,6 +7826,7 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
         loadExprRecord();
         loadAdoptionHeartSetList();
         loadHeartSetSearchForm();
+        loadRNForm();
     }
 })();
 
