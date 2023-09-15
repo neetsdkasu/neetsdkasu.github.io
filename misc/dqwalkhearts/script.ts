@@ -5667,6 +5667,19 @@ interface RNHeartset {
     cost: number;
 }
 
+const RNBestRefExprScores: number[] = new Array(6).fill(0);
+const RNBestRefExprPenalties: number[] = new Array(6).fill(Number.MAX_VALUE);
+
+function updateRNBestRefExpr(i: number, penalty: number, score: number): boolean {
+    const isBest = penalty < RNBestRefExprPenalties[i]
+        || (penalty === RNBestRefExprPenalties[i] && score > RNBestRefExprScores[i]);
+    if (isBest) {
+        RNBestRefExprPenalties[i] = penalty;
+        RNBestRefExprScores[i] = score;
+    }
+    return isBest;
+}
+
 // ReallyNeededのこころセット表示
 function showRNHeartset(target: RNTarget, heartsets: RNHeartset[]): void {
     const res = document.getElementById("reallyneeded_result")!;
@@ -5769,29 +5782,36 @@ function showRNHeartset(target: RNTarget, heartsets: RNHeartset[]): void {
         for (let z = 0; z < statusValues.length; z++) {
             target.scoreres[z].refSetter(status, statusValues[z]);
         }
+        const hasRefExprBest: boolean[] = new Array(6).fill(false);
         if (target.useRefExpr) {
             const refScore = target.refExpr!.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値1: ${refScore}`;
+            hasRefExprBest[0] = updateRNBestRefExpr(0, heartset.penalty, refScore);
         }
         if (target.useRefExpr2) {
             const refScore2 = target.refExpr2!.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値2: ${refScore2}`;
+            hasRefExprBest[1] = updateRNBestRefExpr(1, heartset.penalty, refScore2);
         }
         if (target.useRefExpr3) {
             const refScore3 = target.refExpr3!.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値3: ${refScore3}`;
+            hasRefExprBest[2] = updateRNBestRefExpr(2, heartset.penalty, refScore3);
         }
         if (target.useRefExpr4) {
             const refScore4 = target.refExpr4!.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値4: ${refScore4}`;
+            hasRefExprBest[3] = updateRNBestRefExpr(3, heartset.penalty, refScore4);
         }
         if (target.useRefExpr5) {
             const refScore5 = target.refExpr5!.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値5: ${refScore5}`;
+            hasRefExprBest[4] = updateRNBestRefExpr(4, heartset.penalty, refScore5);
         }
         if (target.useRefExpr6) {
             const refScore6 = target.refExpr6!.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値6: ${refScore6}`;
+            hasRefExprBest[5] = updateRNBestRefExpr(5, heartset.penalty, refScore6);
         }
         elem("score").textContent = scoreStr;
         if (EXPOSE_MODE) {
@@ -5813,7 +5833,22 @@ function showRNHeartset(target: RNTarget, heartsets: RNHeartset[]): void {
                     heart: h.heart
                 };
             }
-            (elem("adoption") as HTMLButtonElement).onclick = () => adoptHeartSet(adoptionHeartSet);
+            const adoptor = () => adoptHeartSet(adoptionHeartSet);
+            (elem("adoption") as HTMLButtonElement).onclick = adoptor;
+            if (hasRefExprBest[0]) {
+                const refexpr1BestElem = document.getElementById("reallyneeded_refexpr_best")!;
+                refexpr1BestElem.innerHTML = "";
+                ((refexpr1BestElem.appendChild(item.cloneNode(true)) as HTMLElement)
+                    .querySelector(".result-item-adoption") as HTMLButtonElement).onclick = adoptor;
+            }
+            for (let i = 1; i < hasRefExprBest.length; i++) {
+                if (hasRefExprBest[i]) {
+                    const refexprBestElem = document.getElementById(`reallyneeded_refexpr${i+1}_best`)!;
+                    refexprBestElem.innerHTML = "";
+                    ((refexprBestElem.appendChild(item.cloneNode(true)) as HTMLElement)
+                        .querySelector(".result-item-adoption") as HTMLButtonElement).onclick = adoptor;
+                }
+            }
         }
     }
 }
@@ -7289,6 +7324,15 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
     const algorithm = elem("reallyneeded_algorithm").value;
 
     document.getElementById("reallyneeded_result")!.innerHTML = "";
+
+    RNBestRefExprScores.fill(0);
+    RNBestRefExprPenalties.fill(Number.MAX_VALUE);
+    document.getElementById("reallyneeded_refexpr_best")!.innerHTML = "";
+    document.getElementById("reallyneeded_refexpr2_best")!.innerHTML = "";
+    document.getElementById("reallyneeded_refexpr3_best")!.innerHTML = "";
+    document.getElementById("reallyneeded_refexpr4_best")!.innerHTML = "";
+    document.getElementById("reallyneeded_refexpr5_best")!.innerHTML = "";
+    document.getElementById("reallyneeded_refexpr6_best")!.innerHTML = "";
 
     const oldPowerUp = powerUp;
     powerUp = job.powerUp;
