@@ -841,6 +841,23 @@ function loadAdoptionHeartSetList() {
         if (json !== null) {
             const data = JSON.parse(json);
             for (const hs of data) {
+                // MonsterとHeartのインスタンス参照の設定しなおし
+                for (let i = 0; i < hs.hearts.length; i++) {
+                    const hm = hs.hearts[i];
+                    if (hm === null) {
+                        continue;
+                    }
+                    if (!monsterMap.has(hm.monster.name)) {
+                        continue;
+                    }
+                    hm.monster = monsterMap.get(hm.monster.name);
+                    const rank = hm.heart.rank;
+                    const hi = hm.monster.hearts.findIndex(h => h.rank === rank);
+                    if (hi >= 0) {
+                        hm.heart = hm.monster.hearts[hi];
+                    }
+                    hs.hearts[i] = hm;
+                }
                 currentAdoptionHeartSet = hs;
                 addToAdoptionHeartSetList();
             }
