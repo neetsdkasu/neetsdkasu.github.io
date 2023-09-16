@@ -15,6 +15,7 @@ const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
 const STORAGE_KEY_EXPR_RECORD = LOCAL_STORAGE_PATH + ".expr_rec";
 const STORAGE_KEY_ADOPT_HEARTSET = LOCAL_STORAGE_PATH + ".adopt_heartset";
 const STORAGE_KEY_HEARTSET_SEARCH = LOCAL_STORAGE_PATH + ".heartset_search";
+const STORAGE_KEY_REALLYNEEDED_FORM = LOCAL_STORAGE_PATH + ".reallyneeded_form";
 function dialogAlert(msg) {
     if (DEBUG) {
         console.log(`dialogAlert: ${msg}`);
@@ -308,6 +309,8 @@ const JobPresetMaximumCost = [
         ]
     },
     { id: 300, maximumCostList: [
+            { level: 9, maximumCost: 304 },
+            { level: 8, maximumCost: 296 },
             { level: 7, maximumCost: 292 },
             { level: 6, maximumCost: 284 },
             { level: 5, maximumCost: 280 },
@@ -5116,6 +5119,203 @@ document.getElementById("calc_damages").addEventListener("click", () => {
         }
     }
 });
+function saveRNForm() {
+    if (DEBUG) {
+        console.log("call saveRNForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    const sel = (id) => document.getElementById(id).value;
+    const elem = (id) => document.getElementById(id);
+    const checked = (id) => elem(id).checked;
+    const value = (id) => elem(id).value;
+    const keys = [
+        "maximumhp",
+        "maximummp",
+        "power",
+        "defence",
+        "attackmagic",
+        "recovermagic",
+        "speed",
+        "dexterity",
+        "expr1",
+        "expr2",
+        "expr3",
+        "expr4",
+        "expr5",
+        "expr6",
+        "expr7",
+        "expr8"
+    ];
+    const paramKeys = [
+        "goal",
+        "lp2",
+        "lp1",
+        "lpc",
+        "hp2",
+        "hp1",
+        "hpc",
+        "bn2",
+        "bn1",
+        "bnc",
+    ];
+    const checks = [];
+    const params = [];
+    for (const key of keys) {
+        checks.push(checked(`reallyneeded_${key}`));
+        const list = [];
+        for (const pKey of paramKeys) {
+            list.push(value(`reallyneeded_${key}_${pKey}`));
+        }
+        params.push(list);
+    }
+    const exprs = [];
+    for (let i = 1; i <= 8; i++) {
+        exprs.push(value(`reallyneeded_expr${i}_expr`));
+    }
+    const form = {
+        jobId: sel("reallyneeded_job"),
+        maximumCost: value("reallyneeded_heart_maximum_cost"),
+        asLimit: checked("reallyneeded_as_limit_heart_cost"),
+        maximumCostParams: [
+            value("reallyneeded_heart_maximum_cost_hp2"),
+            value("reallyneeded_heart_maximum_cost_hp1"),
+            value("reallyneeded_heart_maximum_cost_hpc")
+        ],
+        checks: checks,
+        params: params,
+        exprs: exprs,
+        refChecks: [
+            checked("reallyneeded_refexpr"),
+            checked("reallyneeded_refexpr2"),
+            checked("reallyneeded_refexpr3"),
+            checked("reallyneeded_refexpr4"),
+            checked("reallyneeded_refexpr5"),
+            checked("reallyneeded_refexpr6")
+        ],
+        refExprs: [
+            value("reallyneeded_refexpr_expr"),
+            value("reallyneeded_refexpr2_expr"),
+            value("reallyneeded_refexpr3_expr"),
+            value("reallyneeded_refexpr4_expr"),
+            value("reallyneeded_refexpr5_expr"),
+            value("reallyneeded_refexpr6_expr")
+        ],
+        algorithm: sel("reallyneeded_algorithm")
+    };
+    if (DEBUG) {
+        console.log(form);
+    }
+    try {
+        const data = form;
+        const json = JSON.stringify(data);
+        window.sessionStorage.setItem(STORAGE_KEY_REALLYNEEDED_FORM, json);
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+function loadRNForm() {
+    if (DEBUG) {
+        console.log("call loadRNForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.sessionStorage.getItem(STORAGE_KEY_REALLYNEEDED_FORM);
+        if (json !== null) {
+            const data = JSON.parse(json);
+            // フォーマットの確認してないな…必要かどうかはわからんが
+            if (DEBUG) {
+                console.log(data);
+            }
+            const sel = (id, v) => document.getElementById(id).value = v;
+            const elem = (id) => document.getElementById(id);
+            const checked = (id, ch) => elem(id).checked = ch;
+            const value = (id, v) => elem(id).value = v;
+            const keys = [
+                "maximumhp",
+                "maximummp",
+                "power",
+                "defence",
+                "attackmagic",
+                "recovermagic",
+                "speed",
+                "dexterity",
+                "expr1",
+                "expr2",
+                "expr3",
+                "expr4",
+                "expr5",
+                "expr6",
+                "expr7",
+                "expr8"
+            ];
+            const paramKeys = [
+                "goal",
+                "lp2",
+                "lp1",
+                "lpc",
+                "hp2",
+                "hp1",
+                "hpc",
+                "bn2",
+                "bn1",
+                "bnc",
+            ];
+            sel("reallyneeded_job", data.jobId);
+            value("reallyneeded_heart_maximum_cost", data.maximumCost);
+            checked("reallyneeded_as_limit_heart_cost", data.asLimit);
+            value("reallyneeded_heart_maximum_cost_hp2", data.maximumCostParams[0]);
+            value("reallyneeded_heart_maximum_cost_hp1", data.maximumCostParams[1]);
+            value("reallyneeded_heart_maximum_cost_hpc", data.maximumCostParams[2]);
+            for (let k = 0; k < keys.length; k++) {
+                const key = keys[k];
+                checked(`reallyneeded_${key}`, data.checks[k]);
+                const list = data.params[k];
+                for (let p = 0; p < paramKeys.length; p++) {
+                    value(`reallyneeded_${key}_${paramKeys[p]}`, list[p]);
+                }
+            }
+            for (let i = 1; i <= 8; i++) {
+                value(`reallyneeded_expr${i}_expr`, data.exprs[i - 1]);
+            }
+            checked("reallyneeded_refexpr", data.refChecks[0]);
+            value("reallyneeded_refexpr_expr", data.refExprs[0]);
+            for (let i = 2; i <= 6; i++) {
+                checked(`reallyneeded_refexpr${i}`, data.refChecks[i - 1]);
+                value(`reallyneeded_refexpr${i}_expr`, data.refExprs[i - 1]);
+            }
+            sel("reallyneeded_algorithm", data.algorithm);
+            // こころ枠や適合倍率の設定
+            setRNJob();
+        }
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+const RNBestRefExprScores = new Array(6).fill(0);
+const RNBestRefExprPenalties = new Array(6).fill(Number.MAX_VALUE);
+function updateRNBestRefExpr(i, penalty, score) {
+    const isBest = penalty < RNBestRefExprPenalties[i]
+        || (penalty === RNBestRefExprPenalties[i] && score > RNBestRefExprScores[i]);
+    if (isBest) {
+        RNBestRefExprPenalties[i] = penalty;
+        RNBestRefExprScores[i] = score;
+    }
+    return isBest;
+}
 // ReallyNeededのこころセット表示
 function showRNHeartset(target, heartsets) {
     const res = document.getElementById("reallyneeded_result");
@@ -5218,29 +5418,36 @@ function showRNHeartset(target, heartsets) {
         for (let z = 0; z < statusValues.length; z++) {
             target.scoreres[z].refSetter(status, statusValues[z]);
         }
+        const hasRefExprBest = new Array(6).fill(false);
         if (target.useRefExpr) {
             const refScore = target.refExpr.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値1: ${refScore}`;
+            hasRefExprBest[0] = updateRNBestRefExpr(0, heartset.penalty, refScore);
         }
         if (target.useRefExpr2) {
             const refScore2 = target.refExpr2.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値2: ${refScore2}`;
+            hasRefExprBest[1] = updateRNBestRefExpr(1, heartset.penalty, refScore2);
         }
         if (target.useRefExpr3) {
             const refScore3 = target.refExpr3.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値3: ${refScore3}`;
+            hasRefExprBest[2] = updateRNBestRefExpr(2, heartset.penalty, refScore3);
         }
         if (target.useRefExpr4) {
             const refScore4 = target.refExpr4.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値4: ${refScore4}`;
+            hasRefExprBest[3] = updateRNBestRefExpr(3, heartset.penalty, refScore4);
         }
         if (target.useRefExpr5) {
             const refScore5 = target.refExpr5.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値5: ${refScore5}`;
+            hasRefExprBest[4] = updateRNBestRefExpr(4, heartset.penalty, refScore5);
         }
         if (target.useRefExpr6) {
             const refScore6 = target.refExpr6.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値6: ${refScore6}`;
+            hasRefExprBest[5] = updateRNBestRefExpr(5, heartset.penalty, refScore6);
         }
         elem("score").textContent = scoreStr;
         if (EXPOSE_MODE) {
@@ -5262,7 +5469,22 @@ function showRNHeartset(target, heartsets) {
                     heart: h.heart
                 };
             }
-            elem("adoption").onclick = () => adoptHeartSet(adoptionHeartSet);
+            const adoptor = () => adoptHeartSet(adoptionHeartSet);
+            elem("adoption").onclick = adoptor;
+            if (hasRefExprBest[0]) {
+                const refexpr1BestElem = document.getElementById("reallyneeded_refexpr_best");
+                refexpr1BestElem.innerHTML = "";
+                refexpr1BestElem.appendChild(item.cloneNode(true))
+                    .querySelector(".result-item-adoption").onclick = adoptor;
+            }
+            for (let i = 1; i < hasRefExprBest.length; i++) {
+                if (hasRefExprBest[i]) {
+                    const refexprBestElem = document.getElementById(`reallyneeded_refexpr${i + 1}_best`);
+                    refexprBestElem.innerHTML = "";
+                    refexprBestElem.appendChild(item.cloneNode(true))
+                        .querySelector(".result-item-adoption").onclick = adoptor;
+                }
+            }
         }
     }
 }
@@ -6446,9 +6668,7 @@ function searchRNHeartsetBF(target) {
     };
     dialogWait(task, "探索中です･･･");
 }
-// ReallyNeededのこころセット探索フォームにて
-// 職業ごとのこころ枠の組み合わせをフォームに設定する
-document.getElementById("reallyneeded_job").addEventListener("change", () => {
+function setRNJob() {
     const sel = document.getElementById("reallyneeded_job");
     const value = parseInt(sel.value ?? "0");
     for (const job of JobPreset) {
@@ -6493,6 +6713,11 @@ document.getElementById("reallyneeded_job").addEventListener("change", () => {
         return;
     }
     dialogAlert(`Unknown ID: ${value}`);
+}
+// ReallyNeededのこころセット探索フォームにて
+// 職業ごとのこころ枠の組み合わせをフォームに設定する
+document.getElementById("reallyneeded_job").addEventListener("change", () => {
+    setRNJob();
 });
 let currentReallyneededJobPresetMaximumCostId = 0;
 // ReallyNeededのこころセット探索フォームにて
@@ -6548,6 +6773,7 @@ let currentReallyneededJobPresetMaximumCostId = 0;
 })();
 // ReallyNeededのこころセット探索開始ボタン
 document.getElementById("reallyneeded_start").addEventListener("click", () => {
+    saveRNForm();
     const elem = (id) => document.getElementById(id);
     const num = (id) => {
         const x = parseInt(elem(id).value ?? "0");
@@ -6720,6 +6946,14 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
     }
     const algorithm = elem("reallyneeded_algorithm").value;
     document.getElementById("reallyneeded_result").innerHTML = "";
+    RNBestRefExprScores.fill(0);
+    RNBestRefExprPenalties.fill(Number.MAX_VALUE);
+    document.getElementById("reallyneeded_refexpr_best").innerHTML = "";
+    document.getElementById("reallyneeded_refexpr2_best").innerHTML = "";
+    document.getElementById("reallyneeded_refexpr3_best").innerHTML = "";
+    document.getElementById("reallyneeded_refexpr4_best").innerHTML = "";
+    document.getElementById("reallyneeded_refexpr5_best").innerHTML = "";
+    document.getElementById("reallyneeded_refexpr6_best").innerHTML = "";
     const oldPowerUp = powerUp;
     powerUp = job.powerUp;
     switch (algorithm) {
@@ -7153,6 +7387,10 @@ document.getElementById("manualset_job").addEventListener("change", () => {
 /////////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////////
+window.addEventListener("pagehide", () => {
+    saveHeartSetSearchForm();
+    saveRNForm();
+});
 // ページのURLのパラメータの処理
 (function () {
     const params = new URLSearchParams(window.location.search);
@@ -7223,6 +7461,7 @@ document.getElementById("manualset_job").addEventListener("change", () => {
         loadExprRecord();
         loadAdoptionHeartSetList();
         loadHeartSetSearchForm();
+        loadRNForm();
     }
 })();
 // デバッグモードであることの確認
