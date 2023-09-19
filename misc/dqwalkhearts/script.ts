@@ -385,15 +385,16 @@ const JobPresetMaximumCost: JobMaximumCost[] = [
         ]
     },
     { id: 300, maximumCostList: [
-            { level: 9, maximumCost: 304 },
-            { level: 8, maximumCost: 296 },
-            { level: 7, maximumCost: 292 },
-            { level: 6, maximumCost: 284 },
-            { level: 5, maximumCost: 280 },
-            { level: 4, maximumCost: 275 },
-            { level: 3, maximumCost: 269 },
-            { level: 2, maximumCost: 264 },
-            { level: 1, maximumCost: 259 }
+            { level: 10, maximumCost: 308 },
+            { level:  9, maximumCost: 304 },
+            { level:  8, maximumCost: 296 },
+            { level:  7, maximumCost: 292 },
+            { level:  6, maximumCost: 284 },
+            { level:  5, maximumCost: 280 },
+            { level:  4, maximumCost: 275 },
+            { level:  3, maximumCost: 269 },
+            { level:  2, maximumCost: 264 },
+            { level:  1, maximumCost: 259 }
         ]
     }
 ];
@@ -957,6 +958,23 @@ function loadAdoptionHeartSetList(): void {
         if (json !== null) {
             const data: AdoptionHeartSet[] = JSON.parse(json);
             for (const hs of data) {
+                // MonsterとHeartのインスタンス参照の設定しなおし
+                for (let i = 0; i < hs.hearts.length; i++) {
+                    const hm = hs.hearts[i];
+                    if (hm === null) {
+                        continue;
+                    }
+                    if (!monsterMap.has(hm.monster.name)) {
+                        continue;
+                    }
+                    hm.monster = monsterMap.get(hm.monster.name)!;
+                    const rank = hm.heart.rank;
+                    const hi = hm.monster.hearts.findIndex(h => h.rank === rank);
+                    if (hi >= 0) {
+                        hm.heart = hm.monster.hearts[hi];
+                    }
+                    hs.hearts[i] = hm;
+                }
                 currentAdoptionHeartSet = hs;
                 addToAdoptionHeartSetList();
             }
