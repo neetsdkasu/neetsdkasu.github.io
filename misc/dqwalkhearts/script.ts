@@ -989,6 +989,28 @@ function loadAdoptionHeartSetList(): void {
     }
 }
 
+function removeAdaptionHeartSet(heartset: AdoptionHeartSet): void {
+    const index = adoptionHeartSetList.findIndex(hs => hs === heartset);
+    if (index < 0) {
+        console.log(`not found in adoptionHeartSetList: ${heartset}`)
+        console.log("FAILED REMVOE ADOPTION-HEART-SET");
+        return;
+    }
+    const list = document.getElementById("adoption_heartset_list")!;
+    const items = list.querySelectorAll(":scope > .outline");
+    try {
+        list.removeChild(items[index]);
+        const ahsList1 = adoptionHeartSetList.slice(0, index);
+        const ahsList2 = adoptionHeartSetList.slice(index + 1);
+        adoptionHeartSetList = ahsList1.concat(ahsList2);
+        saveAdoptionHeartSetList();
+        dialogAlert("採用リストからこころセットを１つ除去しました");
+    } catch (err) {
+        console.log(err);
+        console.log("FAILED REMVOE ADOPTION-HEART-SET");
+    }
+}
+
 // 採用したこころセットをリストに追加して表示
 function addToAdoptionHeartSetList(): boolean {
     if (currentAdoptionHeartSet === null) {
@@ -1033,8 +1055,15 @@ function addToAdoptionHeartSetList(): boolean {
         for (const sec of fragment.querySelectorAll(".secret")) {
             sec.classList.remove("secret");
         }
-        fragment.querySelector(".result-item-adoption")!.addEventListener("click", () => adoptHeartSet(heartset));
+        const btn = fragment.querySelector(".result-item-adoption")!;
+        btn.textContent = "こころリストのランク変更";
+        btn.addEventListener("click", () => adoptHeartSet(heartset));
     }
+    const buttons = fragment.querySelector(".buttons")!;
+    const delBtn = buttons.insertBefore(document.createElement("button"), buttons.querySelector(".result-item-adoption"));
+    delBtn.type = "button";
+    delBtn.textContent = "採用リストから除去";
+    delBtn.addEventListener("click", () => removeAdaptionHeartSet(heartset));
     const elem = (name: string) => fragment.querySelector(`.result-item-${name}`)!;
     const text = (name: string, value: any) => elem(name).textContent = `${value}`;
     text("number", heartset.jobName);
@@ -7181,11 +7210,21 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
     const maximumCost = num("reallyneeded_heart_maximum_cost");
     const asLimitCost = elem("reallyneeded_as_limit_heart_cost").checked;
 
+    if (maximumCost < 1) {
+        dialogAlert("こころ最大コストを設定してください");
+        return;
+    }
+
     const costCoCo: RNCoCo = {
         quadratic: num("reallyneeded_heart_maximum_cost_hp2"),
         linear: num("reallyneeded_heart_maximum_cost_hp1"),
         constant: num("reallyneeded_heart_maximum_cost_hpc")
     };
+
+    if (costCoCo.quadratic < 1 && costCoCo.linear < 1 && costCoCo.constant < 1) {
+        dialogAlert("コスト高ペナを設定してください");
+        return;
+    }
 
     const useRefExpr = elem("reallyneeded_refexpr").checked;
     let refExpr: Scorer | null = null;
