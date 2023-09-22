@@ -9,6 +9,7 @@ const DEBUG = DEVELOP || new URLSearchParams(window.location.search).has("DEBUG"
 if (DEBUG) {
     console.log("DEBUG MODE");
 }
+const LIMIT_OF_HEARTEST = 300;
 let EXPOSE_MODE = false;
 const LOCAL_STORAGE_PATH = "dqwalkhearts";
 const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
@@ -309,6 +310,8 @@ const JobPresetMaximumCost = [
         ]
     },
     { id: 300, maximumCostList: [
+            { level: 12, maximumCost: 318 },
+            { level: 11, maximumCost: 314 },
             { level: 10, maximumCost: 308 },
             { level: 9, maximumCost: 304 },
             { level: 8, maximumCost: 296 },
@@ -869,6 +872,28 @@ function loadAdoptionHeartSetList() {
         console.log(err);
     }
 }
+function removeAdaptionHeartSet(heartset) {
+    const index = adoptionHeartSetList.findIndex(hs => hs === heartset);
+    if (index < 0) {
+        console.log(`not found in adoptionHeartSetList: ${heartset}`);
+        console.log("FAILED REMVOE ADOPTION-HEART-SET");
+        return;
+    }
+    const list = document.getElementById("adoption_heartset_list");
+    const items = list.querySelectorAll(":scope > .outline");
+    try {
+        list.removeChild(items[index]);
+        const ahsList1 = adoptionHeartSetList.slice(0, index);
+        const ahsList2 = adoptionHeartSetList.slice(index + 1);
+        adoptionHeartSetList = ahsList1.concat(ahsList2);
+        saveAdoptionHeartSetList();
+        dialogAlert("採用リストからこころセットを１つ除去しました");
+    }
+    catch (err) {
+        console.log(err);
+        console.log("FAILED REMVOE ADOPTION-HEART-SET");
+    }
+}
 // 採用したこころセットをリストに追加して表示
 function addToAdoptionHeartSetList() {
     if (currentAdoptionHeartSet === null) {
@@ -913,8 +938,15 @@ function addToAdoptionHeartSetList() {
         for (const sec of fragment.querySelectorAll(".secret")) {
             sec.classList.remove("secret");
         }
-        fragment.querySelector(".result-item-adoption").addEventListener("click", () => adoptHeartSet(heartset));
+        const btn = fragment.querySelector(".result-item-adoption");
+        btn.textContent = "こころリストのランク変更";
+        btn.addEventListener("click", () => adoptHeartSet(heartset));
     }
+    const buttons = fragment.querySelector(".buttons");
+    const delBtn = buttons.insertBefore(document.createElement("button"), buttons.querySelector(".result-item-adoption"));
+    delBtn.type = "button";
+    delBtn.textContent = "採用リストから除去";
+    delBtn.addEventListener("click", () => removeAdaptionHeartSet(heartset));
     const elem = (name) => fragment.querySelector(`.result-item-${name}`);
     const text = (name, value) => elem(name).textContent = `${value}`;
     text("number", heartset.jobName);
@@ -3916,7 +3948,7 @@ document.getElementById("search_heart_dialog")
     try {
         const target = parseTarget(elements);
         const num = calcNumOfBestHeartSet(target);
-        if (num > 100) {
+        if (num > LIMIT_OF_HEARTEST) {
             dialogAlert(`該当する件数が多すぎる ${num}`);
             return;
         }
@@ -5325,11 +5357,15 @@ function loadRNForm() {
 }
 const RNBestRefExprScores = new Array(6).fill(0);
 const RNBestRefExprPenalties = new Array(6).fill(Number.MAX_VALUE);
-function updateRNBestRefExpr(i, penalty, score) {
-    const isBest = penalty < RNBestRefExprPenalties[i]
-        || (penalty === RNBestRefExprPenalties[i] && score > RNBestRefExprScores[i]);
+const RNBestRefExprBonuses = new Array(6).fill(0);
+function updateRNBestRefExpr(i, heartset, score) {
+    const isBest = heartset.penalty < RNBestRefExprPenalties[i]
+        || (heartset.penalty === RNBestRefExprPenalties[i]
+            && (score > RNBestRefExprScores[i]
+                || (score === RNBestRefExprScores[i] && heartset.bonus > RNBestRefExprBonuses[i])));
     if (isBest) {
-        RNBestRefExprPenalties[i] = penalty;
+        RNBestRefExprPenalties[i] = heartset.penalty;
+        RNBestRefExprBonuses[i] = heartset.bonus;
         RNBestRefExprScores[i] = score;
     }
     return isBest;
@@ -5440,32 +5476,32 @@ function showRNHeartset(target, heartsets) {
         if (target.useRefExpr) {
             const refScore = target.refExpr.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値1: ${refScore}`;
-            hasRefExprBest[0] = updateRNBestRefExpr(0, heartset.penalty, refScore);
+            hasRefExprBest[0] = updateRNBestRefExpr(0, heartset, refScore);
         }
         if (target.useRefExpr2) {
             const refScore2 = target.refExpr2.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値2: ${refScore2}`;
-            hasRefExprBest[1] = updateRNBestRefExpr(1, heartset.penalty, refScore2);
+            hasRefExprBest[1] = updateRNBestRefExpr(1, heartset, refScore2);
         }
         if (target.useRefExpr3) {
             const refScore3 = target.refExpr3.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値3: ${refScore3}`;
-            hasRefExprBest[2] = updateRNBestRefExpr(2, heartset.penalty, refScore3);
+            hasRefExprBest[2] = updateRNBestRefExpr(2, heartset, refScore3);
         }
         if (target.useRefExpr4) {
             const refScore4 = target.refExpr4.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値4: ${refScore4}`;
-            hasRefExprBest[3] = updateRNBestRefExpr(3, heartset.penalty, refScore4);
+            hasRefExprBest[3] = updateRNBestRefExpr(3, heartset, refScore4);
         }
         if (target.useRefExpr5) {
             const refScore5 = target.refExpr5.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値5: ${refScore5}`;
-            hasRefExprBest[4] = updateRNBestRefExpr(4, heartset.penalty, refScore5);
+            hasRefExprBest[4] = updateRNBestRefExpr(4, heartset, refScore5);
         }
         if (target.useRefExpr6) {
             const refScore6 = target.refExpr6.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値6: ${refScore6}`;
-            hasRefExprBest[5] = updateRNBestRefExpr(5, heartset.penalty, refScore6);
+            hasRefExprBest[5] = updateRNBestRefExpr(5, heartset, refScore6);
         }
         elem("score").textContent = scoreStr;
         if (EXPOSE_MODE) {
@@ -6803,11 +6839,19 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
     const setSize = job.colors.reduce((acc, c) => c !== Color.Omit ? acc + 1 : acc, 0);
     const maximumCost = num("reallyneeded_heart_maximum_cost");
     const asLimitCost = elem("reallyneeded_as_limit_heart_cost").checked;
+    if (maximumCost < 1) {
+        dialogAlert("こころ最大コストを設定してください");
+        return;
+    }
     const costCoCo = {
         quadratic: num("reallyneeded_heart_maximum_cost_hp2"),
         linear: num("reallyneeded_heart_maximum_cost_hp1"),
         constant: num("reallyneeded_heart_maximum_cost_hpc")
     };
+    if (costCoCo.quadratic < 1 && costCoCo.linear < 1 && costCoCo.constant < 1) {
+        dialogAlert("コスト高ペナを設定してください");
+        return;
+    }
     const useRefExpr = elem("reallyneeded_refexpr").checked;
     let refExpr = null;
     if (useRefExpr) {
@@ -6966,6 +7010,7 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
     document.getElementById("reallyneeded_result").innerHTML = "";
     RNBestRefExprScores.fill(0);
     RNBestRefExprPenalties.fill(Number.MAX_VALUE);
+    RNBestRefExprBonuses.fill(0);
     document.getElementById("reallyneeded_refexpr_best").innerHTML = "";
     document.getElementById("reallyneeded_refexpr2_best").innerHTML = "";
     document.getElementById("reallyneeded_refexpr3_best").innerHTML = "";
