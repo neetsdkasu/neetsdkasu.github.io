@@ -1321,19 +1321,176 @@
       <section class="secret damagetool2">
         <h5>ダメージの目安の計算(雑)</h5>
         <details>
-          <details>
+          <details class="outline">
             <summary>斬撃・体技</summary>
-  
+            <div class="outline">
+              <div class="small subtitle">こころセット由来</div>
+              <details class="outline">
+                <summary class="small">こころセット取り込み設定</summary>
+                <table class="tr-hover">
+                  <tbody>
+                    <tr>
+                      <td><span>力:</span></td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="PWR" placeholder="PWR" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td><span>攻魔:</span></td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="AMG" placeholder="AMG" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <span>斬D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(スキルの斬撃ダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <span>体D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(スキルの体技ダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <span>斬体D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(スキルの斬撃・体技ダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <span>呪文D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(じゅもんダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <select>
+                          <option>メラ</option><option>ギラ</option><option>ヒャド</option><option>バギ</option>
+                          <option>デイン</option><option>ジバリア</option><option>イオ</option><option>ドルマ</option>
+                        </select>
+                        <span>斬体D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(メラ属性斬撃・体技ダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <select>
+                          <option>メラ</option><option>ギラ</option><option>ヒャド</option><option>バギ</option>
+                          <option>デイン</option><option>ジバリア</option><option>イオ</option><option>ドルマ</option>
+                        </select>
+                        <span>呪文D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(メラ属性じゅもんダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <select>
+                          <option>メラ</option><option>ギラ</option><option>ヒャド</option><option>バギ</option>
+                          <option>デイン</option><option>ジバリア</option><option>イオ</option><option>ドルマ</option>
+                        </select>
+                        <span>属性D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(メラ属性ダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>
+                        <input type="checkbox" />
+                        <select>
+                          <option>スライム</option><option>けもの</option><option>ドラゴン</option><option>虫</option><option>鳥</option>
+                          <option>植物</option><option>物質</option><option>マシン</option><option>ゾンビ</option><option>悪魔</option>
+                          <option>エレメント</option><option>怪人</option><option>水</option><option>？？？？</option>
+                          <option>特定モンスターX</option><option>特定モンスターY</option><option>特定モンスターZ</option>
+                        </select>
+                        <span>系統D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(スライム系へのダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </details>
+              <div class="buttons">
+                <span>
+                  <select>
+                    <option>こころセット検索結果</option>
+                    <option>マニュアルこころセット</option>
+                    <option>採用こころセットリスト</option>
+                    <option>本欲探索結果</option>
+                    <option>本欲参考値ベスト</option>
+                  </select>
+                  <select>
+                    <option>-</option>
+                  </select>
+                  <button>から追加</button>
+                </span>
+                <button>手入力での追加</button>
+              </div>
+              <hr />
+              <div class="yscroll-half"></div>
+            </div>
+            <div class="outline">
+              <div class="small subtitle">こころセット以外</div>
+              <div><button>追加</button></div>
+              <hr />
+              <div class="yscroll-half"></div>
+            </div>
+            <div class="outline">
+              <div class="small subtitle">スキル</div>
+              <div><button>追加</button></div>
+              <hr />
+              <div class="yscroll-half"></div>
+            </div>
+            <div class="outline">
+              <div class="small subtitle">計算</div>
+              <div><button>計算</button></div>
+              <hr />
+              <div class="yscroll-half"></div>
+            </div>
           </details>
           <hr />
-          <details>
+          <details class="outline">
             <summary>呪文・ブレス</summary>
           </details>
         </details>
       </section>
-      
+
       <hr class="secret" />
-      
+
 
       <section class="secret damagetool">
         <h5>ダメージの目安の計算(雑)</h5>
@@ -1602,9 +1759,9 @@
           <label>セット名:<input type="text" class="damagetool2-zantai-set-name" /></label>
         </div>
         <div>
-         <label>ちから:<input type="number" min="0" max="9999" class="damagetool2-zantai-set-power" /></label>
+         <label>力:<input type="number" min="0" max="9999" class="damagetool2-zantai-set-power" /></label>
          ,
-         <label>こうげき魔力:<input type="number" min="0" max="9999" class="damagetool2-zantai-set-attackmagic" /></label>
+         <label>攻魔:<input type="number" min="0" max="9999" class="damagetool2-zantai-set-attackmagic" /></label>
         </div>
         <div>
           スキル:
