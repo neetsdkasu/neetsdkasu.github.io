@@ -1324,26 +1324,37 @@
           <details class="outline">
             <summary>斬撃・体技</summary>
             <div class="outline">
-              <div class="small subtitle">こころセット由来</div>
+              <div class="small subtitle">
+                <span>こころセット由来のステータス情報</span>
+                <span class="very-small">(※こころセット分のみのステータス増分情報)</span>
+              </div>
               <details class="outline">
                 <summary class="small">こころセット取り込み設定</summary>
                 <table class="tr-hover">
                   <tbody>
                     <tr>
-                      <td><span>力:</span></td>
+                      <td colspan="2">
+                        <span>力:</span>
+                      </td>
                       <td>
                         <input type="text" maxlength="300" size="100" value="PWR" placeholder="PWR" />
                         <button>…</button>
                       </td>
                     </tr>
                     <tr>
-                      <td><span>攻魔:</span></td>
+                      <td colspan="2">
+                        <input type="checkbox" />
+                        <span>攻魔:</span>
+                      </td>
                       <td>
                         <input type="text" maxlength="300" size="100" value="AMG" placeholder="AMG" />
                         <button>…</button>
                       </td>
                     </tr>
                     <tr>
+                      <td rowspan="3">
+                        <span>スキル</span>
+                      </td>
                       <td>
                         <input type="checkbox" />
                         <span>斬D:</span>
@@ -1374,7 +1385,7 @@
                       </td>
                     </tr>
                     <tr>
-                      <td>
+                      <td colspan="2">
                         <input type="checkbox" />
                         <span>呪文D:</span>
                       </td>
@@ -1384,12 +1395,24 @@
                       </td>
                     </tr>
                     <tr>
-                      <td>
+                      <td colspan="2">
                         <input type="checkbox" />
+                        <span>全属性D:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(全属性ダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td rowspan="3">
                         <select>
                           <option>メラ</option><option>ギラ</option><option>ヒャド</option><option>バギ</option>
                           <option>デイン</option><option>ジバリア</option><option>イオ</option><option>ドルマ</option>
                         </select>
+                      </td>
+                      <td>
+                        <input type="checkbox" />
                         <span>斬体D:</span>
                       </td>
                       <td>
@@ -1400,10 +1423,6 @@
                     <tr>
                       <td>
                         <input type="checkbox" />
-                        <select>
-                          <option>メラ</option><option>ギラ</option><option>ヒャド</option><option>バギ</option>
-                          <option>デイン</option><option>ジバリア</option><option>イオ</option><option>ドルマ</option>
-                        </select>
                         <span>呪文D:</span>
                       </td>
                       <td>
@@ -1414,10 +1433,6 @@
                     <tr>
                       <td>
                         <input type="checkbox" />
-                        <select>
-                          <option>メラ</option><option>ギラ</option><option>ヒャド</option><option>バギ</option>
-                          <option>デイン</option><option>ジバリア</option><option>イオ</option><option>ドルマ</option>
-                        </select>
                         <span>属性D:</span>
                       </td>
                       <td>
@@ -1426,7 +1441,7 @@
                       </td>
                     </tr>
                     <tr>
-                      <td>
+                      <td colspan="2">
                         <input type="checkbox" />
                         <select>
                           <option>スライム</option><option>けもの</option><option>ドラゴン</option><option>虫</option><option>鳥</option>
@@ -1438,6 +1453,16 @@
                       </td>
                       <td>
                         <input type="text" maxlength="300" size="100" value="" placeholder="NUM(スライム系へのダメージ+#%)" />
+                        <button>…</button>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colspan="2">
+                        <input type="checkbox" />
+                        <span>特定スキル1:</span>
+                      </td>
+                      <td>
+                        <input type="text" maxlength="300" size="100" value="" placeholder="NUM(アバン流刀殺法のダメージ+#%)" />
                         <button>…</button>
                       </td>
                     </tr>
@@ -1462,22 +1487,93 @@
               </div>
               <hr />
               <div class="yscroll-half"></div>
+              <hr />
+              <div><button>全てのステータス情報を削除</button></div>
             </div>
+            <hr />
             <div class="outline">
-              <div class="small subtitle">こころセット以外</div>
+              <div class="small subtitle">
+                <span>こころセット以外のステータス情報</span>
+                <span class="very-small">(※こころをセットしていない状態でのステータス情報)</span>
+              </div>
               <div><button>追加</button></div>
               <hr />
               <div class="yscroll-half"></div>
+              <hr />
+              <div><button>全てのステータス情報を削除</button></div>
             </div>
+            <hr />
             <div class="outline">
               <div class="small subtitle">スキル</div>
               <div><button>追加</button></div>
               <hr />
-              <div class="yscroll-half"></div>
+              <div class="yscroll-half">
+                <div class="pad1 outline">
+                  <div>
+                    <span>スキル名:</span>
+                    <input type="text" />
+                  </div>
+                  <div class="buttons">
+                    <span>1撃目:</span>
+                    <select>
+                      <option>メラ</option><option>ギラ</option><option>ヒャド</option><option>バギ</option>
+                      <option>デイン</option><option>ジバリア</option><option>イオ</option><option>ドルマ</option>
+                      <option selected>無属性</option>
+                    </select>
+                    <select>
+                      <option>斬撃</option>
+                      <option>体技</option>
+                      <option>攻魔複合・斬撃</option>
+                      <option>攻魔複合・体技</option>
+                    </select>
+                    <label>
+                      <span>威力:</span>
+                      <input type="number" min="0" value="100" />
+                      <span>%</span>
+                    </label>
+                    <label>
+                      <span>回数:</span>
+                      <input type="number" min="1" value="1"/>
+                      <span>回</span>
+                    </label>
+                  </div>
+                  <div>
+                    <span>紐付けIDリスト:</span>
+                    <input type="text" placeholder="A1 A2 A3 B1 B2" title="こころセットあるいは装備等のステータス情報のIDにこのスキルを紐付ける。IDは空白区切りで指定。空欄の場合は全てのIDにこのスキルを紐付ける。" />
+                  </div>
+                </div>
+              </div>
+              <hr />
+              <div><button>全てのスキルを削除</button></div>
             </div>
+            <hr />
             <div class="outline">
-              <div class="small subtitle">計算</div>
-              <div><button>計算</button></div>
+              <div class="small subtitle">計算の組み合わせ</div>
+              <div class="buttons">
+                <label>
+                  <span class="very-small">こころセット由来:</span>
+                  <select>
+                    <option>*</option>
+                  </select>
+                </label>
+                <label>
+                  <span class="very-small">こころセット以外:</span>
+                  <select>
+                    <option>*</option>
+                  </select>
+                </label>
+                <button>追加</button>
+                <span class="very-small">※１つも指定が無い場合は全通りの組み合わせを計算します</span>
+              </div>
+              <hr />
+              <div class="yscroll-half"></div>
+              <hr />
+              <div><button>全ての組み合わせを削除</button></div>
+            </div>
+            <hr />
+            <div class="outline">
+              <div class="small subtitle">ダメージの計算</div>
+              <div><button>計算する</button></div>
               <hr />
               <div class="yscroll-half"></div>
             </div>
@@ -1485,6 +1581,7 @@
           <hr />
           <details class="outline">
             <summary>呪文・ブレス</summary>
+            <div class="small">未実装</div>
           </details>
         </details>
       </section>
@@ -1755,6 +1852,7 @@
 
     <template id="damagetool2-zantai-set-template">
       <div class="pad1 outline">
+        <div><span>ID:</span> <span class="damagetool2-zantai-set-id"></span></div>
         <div>
           <label>セット名:<input type="text" class="damagetool2-zantai-set-name" /></label>
         </div>
