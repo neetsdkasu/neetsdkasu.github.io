@@ -1723,13 +1723,13 @@
                 <label>
                   <span class="very-small">こころセット由来:</span>
                   <select name="damagetool2_zantai_calc_pair_from_heartset" id="damagetool2_zantai_calc_pair_from_heartset">
-                    <option value="-1">*</option>
+                    <option value="*">*</option>
                   </select>
                 </label>
                 <label>
                   <span class="very-small">こころセット以外:</span>
                   <select name="damagetool2_zantai_calc_pair_from_non_heartset" id="damagetool2_zantai_calc_pair_from_non_heartset">
-                    <option value="-1">*</option>
+                    <option value="*">*</option>
                   </select>
                 </label>
                 <button type="button" id="damagetool2_zantai_add_calc_pair">追加</button>
@@ -2045,9 +2045,9 @@
         </div>
         <div>
           スキル:
-          <label>斬D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-zangeki" />%</label>
-          <label>体D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-taigi" />%</label>
-          <label>斬体D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-zantai" />%</label>
+          <label>斬D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-skill-zangeki" />%</label>
+          <label>体D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-skill-taigi" />%</label>
+          <label>斬体D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-skill-zantai" />%</label>
           <label>呪文D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-jumon" />%</label>
         </div>
         <div>
@@ -2055,7 +2055,7 @@
         </div>
         <div>
           属性:
-          <select class="damagetool2-zantai-set-zokusei1-name" >
+          <select class="damagetool2-zantai-set-zokusei1-kind" >
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
@@ -2065,7 +2065,7 @@
         </div>
         <div>
           属性:
-          <select class="damagetool2-zantai-set-zokusei2-name" >
+          <select class="damagetool2-zantai-set-zokusei2-kind" >
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
@@ -2075,7 +2075,7 @@
         </div>
         <div>
           属性:
-          <select class="damagetool2-zantai-set-zokusei3-name" >
+          <select class="damagetool2-zantai-set-zokusei3-kind" >
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
@@ -2085,7 +2085,7 @@
         </div>
         <div>
           属性:
-          <select class="damagetool2-zantai-set-zokusei4-name" >
+          <select class="damagetool2-zantai-set-zokusei4-kind" >
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
@@ -2096,88 +2096,88 @@
         <div>
           <span>
             系統:
-            <select class="damagetool2-zantai-set-monster1-name" >
+            <select class="damagetool2-zantai-set-monster1-kind" >
               <option value="1">スライム</option><option value="2">けもの</option><option value="3">ドラゴン</option><option value="4">虫</option><option value="5">鳥</option>
               <option value="6">植物</option><option value="7">物質</option><option value="8">マシン</option><option value="9">ゾンビ</option><option value="10">悪魔</option>
               <option value="11">エレメント</option><option value="12">怪人</option><option value="13">水</option><option value="14">？？？？</option>
               <option value="15">特定モンスターX</option><option value="16">特定モンスターY</option><option value="17">特定モンスターZ</option>
             </select>
-            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster1-damage" />%</label>
+            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster1-rate" />%</label>
           </span>
           ,
           <span>
             系統:
-            <select class="damagetool2-zantai-set-monster2-name" >
+            <select class="damagetool2-zantai-set-monster2-kind" >
               <option value="1">スライム</option><option value="2">けもの</option><option value="3">ドラゴン</option><option value="4">虫</option><option value="5">鳥</option>
               <option value="6">植物</option><option value="7">物質</option><option value="8">マシン</option><option value="9">ゾンビ</option><option value="10">悪魔</option>
               <option value="11">エレメント</option><option value="12">怪人</option><option value="13">水</option><option value="14">？？？？</option>
               <option value="15">特定モンスターX</option><option value="16">特定モンスターY</option><option value="17">特定モンスターZ</option>
             </select>
-            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster2-damage" />%</label>
+            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster2-rate" />%</label>
           </span>
         </div>
         <div>
           <span>
             系統:
-            <select class="damagetool2-zantai-set-monster3-name" >
+            <select class="damagetool2-zantai-set-monster3-kind" >
               <option value="1">スライム</option><option value="2">けもの</option><option value="3">ドラゴン</option><option value="4">虫</option><option value="5">鳥</option>
               <option value="6">植物</option><option value="7">物質</option><option value="8">マシン</option><option value="9">ゾンビ</option><option value="10">悪魔</option>
               <option value="11">エレメント</option><option value="12">怪人</option><option value="13">水</option><option value="14">？？？？</option>
               <option value="15">特定モンスターX</option><option value="16">特定モンスターY</option><option value="17">特定モンスターZ</option>
             </select>
-            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster3-damage" />%</label>
+            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster3-rate" />%</label>
           </span>
           ,
           <span>
             系統:
-            <select class="damagetool2-zantai-set-monster4-name" >
+            <select class="damagetool2-zantai-set-monster4-kind" >
               <option value="1">スライム</option><option value="2">けもの</option><option value="3">ドラゴン</option><option value="4">虫</option><option value="5">鳥</option>
               <option value="6">植物</option><option value="7">物質</option><option value="8">マシン</option><option value="9">ゾンビ</option><option value="10">悪魔</option>
               <option value="11">エレメント</option><option value="12">怪人</option><option value="13">水</option><option value="14">？？？？</option>
               <option value="15">特定モンスターX</option><option value="16">特定モンスターY</option><option value="17">特定モンスターZ</option>
             </select>
-            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster4-damage" />%</label>
+            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-monster4-rate" />%</label>
           </span>
         </div>
         <div>
           <span>
             特定スキル1:
-            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-skill1" />%</label>
+            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-spskill1" />%</label>
           </span>
           ,
           <span>
             特定スキル2:
-            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-skill2" />%</label>
+            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-spskill2" />%</label>
           </span>
           ,
           <span>
             特定スキル3:
-            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-skill3" />%</label>
+            <label>D+<input type="number" min="0" max="999" class="damagetool2-zantai-set-spskill3" />%</label>
           </span>
         </div>
       </div>
     </template>
 
-    <template id="damagetool2-zantai-skill-template">
+    <template id="damagetool2_zantai_skill_template">
       <div class="pad1 outline">
         <input type="hidden" class="damagetool2-zantai-skill-id" />
         <div class="buttons">
           <label>
             <span>スキル名:</span>
-            <input type="text" class="damagetool2-zantai-skill-name" size="30"/>
+            <input type="text" class="damagetool2-zantai-skill-name" size="30" />
           </label>
           <span>
             <label>
-              <input type="checkbox" class="damagetool2-zantai-skill-limit-use" />
+              <input type="checkbox" class="damagetool2-zantai-skill-restrict-monster-use" />
               <span>系統限定</span>
             </label>
-            <select class="damagetool2-zantai-skill-limit-monster">
+            <select class="damagetool2-zantai-skill-restrict-monster-kind">
               <option value="1">スライム</option><option value="2">けもの</option><option value="3">ドラゴン</option><option value="4">虫</option><option value="5">鳥</option>
               <option value="6">植物</option><option value="7">物質</option><option value="8">マシン</option><option value="9">ゾンビ</option><option value="10">悪魔</option>
               <option value="11">エレメント</option><option value="12">怪人</option><option value="13">水</option><option value="14">？？？？</option>
               <option value="15">特定モンスターX</option><option value="16">特定モンスターY</option><option value="17">特定モンスターZ</option>
             </select>
-            <select class="damagetool2-zantai-skill-limit-monster-is-only">
+            <select class="damagetool2-zantai-skill-restrict-monster-is-only">
               <option value="0">以外</option>
               <option value="1" selected>のみ</option>
             </select>
@@ -2185,15 +2185,15 @@
         </div>
         <div class="buttons">
           <label>
-            <input type="checkbox" checked disabled />
+            <input type="checkbox" checked disabled class="damagetool2-zantai-skill-attack1-use" />
             <span>1撃目:</span>
           </label>
-          <select class="damagetool2-zantai-skill-attack1-type">
+          <select class="damagetool2-zantai-skill-attack1-kind">
             <option value="0" selected>無属性</option>
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
-          <select class="damagetool2-zantai-skill-attack1-kind">
+          <select class="damagetool2-zantai-skill-attack1-type">
             <option value="0" selected>斬撃</option>
             <option value="1">体技</option>
             <option value="2">攻魔複合・斬撃</option>
@@ -2215,12 +2215,12 @@
             <input type="checkbox" class="damagetool2-zantai-skill-attack2-use" />
             <span>2撃目:</span>
           </label>
-          <select class="damagetool2-zantai-skill-attack2-type">
+          <select class="damagetool2-zantai-skill-attack2-kind">
             <option value="0" selected>無属性</option>
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
-          <select class="damagetool2-zantai-skill-attack2-kind">
+          <select class="damagetool2-zantai-skill-attack2-type">
             <option value="0" selected>斬撃</option>
             <option value="1">体技</option>
             <option value="2">攻魔複合・斬撃</option>
@@ -2242,12 +2242,12 @@
             <input type="checkbox" class="damagetool2-zantai-skill-attack3-use" />
             <span>3撃目:</span>
           </label>
-          <select class="damagetool2-zantai-skill-attack3-type">
+          <select class="damagetool2-zantai-skill-attack3-kind">
             <option value="0" selected>無属性</option>
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
-          <select class="damagetool2-zantai-skill-attack3-kind">
+          <select class="damagetool2-zantai-skill-attack3-type">
             <option value="0" selected>斬撃</option>
             <option value="1">体技</option>
             <option value="2">攻魔複合・斬撃</option>
@@ -2269,12 +2269,12 @@
             <input type="checkbox" class="damagetool2-zantai-skill-attack4-use" />
             <span>4撃目:</span>
           </label>
-          <select class="damagetool2-zantai-skill-attack4-type">
+          <select class="damagetool2-zantai-skill-attack4-kind">
             <option value="0">無属性</option>
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
-          <select class="damagetool2-zantai-skill-attack4-kind">
+          <select class="damagetool2-zantai-skill-attack4-type">
             <option value="0">斬撃</option>
             <option value="1">体技</option>
             <option value="2">攻魔複合・斬撃</option>
@@ -2296,12 +2296,12 @@
             <input type="checkbox" class="damagetool2-zantai-skill-attack5-use" />
             <span>5撃目:</span>
           </label>
-          <select class="damagetool2-zantai-skill-attack5-type">
+          <select class="damagetool2-zantai-skill-attack5-kind">
             <option value="0" selected>無属性</option>
             <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
             <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
           </select>
-          <select class="damagetool2-zantai-skill-attack5-kind">
+          <select class="damagetool2-zantai-skill-attack5-type">
             <option value="0" selected>斬撃</option>
             <option value="1">体技</option>
             <option value="2">攻魔複合・斬撃</option>
@@ -2320,8 +2320,23 @@
         </div>
         <div>
           <span>紐付けIDリスト:</span>
-          <input type="text" class="damagetool2-zantai-skill-id-reference" size="40" placeholder="A1 A2 A3 B1 B2" title="こころセット由来あるいはこころセット以外のステータス情報のIDをこのスキルに紐付けます。IDは空白区切りで指定します。空欄の場合は全てのIDをこのスキルに紐付けます。無効な入力の場合はこのスキルは無視されます。" />
+          <input type="text" class="damagetool2-zantai-skill-id-reference" size="40" placeholder="A1 A2 A3 B1 B2" title="こころセット由来あるいはこころセット以外のステータス情報のIDをこのスキルに紐付けます。IDは空白区切りで指定します。空欄の場合は全てのIDをこのスキルに紐付けます。無効な入力が存在する場合はこのスキルは一切使用されず無視されます。" />
         </div>
+      </div>
+    </template>
+
+    <template id="damagetool2_zantai_calc_pair_template">
+      <div class="pad1 outline buttons">
+        <span>
+          <span class="very-small">こころセット由来:</span>
+          <span class="damagetool2-zantai-calc-pair-heartset-status-id"></span>
+          <span class="damagetool2-zantai-calc-pair-heartset-status-name"></span>
+        </span>
+        <span>
+          <span class="very-small">こころセット以外:</span>
+          <span class="damagetool2-zantai-calc-pair-non-heartset-status-id"></span>
+          <span class="damagetool2-zantai-calc-pair-non-heartset-status-name"></span>
+        </span>
       </div>
     </template>
 

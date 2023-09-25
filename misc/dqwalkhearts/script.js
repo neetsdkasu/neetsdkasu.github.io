@@ -7448,6 +7448,296 @@ document.getElementById("manualset_job").addEventListener("change", () => {
     }
 })();
 /////////////////////////////////////////////////////////////////////////////////////
+// ダメージ計算ツール（雑） v2
+/////////////////////////////////////////////////////////////////////////////////////
+let DT2SkillId = 0;
+let DT2HeartsetStatusId = 0;
+let DT2NonHeartsetStatusId = 0;
+function getDT2StatusFormList(listId) {
+    if (DEBUG) {
+        console.log(`call getDT2StatusFormList(${listId})`);
+    }
+    const list = document.getElementById(listId);
+    const items = list.querySelectorAll(":scope > .outline");
+    const result = [];
+    for (const item of items) {
+        const sel = (cn) => item.querySelector(`:scope .${cn}`).value;
+        const value = (cn) => item.querySelector(`:scope .${cn}`).value;
+        const form = {
+            id: item.querySelector(":scope .damagetool2-zantai-set-id").textContent ?? "",
+            name: value("damagetool2-zantai-set-name"),
+            power: value("damagetool2-zantai-set-power"),
+            attackMagic: value("damagetool2-zantai-set-attackmagic"),
+            skillZan: value("damagetool2-zantai-set-skill-zangeki"),
+            skillTai: value("damagetool2-zantai-set-skill-taigi"),
+            skillZantai: value("damagetool2-zantai-set-skill-zantai"),
+            jumon: value("damagetool2-zantai-set-jumon"),
+            zenzokusei: value("damagetool2-zantai-set-zenzokusei"),
+            zokuseiKind: [
+                sel("damagetool2-zantai-set-zokusei1-kind"),
+                sel("damagetool2-zantai-set-zokusei2-kind"),
+                sel("damagetool2-zantai-set-zokusei3-kind"),
+                sel("damagetool2-zantai-set-zokusei4-kind")
+            ],
+            zokuseiZantai: [
+                value("damagetool2-zantai-set-zokusei1-zantai"),
+                value("damagetool2-zantai-set-zokusei2-zantai"),
+                value("damagetool2-zantai-set-zokusei3-zantai"),
+                value("damagetool2-zantai-set-zokusei4-zantai")
+            ],
+            zokuseiJumon: [
+                value("damagetool2-zantai-set-zokusei1-jumon"),
+                value("damagetool2-zantai-set-zokusei2-jumon"),
+                value("damagetool2-zantai-set-zokusei3-jumon"),
+                value("damagetool2-zantai-set-zokusei4-jumon")
+            ],
+            zokuseiZokusei: [
+                value("damagetool2-zantai-set-zokusei1-zokusei"),
+                value("damagetool2-zantai-set-zokusei2-zokusei"),
+                value("damagetool2-zantai-set-zokusei3-zokusei"),
+                value("damagetool2-zantai-set-zokusei4-zokusei")
+            ],
+            monsterKind: [
+                sel("damagetool2-zantai-set-monster1-kind"),
+                sel("damagetool2-zantai-set-monster2-kind"),
+                sel("damagetool2-zantai-set-monster3-kind"),
+                sel("damagetool2-zantai-set-monster4-kind")
+            ],
+            monsterRate: [
+                value("damagetool2-zantai-set-monster1-rate"),
+                value("damagetool2-zantai-set-monster2-rate"),
+                value("damagetool2-zantai-set-monster3-rate"),
+                value("damagetool2-zantai-set-monster4-rate")
+            ],
+            spskill: [
+                value("damagetool2-zantai-set-spskill1"),
+                value("damagetool2-zantai-set-spskill2"),
+                value("damagetool2-zantai-set-spskill3")
+            ]
+        };
+        result.push(form);
+    }
+    return result;
+}
+function getDT2SkillFormList() {
+    const list = document.getElementById("damagetool2_zantai_skill_list");
+    const items = list.querySelectorAll(":scope > .outline");
+    const result = [];
+    for (const item of items) {
+        const sel = (cn) => item.querySelector(`:scope .${cn}`).value;
+        const value = (cn) => item.querySelector(`:scope .${cn}`).value;
+        const checked = (cn) => item.querySelector(`:scope .${cn}`).checked;
+        const form = {
+            name: value("damagetool2-zantai-skill-name"),
+            limitMonsterUse: checked("damagetool2-zantai-skill-restrict-monster-use"),
+            limitMonsterKind: sel("damagetool2-zantai-skill-restrict-monster-kind"),
+            limitMonsterIsOnly: sel("damagetool2-zantai-skill-restrict-monster-is-only"),
+            attackUse: [
+                checked("damagetool2-zantai-skill-attack1-use"),
+                checked("damagetool2-zantai-skill-attack2-use"),
+                checked("damagetool2-zantai-skill-attack3-use"),
+                checked("damagetool2-zantai-skill-attack4-use"),
+                checked("damagetool2-zantai-skill-attack5-use")
+            ],
+            attackKind: [
+                sel("damagetool2-zantai-skill-attack1-kind"),
+                sel("damagetool2-zantai-skill-attack2-kind"),
+                sel("damagetool2-zantai-skill-attack3-kind"),
+                sel("damagetool2-zantai-skill-attack4-kind"),
+                sel("damagetool2-zantai-skill-attack5-kind")
+            ],
+            attackType: [
+                sel("damagetool2-zantai-skill-attack1-type"),
+                sel("damagetool2-zantai-skill-attack2-type"),
+                sel("damagetool2-zantai-skill-attack3-type"),
+                sel("damagetool2-zantai-skill-attack4-type"),
+                sel("damagetool2-zantai-skill-attack5-type")
+            ],
+            attackRate: [
+                value("damagetool2-zantai-skill-attack1-rate"),
+                value("damagetool2-zantai-skill-attack2-rate"),
+                value("damagetool2-zantai-skill-attack3-rate"),
+                value("damagetool2-zantai-skill-attack4-rate"),
+                value("damagetool2-zantai-skill-attack5-rate")
+            ],
+            attackRepeat: [
+                value("damagetool2-zantai-skill-attack1-repeat"),
+                value("damagetool2-zantai-skill-attack2-repeat"),
+                value("damagetool2-zantai-skill-attack3-repeat"),
+                value("damagetool2-zantai-skill-attack4-repeat"),
+                value("damagetool2-zantai-skill-attack5-repeat")
+            ],
+            idReference: value("damagetool2-zantai-skill-id-reference")
+        };
+        result.push(form);
+    }
+    return result;
+}
+function getDT2CalcPairList() {
+    const list = document.getElementById("damagetool2_zantai_calc_pair_list");
+    const items = list.querySelectorAll(":scope > .outline");
+    const result = [];
+    for (const item of items) {
+        const text = (cn) => (item.querySelector(`:scope .${cn}`).textContent ?? "");
+        const pair = {
+            heartsetStatusId: text("damagetool2-zantai-calc-pair-heartset-status-id"),
+            heartsetStatusName: text("damagetool2-zantai-calc-pair-heartset-status-name"),
+            nonHeartsetStatusId: text("damagetool2-zantai-calc-pair-non-heartset-status-id"),
+            nonHeartsetStatusName: text("damagetool2-zantai-calc-pair-non-heartset-status-name")
+        };
+        result.push(pair);
+    }
+    return result;
+}
+// こころセット由来の手入力用ステータスの追加
+document.getElementById("damagetool2_zantai_add_heartset_status_by_manual")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_add_heartset_status_by_manual Button");
+    }
+    const template = document.getElementById("damagetool2_zantai_set_template");
+    const fragment = template.content.cloneNode(true);
+    DT2HeartsetStatusId++;
+    const id = `A${DT2HeartsetStatusId}`;
+    const name = `こころセット(${id})`;
+    const sel = document.getElementById("damagetool2_zantai_calc_pair_from_heartset");
+    const opt = sel.firstElementChild.nextElementSibling === null
+        ? sel.appendChild(document.createElement("option"))
+        : sel.insertBefore(document.createElement("option"), sel.firstElementChild.nextElementSibling);
+    opt.value = id;
+    opt.textContent = name;
+    fragment.querySelector(":scope .damagetool2-zantai-set-id").textContent = id;
+    fragment.querySelector(":scope .damagetool2-zantai-set-name").value = name;
+    const list = document.getElementById("damagetool2_zantai_heartset_status_list");
+    list.insertBefore(fragment, list.firstElementChild);
+    const nameElem = list.firstElementChild.querySelector(":scope .damagetool2-zantai-set-name");
+    nameElem.addEventListener("input", () => {
+        opt.textContent = nameElem.value;
+        const cpList = document.getElementById("damagetool2_zantai_calc_pair_list");
+        const cpItems = cpList.querySelectorAll(":scope > .outline");
+        for (const item of cpItems) {
+            const cpId = item.querySelector(":scope .damagetool2-zantai-calc-pair-heartset-status-id").textContent;
+            if (cpId === id) {
+                item.querySelector(":scope .damagetool2-zantai-calc-pair-heartset-status-name").textContent = nameElem.value;
+            }
+        }
+    });
+    if (DEBUG) {
+        console.log(`added empty Status: ID: ${id}, NAME: ${name}`);
+    }
+});
+// こころセット由来のステータスリストの削除
+document.getElementById("damagetool2_zantai_clear_heartset_status_list")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_clear_heartset_status_list Button");
+    }
+    document.getElementById("damagetool2_zantai_heartset_status_list").innerHTML = "";
+    const sel = document.getElementById("damagetool2_zantai_calc_pair_from_heartset");
+    sel.innerHTML = "";
+    const opt = sel.appendChild(document.createElement("option"));
+    opt.value = "*";
+    opt.textContent = "*";
+});
+// こころセット以外のステータスの追加
+document.getElementById("damagetool2_zantai_add_non_heartset_status")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_add_non_heartset_status Button");
+    }
+    const template = document.getElementById("damagetool2_zantai_set_template");
+    const fragment = template.content.cloneNode(true);
+    DT2NonHeartsetStatusId++;
+    const id = `B${DT2NonHeartsetStatusId}`;
+    const name = `こころ以外(${id})`;
+    const sel = document.getElementById("damagetool2_zantai_calc_pair_from_non_heartset");
+    const opt = sel.firstElementChild.nextElementSibling === null
+        ? sel.appendChild(document.createElement("option"))
+        : sel.insertBefore(document.createElement("option"), sel.firstElementChild.nextElementSibling);
+    opt.value = id;
+    opt.textContent = name;
+    fragment.querySelector(":scope .damagetool2-zantai-set-id").textContent = id;
+    fragment.querySelector(":scope .damagetool2-zantai-set-name").value = name;
+    const list = document.getElementById("damagetool2_zantai_non_heartset_status_list");
+    list.insertBefore(fragment, list.firstElementChild);
+    const nameElem = list.firstElementChild.querySelector(":scope .damagetool2-zantai-set-name");
+    nameElem.addEventListener("input", () => {
+        opt.textContent = nameElem.value;
+        const cpList = document.getElementById("damagetool2_zantai_calc_pair_list");
+        const cpItems = cpList.querySelectorAll(":scope > .outline");
+        for (const item of cpItems) {
+            const cpId = item.querySelector(":scope .damagetool2-zantai-calc-pair-non-heartset-status-id").textContent;
+            if (cpId === id) {
+                item.querySelector(":scope .damagetool2-zantai-calc-pair-non-heartset-status-name").textContent = nameElem.value;
+            }
+        }
+    });
+    if (DEBUG) {
+        console.log(`added empty Status: ID: ${id}, NAME: ${name}`);
+    }
+});
+// こころセット以外のステータスリストの削除
+document.getElementById("damagetool2_zantai_clear_non_heartset")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_clear_non_heartset Button");
+    }
+    document.getElementById("damagetool2_zantai_non_heartset_status_list").innerHTML = "";
+    const sel = document.getElementById("damagetool2_zantai_calc_pair_from_non_heartset");
+    sel.innerHTML = "";
+    const opt = sel.appendChild(document.createElement("option"));
+    opt.value = "*";
+    opt.textContent = "*";
+});
+// スキルの追加
+document.getElementById("damagetool2_zantai_add_skill")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_add_skill Button");
+    }
+    const template = document.getElementById("damagetool2_zantai_skill_template");
+    const fragment = template.content.cloneNode(true);
+    DT2SkillId++;
+    const id = DT2SkillId;
+    fragment.querySelector(".damagetool2-zantai-skill-name").value = `スキル${id}`;
+    const list = document.getElementById("damagetool2_zantai_skill_list");
+    list.insertBefore(fragment, list.firstElementChild);
+});
+// スキルリストの削除
+document.getElementById("damagetool2_zantai_clear_skill_list")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_clear_skill_list Button");
+    }
+    document.getElementById("damagetool2_zantai_skill_list").innerHTML = "";
+});
+// 計算組み合わせの追加
+document.getElementById("damagetool2_zantai_add_calc_pair")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_add_calc_pair Button");
+    }
+    const template = document.getElementById("damagetool2_zantai_calc_pair_template");
+    const fragment = template.content.cloneNode(true);
+    const text = (cn, t) => fragment.querySelector(`:scope .${cn}`).textContent = t;
+    const sel1 = document.getElementById("damagetool2_zantai_calc_pair_from_heartset");
+    text("damagetool2-zantai-calc-pair-heartset-status-id", sel1.value);
+    text("damagetool2-zantai-calc-pair-heartset-status-name", sel1.selectedOptions[0].textContent ?? "");
+    const sel2 = document.getElementById("damagetool2_zantai_calc_pair_from_non_heartset");
+    text("damagetool2-zantai-calc-pair-non-heartset-status-id", sel2.value);
+    text("damagetool2-zantai-calc-pair-non-heartset-status-name", sel2.selectedOptions[0].textContent ?? "");
+    const list = document.getElementById("damagetool2_zantai_calc_pair_list");
+    list.insertBefore(fragment, list.firstElementChild);
+});
+// 計算組み合わせリストの削除
+document.getElementById("damagetool2_zantai_clear_calc_pair_list")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_clear_calc_pair_list Button");
+    }
+    document.getElementById("damagetool2_zantai_calc_pair_list").innerHTML = "";
+});
+/////////////////////////////////////////////////////////////////////////////////////
 //
 /////////////////////////////////////////////////////////////////////////////////////
 window.addEventListener("pagehide", () => {

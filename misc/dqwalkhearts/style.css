@@ -221,7 +221,7 @@ input[type="checkbox"]:disabled + label,
 
 .yscroll-half
 {
-    height: 16rem;
+    height: 24rem;
     overflow-y: scroll;
 }
 
