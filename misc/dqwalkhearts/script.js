@@ -7450,6 +7450,8 @@ document.getElementById("manualset_job").addEventListener("change", () => {
 /////////////////////////////////////////////////////////////////////////////////////
 // ダメージ計算ツール（雑） v2
 /////////////////////////////////////////////////////////////////////////////////////
+const DT2_ZOKUSEI_KIND_MAX = 8;
+const DT2_MONSTER_KIND_MAX = 17;
 let DT2SkillId = 0;
 let DT2HeartsetStatusId = 0;
 let DT2NonHeartsetStatusId = 0;
@@ -7520,6 +7522,43 @@ function getDT2StatusFormList(listId) {
             ]
         };
         result.push(form);
+    }
+    return result;
+}
+function parseDT2StatusForms(formList) {
+    const result = [];
+    const toInt = (s) => {
+        const n = parseInt(s);
+        return isNaN(n) ? 0 : n;
+    };
+    for (const form of formList) {
+        const zokuseiKind = form.zokuseiKind.map(toInt);
+        const monsterKind = form.monsterKind.map(toInt);
+        const zokuseiF = (arr, v, i) => {
+            arr[zokuseiKind[i]] += toInt(v);
+            return arr;
+        };
+        const monsterF = (arr, v, i) => {
+            arr[monsterKind[i]] += toInt(v);
+            return arr;
+        };
+        const status = {
+            id: form.id,
+            name: form.name,
+            power: toInt(form.power),
+            attackMagic: toInt(form.attackMagic),
+            skillZan: toInt(form.skillZan),
+            skillTai: toInt(form.skillTai),
+            skillZantai: toInt(form.skillZantai),
+            jumon: toInt(form.jumon),
+            zenzokusei: toInt(form.zenzokusei),
+            zokuseiZantai: form.zokuseiZantai.reduce(zokuseiF, new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill(0)),
+            zokuseiJumon: form.zokuseiJumon.reduce(zokuseiF, new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill(0)),
+            zokuseiZokusei: form.zokuseiZokusei.reduce(zokuseiF, new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill(0)),
+            monsterRate: form.monsterRate.reduce(monsterF, new Array(DT2_MONSTER_KIND_MAX + 1).fill(0)),
+            spskill: form.spskill.map(toInt)
+        };
+        result.push(status);
     }
     return result;
 }
@@ -7857,6 +7896,55 @@ document.getElementById("damagetool2_zantai_clear_calc_pair_list")
     }
     document.getElementById("damagetool2_zantai_calc_pair_list").innerHTML = "";
     DT2UniqCalcPair.clear();
+});
+// 計算する
+document.getElementById("damagetool2_zantai_calc")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_calc Button");
+    }
+    const resultElem = document.getElementById("damagetool2_zantai_calc_result");
+    resultElem.innerHTML = "";
+    const targetMonsterKind = parseInt(document.getElementById("damagetool2_zantai_calc_target_monster").value);
+    const statusMap = new Map();
+    for (const hs of parseDT2StatusForms(getDT2StatusFormList("damagetool2_zantai_heartset_status_list"))) {
+        statusMap.set(hs.id, hs);
+    }
+    for (const nhs of parseDT2StatusForms(getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list"))) {
+        statusMap.set(nhs.id, nhs);
+    }
+    const skillFormList = getDT2SkillFormList();
+    const calcPairList = getDT2CalcPairList();
+    const baseDamage = (p, d) => Math.max(0, Math.floor(p / 2) - Math.floor(d / 4));
+    for (let defence = 0; defence <= 2000; defence += 100) {
+        const defDetails = document.createElement("details");
+        defDetails.appendChild(document.createElement("summary")).textContent = `守備力 ${defence}`;
+        const table = defDetails.appendChild(document.createElement("table"));
+        const header = table.appendChild(document.createElement("thead")).appendChild(document.createElement("tr"));
+        header.appendChild(document.createElement("th")).textContent = "こころセット由来";
+        header.appendChild(document.createElement("th")).textContent = "こころセット以外";
+        header.appendChild(document.createElement("th")).textContent = "攻撃増0";
+        header.appendChild(document.createElement("th")).textContent = "攻撃増1";
+        header.appendChild(document.createElement("th")).textContent = "攻撃増2";
+        header.appendChild(document.createElement("th")).textContent = "攻撃増3";
+        const tbody = table.appendChild(document.createElement("tbody"));
+        const normalAttackHeader = tbody.appendChild(document.createElement("tr")).appendChild(document.createElement("th"));
+        normalAttackHeader.colSpan = 6;
+        normalAttackHeader.textContent = "通常攻撃";
+        for (const cp of calcPairList) {
+            const tr = tbody.appendChild(document.createElement("tr"));
+            tr.appendChild(document.createElement("td")).textContent = cp.heartsetStatusName;
+            tr.appendChild(document.createElement("td")).textContent = cp.nonHeartsetStatusName;
+            const st1 = statusMap.get(cp.heartsetStatusId);
+            const st2 = statusMap.get(cp.nonHeartsetStatusId);
+            const mr = (100 + st1.monsterRate[targetMonsterKind] + st2.monsterRate[targetMonsterKind]) / 100;
+            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(st1.power + st2.power, defence))}`;
+            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.2), defence))}`;
+            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.4), defence))}`;
+            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.6), defence))}`;
+        }
+        resultElem.appendChild(defDetails);
+    }
 });
 /////////////////////////////////////////////////////////////////////////////////////
 //
