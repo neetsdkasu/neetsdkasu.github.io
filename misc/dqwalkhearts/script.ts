@@ -7869,6 +7869,11 @@ document.getElementById("manualset_job")!.addEventListener("change", () => {
 let DT2SkillId = 0;
 let DT2HeartsetStatusId = 0;
 let DT2NonHeartsetStatusId = 0;
+let DT2UniqCalcPair: Map<string, boolean> = new Map();
+
+function makeDT2CalcPairKey(hsId: string, nhsId: string): string {
+    return `${hsId}-${nhsId}`;
+}
 
 interface DT2StatusForm {
     id: string;
@@ -8032,18 +8037,90 @@ interface DT2CalcPair {
 }
 
 function getDT2CalcPairList(): DT2CalcPair[] {
+    const hsList = getDT2StatusFormList("damagetool2_zantai_heartset_status_list");
+    const nhsList = getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list");
     const list = document.getElementById("damagetool2_zantai_calc_pair_list")!;
     const items = list.querySelectorAll(":scope > .outline");
     const result: DT2CalcPair[] = [];
+    if (items.length === 0) {
+        for (const hs of hsList) {
+            for (const nhs of nhsList) {
+                const pair: DT2CalcPair = {
+                    heartsetStatusId: hs.id,
+                    heartsetStatusName: hs.name,
+                    nonHeartsetStatusId: nhs.id,
+                    nonHeartsetStatusName: nhs.name
+                };
+                result.push(pair);
+            }
+        }
+        return result;
+    }
+    const dup: Map<string, boolean> = new Map();
     for (const item of items) {
         const text = (cn: string) => (item.querySelector(`:scope .${cn}`)!.textContent ?? "");
-        const pair: DT2CalcPair = {
-            heartsetStatusId: text("damagetool2-zantai-calc-pair-heartset-status-id"),
-            heartsetStatusName: text("damagetool2-zantai-calc-pair-heartset-status-name"),
-            nonHeartsetStatusId: text("damagetool2-zantai-calc-pair-non-heartset-status-id"),
-            nonHeartsetStatusName: text("damagetool2-zantai-calc-pair-non-heartset-status-name")
-        };
-        result.push(pair);
+        const hsId = text("damagetool2-zantai-calc-pair-heartset-status-id");
+        const hsName = text("damagetool2-zantai-calc-pair-heartset-status-name");
+        const nhsId = text("damagetool2-zantai-calc-pair-non-heartset-status-id");
+        const nhsName = text("damagetool2-zantai-calc-pair-non-heartset-status-name");
+        const keyX = makeDT2CalcPairKey(hsId, nhsId);
+        if (dup.has(keyX)) {
+            continue;
+        }
+        if (hsId === "*" && nhsId === "*") {
+            for (const hs of hsList) {
+                for (const nhs of nhsList) {
+                    const key = makeDT2CalcPairKey(hs.id, nhs.id);
+                    if (!dup.has(key)) {
+                        const pair: DT2CalcPair = {
+                            heartsetStatusId: hs.id,
+                            heartsetStatusName: hs.name,
+                            nonHeartsetStatusId: nhs.id,
+                            nonHeartsetStatusName: nhs.name
+                        };
+                        result.push(pair);
+                        dup.set(key, true);
+                    }
+                }
+            }
+        } else if(hsId === "*") {
+            for (const hs of hsList) {
+                const key = makeDT2CalcPairKey(hs.id, nhsId);
+                if (!dup.has(key)) {
+                    const pair: DT2CalcPair = {
+                        heartsetStatusId: hs.id,
+                        heartsetStatusName: hs.name,
+                        nonHeartsetStatusId: nhsId,
+                        nonHeartsetStatusName: nhsName
+                    };
+                    result.push(pair);
+                    dup.set(key, true);
+                }
+            }
+        } else if (nhsId === "*") {
+            for (const nhs of nhsList) {
+                const key = makeDT2CalcPairKey(hsId, nhs.id);
+                if (!dup.has(key)) {
+                    const pair: DT2CalcPair = {
+                        heartsetStatusId: hsId,
+                        heartsetStatusName: hsName,
+                        nonHeartsetStatusId: nhs.id,
+                        nonHeartsetStatusName: nhs.name
+                    };
+                    result.push(pair);
+                    dup.set(key, true);
+                }
+            }
+        } else {
+            const pair: DT2CalcPair = {
+                heartsetStatusId: hsId,
+                heartsetStatusName: hsName,
+                nonHeartsetStatusId: nhsId,
+                nonHeartsetStatusName: nhsName
+            };
+            result.push(pair);
+        }
+        dup.set(keyX, true);
     }
     return result;
 }
@@ -8098,6 +8175,23 @@ document.getElementById("damagetool2_zantai_clear_heartset_status_list")!
     const opt = sel.appendChild(document.createElement("option"));
     opt.value = "*";
     opt.textContent = "*";
+
+    const cpList = document.getElementById("damagetool2_zantai_calc_pair_list")!;
+    const cpItems = cpList.querySelectorAll(":scope > .outline");
+    const removes = [];
+    for (const cpItem of cpItems) {
+        const hsId = cpItem.querySelector(":scope .damagetool2-zantai-calc-pair-heartset-status-id")!.textContent ?? "";
+        if (hsId === "*") {
+            continue;
+        }
+        const nhsId = cpItem.querySelector(":scope .damagetool2-zantai-calc-pair-non-heartset-status-id")!.textContent ?? "";
+        const key = makeDT2CalcPairKey(hsId, nhsId);
+        DT2UniqCalcPair.delete(key);
+        removes.push(cpItem);
+    }
+    for (const cpItem of removes) {
+        cpList.removeChild(cpItem);
+    }
 });
 
 // こころセット以外のステータスの追加
@@ -8150,6 +8244,23 @@ document.getElementById("damagetool2_zantai_clear_non_heartset")!
     const opt = sel.appendChild(document.createElement("option"));
     opt.value = "*";
     opt.textContent = "*";
+
+    const cpList = document.getElementById("damagetool2_zantai_calc_pair_list")!;
+    const cpItems = cpList.querySelectorAll(":scope > .outline");
+    const removes = [];
+    for (const cpItem of cpItems) {
+        const nhsId = cpItem.querySelector(":scope .damagetool2-zantai-calc-pair-non-heartset-status-id")!.textContent ?? "";
+        if (nhsId === "*") {
+            continue;
+        }
+        const hsId = cpItem.querySelector(":scope .damagetool2-zantai-calc-pair-heartset-status-id")!.textContent ?? "";
+        const key = makeDT2CalcPairKey(hsId, nhsId);
+        DT2UniqCalcPair.delete(key);
+        removes.push(cpItem);
+    }
+    for (const cpItem of removes) {
+        cpList.removeChild(cpItem);
+    }
 });
 
 // スキルの追加
@@ -8184,18 +8295,31 @@ document.getElementById("damagetool2_zantai_add_calc_pair")!
     if (DEBUG) {
         console.log("click damagetool2_zantai_add_calc_pair Button");
     }
+
+    const sel1 = document.getElementById("damagetool2_zantai_calc_pair_from_heartset") as HTMLSelectElement;
+    const hsId = sel1.value;
+    const hsName = sel1.selectedOptions[0]!.textContent ?? "";
+
+    const sel2 = document.getElementById("damagetool2_zantai_calc_pair_from_non_heartset") as HTMLSelectElement;
+    const nhsId = sel2.value;
+    const nhsName = sel2.selectedOptions[0]!.textContent ?? "";
+
+    const key = makeDT2CalcPairKey(hsId, nhsId);
+    if (DT2UniqCalcPair.has(key)) {
+        return;
+    }
+    DT2UniqCalcPair.set(key, true);
+
     const template = document.getElementById("damagetool2_zantai_calc_pair_template") as HTMLTemplateElement;
     const fragment = template.content.cloneNode(true) as DocumentFragment;
 
     const text = (cn: string, t: string) => fragment.querySelector(`:scope .${cn}`)!.textContent = t;
 
-    const sel1 = document.getElementById("damagetool2_zantai_calc_pair_from_heartset") as HTMLSelectElement;
-    text("damagetool2-zantai-calc-pair-heartset-status-id", sel1.value);
-    text("damagetool2-zantai-calc-pair-heartset-status-name", sel1.selectedOptions[0]!.textContent ?? "");
+    text("damagetool2-zantai-calc-pair-heartset-status-id", hsId);
+    text("damagetool2-zantai-calc-pair-heartset-status-name", hsName);
 
-    const sel2 = document.getElementById("damagetool2_zantai_calc_pair_from_non_heartset") as HTMLSelectElement;
-    text("damagetool2-zantai-calc-pair-non-heartset-status-id", sel2.value);
-    text("damagetool2-zantai-calc-pair-non-heartset-status-name", sel2.selectedOptions[0]!.textContent ?? "");
+    text("damagetool2-zantai-calc-pair-non-heartset-status-id", nhsId);
+    text("damagetool2-zantai-calc-pair-non-heartset-status-name", nhsName);
 
     const list = document.getElementById("damagetool2_zantai_calc_pair_list")!;
     list.insertBefore(fragment, list.firstElementChild);
@@ -8208,7 +8332,10 @@ document.getElementById("damagetool2_zantai_clear_calc_pair_list")!
         console.log("click damagetool2_zantai_clear_calc_pair_list Button");
     }
     document.getElementById("damagetool2_zantai_calc_pair_list")!.innerHTML = "";
+    DT2UniqCalcPair.clear();
 });
+
+
 
 /////////////////////////////////////////////////////////////////////////////////////
 //
