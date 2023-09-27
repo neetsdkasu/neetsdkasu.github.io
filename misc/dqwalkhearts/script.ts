@@ -8012,18 +8012,33 @@ function parseDT2StatusForms(formList: DT2StatusForm[]): DT2Status[] {
             zokuseiJumon: form.zokuseiJumon.reduce(zokuseiF, new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill(0)),
             zokuseiZokusei: form.zokuseiZokusei.reduce(zokuseiF, new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill(0)),
             monsterRate: form.monsterRate.reduce(monsterF, new Array(DT2_MONSTER_KIND_MAX + 1).fill(0)),
-            spskill: form.spskill.map(toInt)
+            spskill: [0].concat(form.spskill.map(toInt))
         };
         result.push(status);
     }
     return result;
 }
 
+interface DT2Skill {
+    name: string;
+    spskill: number;
+    restrictMonsterUse: boolean;
+    restrictMonsterKind: number;
+    restrictMonsterIsOnly: boolean;
+    attackUse: boolean[];
+    attackKind: number[];
+    attackType: number[];
+    attackRate: number[];
+    attackRepeat: number[];
+    idReference: string[];
+}
+
 interface DT2SkillForm {
     name: string;
-    limitMonsterUse: boolean;
-    limitMonsterKind: string;
-    limitMonsterIsOnly: string;
+    spskill: string;
+    restrictMonsterUse: boolean;
+    restrictMonsterKind: string;
+    restrictMonsterIsOnly: string;
     attackUse: boolean[];
     attackKind: string[];
     attackType: string[];
@@ -8042,9 +8057,10 @@ function getDT2SkillFormList(): DT2SkillForm[] {
         const checked = (cn: string) => (item.querySelector(`:scope .${cn}`) as HTMLInputElement).checked;
         const form: DT2SkillForm = {
             name: value("damagetool2-zantai-skill-name"),
-            limitMonsterUse: checked("damagetool2-zantai-skill-restrict-monster-use"),
-            limitMonsterKind: sel("damagetool2-zantai-skill-restrict-monster-kind"),
-            limitMonsterIsOnly: sel("damagetool2-zantai-skill-restrict-monster-is-only"),
+            spskill: sel("damagetool2-zantai-skill-spskill"),
+            restrictMonsterUse: checked("damagetool2-zantai-skill-restrict-monster-use"),
+            restrictMonsterKind: sel("damagetool2-zantai-skill-restrict-monster-kind"),
+            restrictMonsterIsOnly: sel("damagetool2-zantai-skill-restrict-monster-is-only"),
             attackUse: [
                 checked("damagetool2-zantai-skill-attack1-use"),
                 checked("damagetool2-zantai-skill-attack2-use"),
@@ -8083,6 +8099,31 @@ function getDT2SkillFormList(): DT2SkillForm[] {
             idReference: value("damagetool2-zantai-skill-id-reference")
         };
         result.push(form);
+    }
+    return result;
+}
+
+function parseDT2SkillForms(formList: DT2SkillForm[]): DT2Skill[] {
+    const result: DT2Skill[] = [];
+    const toInt = (s: string) => {
+        const n = parseInt(s);
+        return isNaN(n) ? 0 : n;
+    };
+    for (const form of formList) {
+        const skill:DT2Skill = {
+            name: form.name,
+            spskill: toInt(form.spskill),
+            restrictMonsterUse: form.restrictMonsterUse,
+            restrictMonsterKind: toInt(form.restrictMonsterKind),
+            restrictMonsterIsOnly: form.restrictMonsterIsOnly === "1",
+            attackUse: form.attackUse,
+            attackKind: form.attackKind.map(toInt),
+            attackType: form.attackType.map(toInt),
+            attackRate: form.attackRate.map(toInt),
+            attackRepeat: form.attackRepeat.map(toInt),
+            idReference: form.idReference.split(/\s+/).filter(s => s.length !== 0)
+        };
+        result.push(skill);
     }
     return result;
 }
@@ -8411,7 +8452,7 @@ document.getElementById("damagetool2_zantai_calc")!
     for (const nhs of parseDT2StatusForms(getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list"))) {
         statusMap.set(nhs.id, nhs);
     }
-    const skillFormList = getDT2SkillFormList();
+    const skillList = parseDT2SkillForms(getDT2SkillFormList());
     const calcPairList = getDT2CalcPairList();
 
     const baseDamage = (p: number, d: number) => Math.max(0, Math.floor(p / 2) - Math.floor(d / 4));
@@ -8447,6 +8488,62 @@ document.getElementById("damagetool2_zantai_calc")!
             tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.2), defence))}`;
             tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.4), defence))}`;
             tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.6), defence))}`;
+        }
+
+        for (const skill of skillList) {
+            if (skill.restrictMonsterUse
+                    && (skill.restrictMonsterIsOnly !== (skill.restrictMonsterKind === targetMonsterKind))) {
+                continue;
+            }
+            if (!skill.idReference.every(id => statusMap.has(id))) {
+                continue;
+            }
+            const isAll = skill.idReference.length === 0;
+
+            const skillHeader = tbody.appendChild(document.createElement("tr")).appendChild(document.createElement("th"));
+            skillHeader.colSpan = 6;
+            skillHeader.textContent = skill.name;
+
+            for (const cp of calcPairList) {
+                if (!(isAll || skill.idReference.includes(cp.heartsetStatusId) || skill.idReference.includes(cp.nonHeartsetStatusId))) {
+                    continue;
+                }
+                const tr = tbody.appendChild(document.createElement("tr"));
+                tr.appendChild(document.createElement("td")).textContent = cp.heartsetStatusName;
+                tr.appendChild(document.createElement("td")).textContent = cp.nonHeartsetStatusName;
+                const st1 = statusMap.get(cp.heartsetStatusId)!;
+                const st2 = statusMap.get(cp.nonHeartsetStatusId)!;
+                for (let pwrup = 100; pwrup <= 160; pwrup += 20) {
+                    let damage = 0;
+                    for (let i = 0; i < skill.attackUse.length; i++) {
+                        if (!skill.attackUse[i]) {
+                            continue;
+                        }
+                        const isZan = (skill.attackType[i] & 1) === 0;
+                        const isMix = skill.attackType[i] >= 2;
+                        const pwr = Math.floor((st1.power + st2.power) * pwrup / 100)
+                                    + (isMix ? (st1.attackMagic + st2.attackMagic) : 0);
+                        const bd = baseDamage(pwr, defence);
+                        let d = Math.floor(bd * skill.attackRate[i] / 100)
+                        const sk = 100 + (st1.skillZantai + st2.skillZantai)
+                                    + (isZan ? (st1.skillZan + st2.skillZan) : (st1.skillTai + st2.skillTai))
+                                    + (isMix ? (st1.jumon + st2.jumon) : 0);
+                        d = Math.floor(d * sk / 100);
+                        const k = skill.attackKind[i];
+                        const zk = 100 + (k === 0 ? 0 : (st1.zenzokusei + st2.zenzokusei))
+                                    + (st1.zokuseiZantai[k] + st2.zokuseiZantai[k])
+                                    + (isMix ? (st1.zokuseiJumon[k] + st2.zokuseiJumon[k]) : 0)
+                                    + (st1.zokuseiZokusei[k] + st2.zokuseiZokusei[k]);
+                        d = Math.floor(d * zk / 100);
+                        const mr = 100 + (st1.monsterRate[targetMonsterKind] + st2.monsterRate[targetMonsterKind]);
+                        d = Math.floor(d * mr / 100);
+                        const sp = 100 + (st1.spskill[skill.spskill] + st2.spskill[skill.spskill]);
+                        d = Math.floor(d * sp / 100);
+                        damage += d * skill.attackRepeat[i];
+                    }
+                    tr.appendChild(document.createElement("td")).textContent = `${damage}`;
+                }
+            }
         }
 
         resultElem.appendChild(defDetails);
