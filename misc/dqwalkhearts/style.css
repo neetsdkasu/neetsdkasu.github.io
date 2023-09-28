@@ -8,15 +8,43 @@ footer
     margin: 2rem 0px;
 }
 
-.extend:focus {
+.extend:focus
+{
     position: absolute;
     z-index: 3;
     width: 50em;
     padding: 1em;
 }
 
-.pad1 {
+.mar05
+{
+    margin: 0.5em;
+}
+
+.mar1
+{
+    margin: 1em;
+}
+
+.pad05
+{
+    padding: 0.5em;
+}
+
+.pad1
+{
     padding: 1em;
+}
+
+.hover-outline
+{
+    border: 1px solid rgba(0,0,0,0);
+    margin: 5px;
+}
+
+.hover-outline:hover
+{
+    border: 1px solid gray;
 }
 
 .outline

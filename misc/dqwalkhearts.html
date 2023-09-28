@@ -1321,7 +1321,7 @@
       <section class="secret damagetool2">
         <h5>ダメージの目安の計算(雑)</h5>
         <details>
-          <details class="outline">
+          <details class="hover-outline pad05">
             <summary>斬撃・体技</summary>
             <div class="outline">
               <div class="small subtitle">
@@ -1330,7 +1330,7 @@
               </div>
               <details class="outline">
                 <summary class="small">こころセット取り込み設定</summary>
-                <table class="tr-hover">
+                <table class="tr-hover mar1">
                   <tbody>
                     <!-- ちから -->
                     <tr>
@@ -1691,8 +1691,8 @@
               <hr />
               <div class="yscroll-half" id="damagetool2_zantai_heartset_status_list"></div>
               <hr />
-              <details><summary>その他の操作</summary>
-                <div><button type="button" id="damagetool2_zantai_clear_heartset_status_list">全てのステータス情報を削除</button></div>
+              <details class="mar05"><summary class="small">その他の操作</summary>
+                <div class="mar1"><button type="button" id="damagetool2_zantai_clear_heartset_status_list">全てのステータス情報を削除</button></div>
               </details>
             </div>
             <hr />
@@ -1705,8 +1705,8 @@
               <hr />
               <div class="yscroll-half" id="damagetool2_zantai_non_heartset_status_list"></div>
               <hr />
-              <details><summary>その他の操作</summary>
-                <div><button type="button" id="damagetool2_zantai_clear_non_heartset">全てのステータス情報を削除</button></div>
+              <details class="mar05"><summary class="small">その他の操作</summary>
+                <div class="mar1"><button type="button" id="damagetool2_zantai_clear_non_heartset">全てのステータス情報を削除</button></div>
               </details>
             </div>
             <hr />
@@ -1718,8 +1718,8 @@
 
               </div>
               <hr />
-              <details><summary>その他の操作</summary>
-                <div><button type="button" id="damagetool2_zantai_clear_skill_list">全てのスキルを削除</button></div>
+              <details class="mar05"><summary class="small">その他の操作</summary>
+                <div class="mar1"><button type="button" id="damagetool2_zantai_clear_skill_list">全てのスキルを削除</button></div>
               </details>
             </div>
             <hr />
@@ -1744,13 +1744,78 @@
               <hr />
               <div class="yscroll-half" id="damagetool2_zantai_calc_pair_list"></div>
               <hr />
-              <details><summary>その他の操作</summary>
-                <div><button type="button" id="damagetool2_zantai_clear_calc_pair_list">全ての組み合わせを削除</button></div>
+              <details class="mar05"><summary class="small">その他の操作</summary>
+                <div class="mar1"><button type="button" id="damagetool2_zantai_clear_calc_pair_list">全ての組み合わせを削除</button></div>
               </details>
             </div>
             <hr />
             <div class="outline">
               <div class="small subtitle">ダメージの計算</div>
+              <details class="outline">
+                <summary class="small">その他の設定</summary>
+                <fieldset class="mar1">
+                  <legend>弱点・耐性</legend>
+                  <div class="small">※弱点なら101%以上に設定する。耐性なら99%以下に設定する。</div>
+                  <div class="buttons">
+                    <label>
+                      <span>斬撃:</span>
+                      <input type="number" min="0" max="9999" value="100" />
+                      <span>%</span>
+                    </label>
+                    <label>
+                      <span>体技:</span>
+                      <input type="number" min="0" max="9999" value="100" />
+                      <span>%</span>
+                    </label>
+                  </div>
+                  <div class="buttons">
+                    <span>
+                      <select>
+                          <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
+                          <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
+                      </select>
+                      <label>
+                        <span>属性</span>
+                        <input type="number" min="0" max="9999" value="100" />
+                        <span>%</span>
+                      </label>
+                    </span>
+                    <span>
+                      <select>
+                          <option value="1">メラ</option><option value="2" selected>ギラ</option><option value="3">ヒャド</option><option value="4">バギ</option>
+                          <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
+                      </select>
+                      <label>
+                        <span>属性</span>
+                        <input type="number" min="0" max="9999" value="100" />
+                        <span>%</span>
+                      </label>
+                    </span>
+                    <span>
+                      <select>
+                          <option value="1">メラ</option><option value="2">ギラ</option><option value="3" selected>ヒャド</option><option value="4">バギ</option>
+                          <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
+                      </select>
+                      <label>
+                        <span>属性</span>
+                        <input type="number" min="0" max="9999" value="100" />
+                        <span>%</span>
+                      </label>
+                    </span>
+                    <span>
+                      <select>
+                          <option value="1">メラ</option><option value="2">ギラ</option><option value="3">ヒャド</option><option value="4" selected>バギ</option>
+                          <option value="5">デイン</option><option value="6">ジバリア</option><option value="7">イオ</option><option value="8">ドルマ</option>
+                      </select>
+                      <label>
+                        <span>属性</span>
+                        <input type="number" min="0" max="9999" value="100" />
+                        <span>%</span>
+                      </label>
+                    </span>
+                  </div>
+                </fieldset>
+              </details>
               <div class="buttons">
                 <label>
                   <span class="very-small">対象</span>
@@ -1769,9 +1834,9 @@
             </div>
           </details>
           <hr />
-          <details class="outline">
+          <details class="hover-outline pad05">
             <summary>呪文・ブレス</summary>
-            <div class="small">未実装</div>
+            <div class="small mar1">未実装</div>
           </details>
         </details>
       </section>
@@ -2036,7 +2101,10 @@
         <div><span>スキル・特殊効果2:</span> <span class="result-item-effects2"></span></div>
         <div><span>スキル・特殊効果3:</span> <span class="result-item-effects3"></span></div>
         <div><span>スキル・特殊効果4:</span> <span class="result-item-effects4"></span></div>
-        <div class="buttons"><button type="button" class="result-item-adoption secret">このこころセットを採用</button></div>
+        <details class="hover-outline">
+          <summary class="small">操作</summary>
+          <div class="buttons mar1"><button type="button" class="result-item-adoption secret">このこころセットを採用</button></div>
+        </details>
       </div>
     </template>
 
