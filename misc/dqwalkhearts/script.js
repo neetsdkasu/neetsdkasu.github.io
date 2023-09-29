@@ -7732,6 +7732,47 @@ function getDT2CalcPairList() {
     }
     return result;
 }
+function getDt2DamgeupRateFormList() {
+    const result = [];
+    const list = document.getElementById("damagetool2_zantai_damageup_rate_list");
+    const items = list.querySelectorAll(":scope > .outline");
+    for (const item of items) {
+        const sel = (cn) => item.querySelector(`:scope .${cn}`).value;
+        const value = (cn) => item.querySelector(`:scope .${cn}`).value;
+        const form = {
+            zan: value("damagetool2-zantai-damageup-rate-zangeki"),
+            tai: value("damagetool2-zantai-damageup-rate-taigi"),
+            zantai: value("damagetool2-zantai-damageup-rate-zantai"),
+            zokuseiKind: [
+                sel("damagetool2-zantai-damageup-rate-zokusei1-kind"),
+                sel("damagetool2-zantai-damageup-rate-zokusei2-kind"),
+                sel("damagetool2-zantai-damageup-rate-zokusei3-kind"),
+                sel("damagetool2-zantai-damageup-rate-zokusei4-kind")
+            ],
+            zokuseiRate: [
+                value("damagetool2-zantai-damageup-rate-zokusei1-rate"),
+                value("damagetool2-zantai-damageup-rate-zokusei2-rate"),
+                value("damagetool2-zantai-damageup-rate-zokusei3-rate"),
+                value("damagetool2-zantai-damageup-rate-zokusei4-rate")
+            ],
+            monsterKind: [
+                sel("damagetool2-zantai-damageup-rate-monster1-kind"),
+                sel("damagetool2-zantai-damageup-rate-monster2-kind"),
+                sel("damagetool2-zantai-damageup-rate-monster3-kind"),
+                sel("damagetool2-zantai-damageup-rate-monster4-kind")
+            ],
+            monsterRate: [
+                value("damagetool2-zantai-damageup-rate-monster1-rate"),
+                value("damagetool2-zantai-damageup-rate-monster2-rate"),
+                value("damagetool2-zantai-damageup-rate-monster3-rate"),
+                value("damagetool2-zantai-damageup-rate-monster4-rate")
+            ],
+            idReference: value("damagetool2-zantai-damageup-rate-id-reference")
+        };
+        result.push(form);
+    }
+    return result;
+}
 // こころセット由来の手入力用ステータスの追加
 document.getElementById("damagetool2_zantai_add_heartset_status_by_manual")
     .addEventListener("click", () => {
@@ -7886,6 +7927,25 @@ document.getElementById("damagetool2_zantai_clear_skill_list")
     }
     document.getElementById("damagetool2_zantai_skill_list").innerHTML = "";
 });
+// ダメージアップ倍率の追加
+document.getElementById("damagetool2_zantai_add_damageup_rate")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_add_damageup_rate Button");
+    }
+    const template = document.getElementById("damagetool2_zantai_damageup_rate_template");
+    const fragment = template.content.cloneNode(true);
+    const list = document.getElementById("damagetool2_zantai_damageup_rate_list");
+    list.insertBefore(fragment, list.firstElementChild);
+});
+// ダメージアップ倍率リストの削除
+document.getElementById("damagetool2_zantai_clear_damageup_rate_list")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_clear_damageup_rate_list Button");
+    }
+    document.getElementById("damagetool2_zantai_damageup_rate_list").innerHTML = "";
+});
 // 計算組み合わせの追加
 document.getElementById("damagetool2_zantai_add_calc_pair")
     .addEventListener("click", () => {
@@ -7939,6 +7999,7 @@ document.getElementById("damagetool2_zantai_calc")
         statusMap.set(nhs.id, nhs);
     }
     const skillList = parseDT2SkillForms(getDT2SkillFormList());
+    const damageupRateList = getDt2DamgeupRateFormList();
     const calcPairList = getDT2CalcPairList();
     const baseDamage = (p, d) => Math.max(0, Math.floor(p / 2) - Math.floor(d / 4));
     for (let defence = 0; defence <= 2000; defence += 100) {
@@ -7973,7 +8034,7 @@ document.getElementById("damagetool2_zantai_calc")
                 && (skill.restrictMonsterIsOnly !== (skill.restrictMonsterKind === targetMonsterKind))) {
                 continue;
             }
-            if (!skill.idReference.every(id => statusMap.has(id))) {
+            if (!skill.idReference.some(id => statusMap.has(id))) {
                 continue;
             }
             const isAll = skill.idReference.length === 0;
