@@ -7460,6 +7460,98 @@ let DT2UniqCalcPair = new Map();
 function makeDT2CalcPairKey(hsId, nhsId) {
     return `${hsId}-${nhsId}`;
 }
+function getDT2ImportSettingForm() {
+    const sel = (id) => document.getElementById(id).value;
+    const value = (id) => document.getElementById(id).value;
+    const checked = (id) => document.getElementById(id).checked;
+    const form = {
+        powerUse: checked("damagetool2_zantai_import_power_use"),
+        powerExpr: value("damagetool2_zantai_import_power_expr"),
+        attackMagicUse: checked("damagetool2_zantai_import_attackmagic_use"),
+        attackMagicExpr: value("damagetool2_zantai_import_attackmagic_expr"),
+        skillZangekiUse: checked("damagetool2_zantai_import_skill_zangeki_use"),
+        skillZangekiExpr: value("damagetool2_zantai_import_skill_zangeki_expr"),
+        skillTaigiUse: checked("damagetool2_zantai_import_skill_taigi_use"),
+        skillTaigiExpr: value("damagetool2_zantai_import_skill_taigi_expr"),
+        skillZantaiUse: checked("damagetool2_zantai_import_skill_zantai_use"),
+        skillZantaiExpr: value("damagetool2_zantai_import_skill_zantai_expr"),
+        jumonUse: checked("damagetool2_zantai_import_jumon_use"),
+        jumonExpr: value("damagetool2_zantai_import_jumon_expr"),
+        zenzokuseiUse: checked("damagetool2_zantai_import_zenzokusei_use"),
+        zenzokuseiExpr: value("damagetool2_zantai_import_zenzokusei_expr"),
+        zokuseiKind: [
+            sel("damagetool2_zantai_import_zokusei1_kind"),
+            sel("damagetool2_zantai_import_zokusei2_kind"),
+            sel("damagetool2_zantai_import_zokusei3_kind"),
+            sel("damagetool2_zantai_import_zokusei4_kind")
+        ],
+        zokuseiZantaiUse: [
+            checked("damagetool2_zantai_import_zokusei1_zantai_use"),
+            checked("damagetool2_zantai_import_zokusei2_zantai_use"),
+            checked("damagetool2_zantai_import_zokusei3_zantai_use"),
+            checked("damagetool2_zantai_import_zokusei4_zantai_use")
+        ],
+        zokuseiZantaiExpr: [
+            value("damagetool2_zantai_import_zokusei1_zantai_expr"),
+            value("damagetool2_zantai_import_zokusei2_zantai_expr"),
+            value("damagetool2_zantai_import_zokusei3_zantai_expr"),
+            value("damagetool2_zantai_import_zokusei4_zantai_expr")
+        ],
+        zokuseiJumonUse: [
+            checked("damagetool2_zantai_import_zokusei1_jumon_use"),
+            checked("damagetool2_zantai_import_zokusei2_jumon_use"),
+            checked("damagetool2_zantai_import_zokusei3_jumon_use"),
+            checked("damagetool2_zantai_import_zokusei4_jumon_use")
+        ],
+        zokuseiJumonExpr: [
+            value("damagetool2_zantai_import_zokusei1_jumon_expr"),
+            value("damagetool2_zantai_import_zokusei2_jumon_expr"),
+            value("damagetool2_zantai_import_zokusei3_jumon_expr"),
+            value("damagetool2_zantai_import_zokusei4_jumon_expr")
+        ],
+        zokuseiZokuseiUse: [
+            checked("damagetool2_zantai_import_zokusei1_zokusei_use"),
+            checked("damagetool2_zantai_import_zokusei2_zokusei_use"),
+            checked("damagetool2_zantai_import_zokusei3_zokusei_use"),
+            checked("damagetool2_zantai_import_zokusei4_zokusei_use")
+        ],
+        zokuseiZokuseiExpr: [
+            value("damagetool2_zantai_import_zokusei1_zokusei_expr"),
+            value("damagetool2_zantai_import_zokusei2_zokusei_expr"),
+            value("damagetool2_zantai_import_zokusei3_zokusei_expr"),
+            value("damagetool2_zantai_import_zokusei4_zokusei_expr")
+        ],
+        monsterUse: [
+            checked("damagetool2_zantai_import_monster1_use"),
+            checked("damagetool2_zantai_import_monster2_use"),
+            checked("damagetool2_zantai_import_monster3_use"),
+            checked("damagetool2_zantai_import_monster4_use")
+        ],
+        monsterKind: [
+            sel("damagetool2_zantai_import_monster1_kind"),
+            sel("damagetool2_zantai_import_monster2_kind"),
+            sel("damagetool2_zantai_import_monster3_kind"),
+            sel("damagetool2_zantai_import_monster4_kind")
+        ],
+        monsterExpr: [
+            value("damagetool2_zantai_import_monster1_expr"),
+            value("damagetool2_zantai_import_monster2_expr"),
+            value("damagetool2_zantai_import_monster3_expr"),
+            value("damagetool2_zantai_import_monster4_expr")
+        ],
+        spskillUse: [
+            checked("damagetool2_zantai_import_spskill1_use"),
+            checked("damagetool2_zantai_import_spskill2_use"),
+            checked("damagetool2_zantai_import_spskill3_use")
+        ],
+        spskillExpr: [
+            value("damagetool2_zantai_import_spskill1_expr"),
+            value("damagetool2_zantai_import_spskill2_expr"),
+            value("damagetool2_zantai_import_spskill3_expr")
+        ]
+    };
+    return form;
+}
 function getDT2StatusFormList(listId) {
     if (DEBUG) {
         console.log(`call getDT2StatusFormList(${listId})`);
@@ -7866,6 +7958,58 @@ function parseDT2CalcSettingForm(form) {
     };
     return result;
 }
+(function () {
+    const list = [
+        "damagetool2_zantai_import_power_expr",
+        "damagetool2_zantai_import_attackmagic_expr",
+        "damagetool2_zantai_import_skill_zangeki_expr",
+        "damagetool2_zantai_import_skill_taigi_expr",
+        "damagetool2_zantai_import_skill_zantai_expr",
+        "damagetool2_zantai_import_jumon_expr",
+        "damagetool2_zantai_import_zenzokusei_expr",
+        "damagetool2_zantai_import_zokusei1_zantai_expr",
+        "damagetool2_zantai_import_zokusei2_zantai_expr",
+        "damagetool2_zantai_import_zokusei3_zantai_expr",
+        "damagetool2_zantai_import_zokusei4_zantai_expr",
+        "damagetool2_zantai_import_zokusei1_jumon_expr",
+        "damagetool2_zantai_import_zokusei2_jumon_expr",
+        "damagetool2_zantai_import_zokusei3_jumon_expr",
+        "damagetool2_zantai_import_zokusei4_jumon_expr",
+        "damagetool2_zantai_import_zokusei1_zokusei_expr",
+        "damagetool2_zantai_import_zokusei2_zokusei_expr",
+        "damagetool2_zantai_import_zokusei3_zokusei_expr",
+        "damagetool2_zantai_import_zokusei4_zokusei_expr",
+        "damagetool2_zantai_import_monster1_expr",
+        "damagetool2_zantai_import_monster2_expr",
+        "damagetool2_zantai_import_monster3_expr",
+        "damagetool2_zantai_import_monster4_expr",
+        "damagetool2_zantai_import_spskill1_expr",
+        "damagetool2_zantai_import_spskill2_expr",
+        "damagetool2_zantai_import_spskill3_expr"
+    ];
+    for (const id of list) {
+        (function (exprId, buttonId) {
+            document.getElementById(buttonId)
+                .addEventListener("click", () => {
+                if (DEBUG) {
+                    console.log(`click ${buttonId} Button`);
+                }
+                showExprRecordDialog(exprId);
+            });
+        })(id, id + "_from");
+    }
+})();
+// こころセット由来のインポート用ステータスの追加
+document.getElementById("damagetool2_zantai_add_heartset_status_from_heartset")
+    .addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click damagetool2_zantai_add_heartset_status_from_heartset Button");
+    }
+    const form = getDT2ImportSettingForm();
+    const target = document.getElementById("damagetool2_zantai_heartset_target").value;
+    const targetId = document.getElementById("damagetool2_zantai_heartset_target_id").value;
+    // TODO
+});
 // こころセット由来の手入力用ステータスの追加
 document.getElementById("damagetool2_zantai_add_heartset_status_by_manual")
     .addEventListener("click", () => {

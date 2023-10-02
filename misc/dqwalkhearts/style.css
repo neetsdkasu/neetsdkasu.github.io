@@ -367,3 +367,8 @@ div.outline.reallyneeded
 {
     margin-left: 2em;
 }
+
+::placeholder
+{
+    color: silver;
+}
