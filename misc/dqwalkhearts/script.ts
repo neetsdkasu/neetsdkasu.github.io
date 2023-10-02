@@ -8345,6 +8345,67 @@ function getDT2DamageupRate(list: DT2DamageupRate[], hsId: string, nhsId: string
     return result;
 }
 
+interface DT2CalcSetting {
+    wrZan: number;
+    wrTai: number;
+    wrZantai: number;
+    wrZokuseiRate: number[];
+    targetMonsterKind: number;
+}
+
+interface DT2CalcSettingForm {
+    wrZan: string;
+    wrTai: string;
+    wrZantai: string;
+    wrZokuseiKind: string[];
+    wrZokuseiRate: string[];
+    targetMonsterKind: string;
+}
+
+function getDT2CalcSettingForm(): DT2CalcSettingForm {
+    const sel = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
+    const value = (id: string) => (document.getElementById(id) as HTMLInputElement).value;
+    const result: DT2CalcSettingForm = {
+        wrZan: value("damagetool2_zantai_calc_setting_weak_resist_zan"),
+        wrTai: value("damagetool2_zantai_calc_setting_weak_resist_tai"),
+        wrZantai: value("damagetool2_zantai_calc_setting_weak_resist_zantai"),
+        wrZokuseiKind: [
+            sel("damagetool2_zantai_calc_setting_weak_resist_zokusei1_kind"),
+            sel("damagetool2_zantai_calc_setting_weak_resist_zokusei2_kind"),
+            sel("damagetool2_zantai_calc_setting_weak_resist_zokusei3_kind"),
+            sel("damagetool2_zantai_calc_setting_weak_resist_zokusei4_kind")
+        ],
+        wrZokuseiRate: [
+            value("damagetool2_zantai_calc_setting_weak_resist_zokusei1_rate"),
+            value("damagetool2_zantai_calc_setting_weak_resist_zokusei2_rate"),
+            value("damagetool2_zantai_calc_setting_weak_resist_zokusei3_rate"),
+            value("damagetool2_zantai_calc_setting_weak_resist_zokusei4_rate")
+        ],
+        targetMonsterKind: sel("damagetool2_zantai_calc_target_monster")
+    };
+    return result;
+}
+
+function parseDT2CalcSettingForm(form: DT2CalcSettingForm): DT2CalcSetting {
+    const toInt = (s: string, d: number) => {
+        const n = parseInt(s);
+        return isNaN(n) ? d : n;
+    };
+    const result: DT2CalcSetting = {
+        wrZan: toInt(form.wrZan, 100) - 100,
+        wrTai: toInt(form.wrTai, 100) - 100,
+        wrZantai: toInt(form.wrZantai, 100) - 100,
+        wrZokuseiRate: form.wrZokuseiKind.reduce((a, k, i) => {
+                a[toInt(k, 0)] += toInt(form.wrZokuseiRate[i], 100) - 100;
+                return a;
+            },
+            new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill(0)
+        ),
+        targetMonsterKind: toInt(form.targetMonsterKind, 0)
+    }
+    return result;
+}
+
 // こころセット由来の手入力用ステータスの追加
 document.getElementById("damagetool2_zantai_add_heartset_status_by_manual")!
 .addEventListener("click", () => {
@@ -8586,7 +8647,8 @@ document.getElementById("damagetool2_zantai_calc")!
     const resultElem = document.getElementById("damagetool2_zantai_calc_result")!;
     resultElem.innerHTML = "";
 
-    const targetMonsterKind = parseInt((document.getElementById("damagetool2_zantai_calc_target_monster") as HTMLSelectElement).value);
+    const calcSetting = parseDT2CalcSettingForm(getDT2CalcSettingForm());
+    const targetMonsterKind = calcSetting.targetMonsterKind;
 
     const statusMap: Map<string, DT2Status> = new Map();
     for (const hs of parseDT2StatusForms(getDT2StatusFormList("damagetool2_zantai_heartset_status_list"))) {
@@ -8608,8 +8670,8 @@ document.getElementById("damagetool2_zantai_calc")!
         const table = defDetails.appendChild(document.createElement("table"));
 
         const header = table.appendChild(document.createElement("thead")).appendChild(document.createElement("tr"));
-        header.appendChild(document.createElement("th")).textContent = "こころセット由来";
-        header.appendChild(document.createElement("th")).textContent = "こころセット以外";
+        header.appendChild(document.createElement("th")).textContent = "こころセット";
+        header.appendChild(document.createElement("th")).textContent = "こころ以外";
         header.appendChild(document.createElement("th")).textContent = "攻撃増0";
         header.appendChild(document.createElement("th")).textContent = "攻撃増1";
         header.appendChild(document.createElement("th")).textContent = "攻撃増2";
@@ -8669,23 +8731,25 @@ document.getElementById("damagetool2_zantai_calc")!
                         const pwr = Math.floor((st1.power + st2.power) * pwrup / 100)
                                     + (isMix ? (st1.attackMagic + st2.attackMagic) : 0);
                         const bd = baseDamage(pwr, defence);
-                        let d = Math.floor(bd * skill.attackRate[i] / 100)
+                        let d = Math.max(0, Math.floor(bd * skill.attackRate[i] / 100));
                         const sk = (st1.skillZantai + st2.skillZantai)
                                     + (isZan ? (st1.skillZan + st2.skillZan) : (st1.skillTai + st2.skillTai))
                                     + (isMix ? (st1.jumon + st2.jumon) : 0);
                         const skup = (isZan ? dmupRate.zan : dmupRate.tai) + dmupRate.zantai;
-                        d = Math.floor(d * (100 + Math.floor(sk * (100 + skup) / 100)) / 100);
+                        d = Math.max(0, Math.floor(d * (100 + Math.floor(sk * (100 + skup) / 100)) / 100));
                         const k = skill.attackKind[i];
                         const zk = (k === 0 ? 0 : (st1.zenzokusei + st2.zenzokusei))
                                     + (st1.zokuseiZantai[k] + st2.zokuseiZantai[k])
                                     + (isMix ? (st1.zokuseiJumon[k] + st2.zokuseiJumon[k]) : 0)
                                     + (st1.zokuseiZokusei[k] + st2.zokuseiZokusei[k]);
-                        d = Math.floor(d * (100 + Math.floor(zk * (100 + dmupRate.zokuseiRate[k]) / 100)) / 100);
+                        d = Math.max(0, Math.floor(d * (100 + Math.floor(zk * (100 + dmupRate.zokuseiRate[k]) / 100)) / 100));
                         const mr = (st1.monsterRate[targetMonsterKind] + st2.monsterRate[targetMonsterKind]);
-                        d = Math.floor(d * (100 + Math.floor(mr * (100 + dmupRate.monsterRate[targetMonsterKind]) / 100)) / 100);
+                        d = Math.max(0, Math.floor(d * (100 + Math.floor(mr * (100 + dmupRate.monsterRate[targetMonsterKind]) / 100)) / 100));
                         const sp = (st1.spskill[skill.spskill] + st2.spskill[skill.spskill]);
-                        d = Math.floor(d * (100 + sp) / 100);
-                        damage += d * skill.attackRepeat[i];
+                        d = Math.max(0, Math.floor(d * (100 + sp) / 100));
+                        d = Math.max(0, Math.floor(d * (100 + (isZan ? calcSetting.wrZan : calcSetting.wrTai) + calcSetting.wrZantai) / 100));
+                        d = Math.max(0, Math.floor(d * (100 + calcSetting.wrZokuseiRate[k]) / 100));
+                        damage += Math.max(0, d * skill.attackRepeat[i]);
                     }
                     tr.appendChild(document.createElement("td")).textContent = `${damage}`;
                 }

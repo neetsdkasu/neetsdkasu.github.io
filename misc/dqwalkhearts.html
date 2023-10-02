@@ -1723,7 +1723,8 @@
             <hr />
             <div class="outline">
               <div class="small subtitle">ダメージアップへの倍率</div>
-              <div class="very-small">※ダメージアップに対してかける倍率（<span>例えば、大太刀・立葵の各モンスター系統1.5倍なら150%、ぎんがのつるぎのメラ属性半減なら50%</span>）</div>
+              <div class="very-small">※ダメージアップに対してかける倍率。（<span>例えば、大太刀・立葵の各モンスター系統1.5倍なら150%、ぎんがのつるぎのメラ属性半減なら50%</span>）</div>
+              <div class="very-small">※斬撃と斬撃・体技、もしくは、体技と斬撃・体技、の組み合わせでの設定には未対応。（<span class="very-small">例えば、斬撃150%、斬撃・体技80%と設定した場合、無根拠な謎合算(100+(150-100)+(80-100))=130%として処理します</span>）</div>
               <div><button type="button" id="damagetool2_zantai_add_damageup_rate">追加</button></div>
               <hr />
               <div class="yscroll-half" id="damagetool2_zantai_damageup_rate_list"></div>
@@ -1765,7 +1766,8 @@
                 <summary class="small">その他の設定</summary>
                 <fieldset class="mar1">
                   <legend>弱点・耐性</legend>
-                  <div class="small">※弱点なら101%以上に設定する。耐性なら99%以下に設定する。（<span class="very-small">例えば、弱点で1.3倍なら130%、耐性で半減なら50%</span>）</div>
+                  <div class="very-small">※弱点なら101%以上に設定する。耐性なら99%以下に設定する。（<span class="very-small">例えば、弱点で1.3倍なら130%、耐性で半減なら50%</span>）</div>
+                  <div class="very-small">※斬撃と斬撃・体技、もしくは、体技と斬撃・体技、の組み合わせでの設定には未対応。（<span class="very-small">例えば、斬撃150%、斬撃・体技80%と設定した場合、無根拠な謎合算(100+(150-100)+(80-100))=130%として処理します</span>）</div>
                   <div class="buttons">
                     <label>
                       <span>斬撃:</span>
