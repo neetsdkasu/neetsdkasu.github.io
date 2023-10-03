@@ -1048,7 +1048,7 @@ function addToAdoptionHeartSetList(): boolean {
         maximumCost: currentAdoptionHeartSet.maximumCost,
         powerUp: currentAdoptionHeartSet.powerUp,
         colors: currentAdoptionHeartSet.colors.slice(),
-        hearts: currentAdoptionHeartSet.hearts.slice()
+        hearts: currentAdoptionHeartSet.hearts.slice() // 不安だが、たぶんシャローコピーで大丈夫ぽい
     };
     currentAdoptionHeartSet = null;
     adoptionHeartSetList.push(heartset);
@@ -5728,6 +5728,8 @@ interface RNHeartset {
     cost: number;
 }
 
+const RN_MAX_BEST_LEN = 20;
+
 const RNBestRefExprScores: number[] = new Array(6).fill(0);
 const RNBestRefExprPenalties: number[] = new Array(6).fill(Number.MAX_VALUE);
 const RNBestRefExprBonuses: number[] = new Array(6).fill(0);
@@ -5976,7 +5978,7 @@ function searchRNHeartsetSA(target: RNTarget): void {
     const perm = permutation(target.setSize);
     const copy = (hs: RNHeartset) => {
         const res: RNHeartset = {
-            hearts: hs.hearts.slice(),
+            hearts: hs.hearts.slice(), // TODO ここシャローコピーで大丈夫？ディープコピーじゃなくて平気なの？
             order: hs.order,
             penalty: hs.penalty,
             bonus: hs.bonus,
@@ -6023,7 +6025,7 @@ function searchRNHeartsetSA(target: RNTarget): void {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -6196,7 +6198,7 @@ function searchRNHeartsetHC(target: RNTarget): void {
     const perm = permutation(target.setSize);
     const copy = (hs: RNHeartset) => {
         const res: RNHeartset = {
-            hearts: hs.hearts.slice(),
+            hearts: hs.hearts.slice(), // TODO ここシャローコピーで大丈夫なの？ディープコピーじゃなくていいの？
             order: hs.order,
             penalty: hs.penalty,
             bonus: hs.bonus,
@@ -6243,7 +6245,7 @@ function searchRNHeartsetHC(target: RNTarget): void {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -6402,7 +6404,7 @@ function searchRNHeartsetHCG(target: RNTarget): void {
     const perm = permutation(target.setSize);
     const copy = (hs: RNHeartset) => {
         const res: RNHeartset = {
-            hearts: hs.hearts.slice(),
+            hearts: hs.hearts.slice(), // TODO ここシャローコピーで大丈夫なの？ディープコピーじゃなくていいの？
             order: hs.order,
             penalty: hs.penalty,
             bonus: hs.bonus,
@@ -6449,7 +6451,7 @@ function searchRNHeartsetHCG(target: RNTarget): void {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -6612,7 +6614,7 @@ function searchRNHeartsetGr(target: RNTarget): void {
     const perm = permutation(target.setSize);
     const copy = (hs: RNHeartset) => {
         const res: RNHeartset = {
-            hearts: hs.hearts.slice(),
+            hearts: hs.hearts.slice(), // TODO ここシャローコピーで大丈夫なの？ディープコピーじゃなくていいの？
             order: hs.order,
             penalty: hs.penalty,
             bonus: hs.bonus,
@@ -6659,7 +6661,7 @@ function searchRNHeartsetGr(target: RNTarget): void {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -6802,7 +6804,7 @@ function searchRNHeartsetBF(target: RNTarget): void {
     const perm = permutation(target.setSize);
     const copy = (hs: RNHeartset) => {
         const res: RNHeartset = {
-            hearts: hs.hearts.slice(),
+            hearts: hs.hearts.slice(), // TODO ここシャローコピーで大丈夫なの？ディープコピーじゃなくていいの？
             order: hs.order,
             penalty: hs.penalty,
             bonus: hs.bonus,
@@ -6854,7 +6856,7 @@ function searchRNHeartsetBF(target: RNTarget): void {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -7692,7 +7694,14 @@ function showManualHeartset(): void {
         text("speed", `${status.speed}`);
         text("dexterity", `${status.dexterity}`);
         powerUp = oldPowerUp;
-        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_MANUALSET, [manualAdoptionHeartSet]);
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_MANUALSET, [{
+            jobName: manualAdoptionHeartSet.jobName,
+            score: manualAdoptionHeartSet.score,
+            maximumCost: manualAdoptionHeartSet.maximumCost,
+            powerUp: manualAdoptionHeartSet.powerUp,
+            colors: manualAdoptionHeartSet.colors.slice(),
+            hearts: manualAdoptionHeartSet.hearts.slice() // シャローコピーで大丈夫ぽい
+        }]);
         return;
     }
 }

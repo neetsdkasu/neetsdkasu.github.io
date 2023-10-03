@@ -931,7 +931,7 @@ function addToAdoptionHeartSetList() {
         maximumCost: currentAdoptionHeartSet.maximumCost,
         powerUp: currentAdoptionHeartSet.powerUp,
         colors: currentAdoptionHeartSet.colors.slice(),
-        hearts: currentAdoptionHeartSet.hearts.slice()
+        hearts: currentAdoptionHeartSet.hearts.slice() // 不安だが、たぶんシャローコピーで大丈夫ぽい
     };
     currentAdoptionHeartSet = null;
     adoptionHeartSetList.push(heartset);
@@ -5363,6 +5363,7 @@ function loadRNForm() {
         console.log(err);
     }
 }
+const RN_MAX_BEST_LEN = 20;
 const RNBestRefExprScores = new Array(6).fill(0);
 const RNBestRefExprPenalties = new Array(6).fill(Number.MAX_VALUE);
 const RNBestRefExprBonuses = new Array(6).fill(0);
@@ -5654,7 +5655,7 @@ function searchRNHeartsetSA(target) {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -5876,7 +5877,7 @@ function searchRNHeartsetHC(target) {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -6084,7 +6085,7 @@ function searchRNHeartsetHCG(target) {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -6296,7 +6297,7 @@ function searchRNHeartsetGr(target) {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -6492,7 +6493,7 @@ function searchRNHeartsetBF(target) {
             state = b;
             changed = true;
         }
-        if (bests.length < 10) {
+        if (bests.length < RN_MAX_BEST_LEN) {
             bests.push(state);
             changed = true;
         }
@@ -7292,7 +7293,14 @@ function showManualHeartset() {
         text("speed", `${status.speed}`);
         text("dexterity", `${status.dexterity}`);
         powerUp = oldPowerUp;
-        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_MANUALSET, [manualAdoptionHeartSet]);
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_MANUALSET, [{
+                jobName: manualAdoptionHeartSet.jobName,
+                score: manualAdoptionHeartSet.score,
+                maximumCost: manualAdoptionHeartSet.maximumCost,
+                powerUp: manualAdoptionHeartSet.powerUp,
+                colors: manualAdoptionHeartSet.colors.slice(),
+                hearts: manualAdoptionHeartSet.hearts.slice() // シャローコピーで大丈夫ぽい
+            }]);
         return;
     }
 }
