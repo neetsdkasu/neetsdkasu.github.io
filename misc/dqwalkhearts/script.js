@@ -161,6 +161,7 @@ var Rank;
     Rank[Rank["B"] = 3] = "B";
     Rank[Rank["C"] = 4] = "C";
     Rank[Rank["D"] = 5] = "D";
+    Rank[Rank["X"] = 6] = "X";
 })(Rank || (Rank = {}));
 var Color;
 (function (Color) {
@@ -3333,6 +3334,7 @@ function searchHeartSet(target) {
     }
     const template = document.getElementById("result_item");
     const omitDuplicate = new Map();
+    const dt2AdoptionHeartsetList = [];
     for (const heartSet of heartSets) {
         const st = {
             score: 0,
@@ -3405,6 +3407,7 @@ function searchHeartSet(target) {
                     heart: hs.monster.hearts.find(h => h.rank === hs.rank)
                 };
             }
+            dt2AdoptionHeartsetList.push(adoptionHeartSet);
             fragment.querySelector(".result-item-adoption")
                 .addEventListener("click", () => adoptHeartSet(adoptionHeartSet));
         }
@@ -3458,6 +3461,7 @@ function searchHeartSet(target) {
     }
     result.insertBefore(document.createElement("div"), result.firstElementChild)
         .textContent = `件数: ${omitDuplicate.size}`;
+    setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_SEARCH_RESULTS, dt2AdoptionHeartsetList);
 }
 // デモ用データの加工
 function convertToDummy(list) {
@@ -7288,6 +7292,7 @@ function showManualHeartset() {
         text("speed", `${status.speed}`);
         text("dexterity", `${status.dexterity}`);
         powerUp = oldPowerUp;
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_MANUALSET, [manualAdoptionHeartSet]);
         return;
     }
 }
@@ -7456,10 +7461,66 @@ document.getElementById("manualset_job").addEventListener("change", () => {
 /////////////////////////////////////////////////////////////////////////////////////
 const DT2_ZOKUSEI_KIND_MAX = 8;
 const DT2_MONSTER_KIND_MAX = 17;
+const DT2_KEY_IMPORT_TARGET_SEARCH_RESULTS = "search-results";
+const DT2_KEY_IMPORT_TARGET_MANUALSET = "manualset";
+const DT2_KEY_IMPORT_TARGET_ADOPTION_LIST = "adoption-list";
+const DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS = "reallyneeded-results";
+const DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS = "reallyneeded-bests";
 let DT2SkillId = 0;
 let DT2HeartsetStatusId = 0;
 let DT2NonHeartsetStatusId = 0;
-let DT2UniqCalcPair = new Map();
+const DT2UniqCalcPair = new Map();
+const DT2HeartsetListReference = new Map();
+const DT2HeartsetByStatusId = new Map();
+function updateDT2ImportTargetIdOption() {
+    const key = document.getElementById("damagetool2_zantai_heartset_target").value;
+    const list = DT2HeartsetListReference.get(key) ?? [];
+    const targetIdElem = document.getElementById("damagetool2_zantai_heartset_target_id");
+    targetIdElem.innerHTML = "";
+    if (list.length === 0) {
+        const opt0 = targetIdElem.appendChild(document.createElement("option"));
+        opt0.value = "-1";
+        opt0.textContent = "-";
+        return;
+    }
+    if (key === DT2_KEY_IMPORT_TARGET_MANUALSET) {
+        const opt0 = targetIdElem.appendChild(document.createElement("option"));
+        opt0.value = "0";
+        opt0.textContent = "-";
+        return;
+    }
+    for (let i = 0; i < list.length; i++) {
+        const item = list[i];
+        if (item === null) {
+            continue;
+        }
+        const opt = targetIdElem.appendChild(document.createElement("option"));
+        opt.value = `${i}`;
+        switch (key) {
+            case DT2_KEY_IMPORT_TARGET_SEARCH_RESULTS:
+                opt.textContent = `候補: ${i + 1}`;
+                break;
+            case DT2_KEY_IMPORT_TARGET_ADOPTION_LIST:
+                opt.textContent = `候補: ${item.jobName} (${i + 1})`;
+                break;
+            case DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS:
+                opt.textContent = `候補: ${i + 1} / ${list.length}`;
+                break;
+            case DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS:
+                opt.textContent = `参考値${i + 1}`;
+                break;
+        }
+    }
+}
+document.getElementById("damagetool2_zantai_heartset_target")
+    .addEventListener("change", () => updateDT2ImportTargetIdOption());
+function setDT2ImportHeartsetList(key, list) {
+    DT2HeartsetListReference.set(key, list);
+    const targetSel = document.getElementById("damagetool2_zantai_heartset_target").value;
+    if (targetSel === key) {
+        updateDT2ImportTargetIdOption();
+    }
+}
 function makeDT2CalcPairKey(hsId, nhsId) {
     return `${hsId}-${nhsId}`;
 }
@@ -8010,8 +8071,137 @@ document.getElementById("damagetool2_zantai_add_heartset_status_from_heartset")
     }
     const form = getDT2ImportSettingForm();
     const target = document.getElementById("damagetool2_zantai_heartset_target").value;
-    const targetId = document.getElementById("damagetool2_zantai_heartset_target_id").value;
-    // TODO
+    const targetId = parseInt(document.getElementById("damagetool2_zantai_heartset_target_id").value);
+    const heartsetList = DT2HeartsetListReference.get(target) ?? [];
+    if (heartsetList.length === 0 || targetId < 0 || heartsetList.length <= targetId) {
+        dialogAlert("候補がありません");
+        return;
+    }
+    const heartset = heartsetList[targetId];
+    if (heartset === null) {
+        dialogAlert("候補がありません");
+        return;
+    }
+    const calc = (scorer) => {
+        let score = 0;
+        const oldPowerUp = powerUp;
+        powerUp = heartset.powerUp;
+        for (let i = 0; i < heartset.colors.length; i++) {
+            const frameColor = heartset.colors[i];
+            if (frameColor === Color.Unset || frameColor === Color.Omit) {
+                continue;
+            }
+            if (heartset.hearts.length <= i) {
+                break;
+            }
+            const mh = heartset.hearts[i];
+            if (mh === null) {
+                continue;
+            }
+            const oldCurColor = mh.monster.curColor;
+            const oldCurCost = mh.monster.curCost;
+            const oldTarget = mh.monster.target;
+            mh.monster.curColor = mh.heart.color;
+            mh.monster.curCost = mh.heart.cost;
+            mh.monster.target = mh.heart.rank;
+            score += scorer.calc(frameColor, mh.monster);
+            mh.monster.curColor = oldCurColor;
+            mh.monster.curCost = oldCurCost;
+            mh.monster.target = oldTarget;
+        }
+        powerUp = oldPowerUp;
+        return score;
+    };
+    const template = document.getElementById("damagetool2_zantai_set_template");
+    const fragment = template.content.cloneNode(true);
+    const setsel = (cn, value) => fragment.querySelector(`:scope .${cn}`).value = value;
+    setsel("damagetool2-zantai-set-zokusei1-kind", form.zokuseiKind[0]);
+    setsel("damagetool2-zantai-set-zokusei2-kind", form.zokuseiKind[1]);
+    setsel("damagetool2-zantai-set-zokusei3-kind", form.zokuseiKind[2]);
+    setsel("damagetool2-zantai-set-zokusei4-kind", form.zokuseiKind[3]);
+    setsel("damagetool2-zantai-set-monster1-kind", form.monsterKind[0]);
+    setsel("damagetool2-zantai-set-monster2-kind", form.monsterKind[1]);
+    setsel("damagetool2-zantai-set-monster3-kind", form.monsterKind[2]);
+    setsel("damagetool2-zantai-set-monster4-kind", form.monsterKind[3]);
+    const fill = (enabled, expr, inputCN, title) => {
+        if (!enabled) {
+            return true;
+        }
+        try {
+            const scorer = parseExpression(expr);
+            const score = calc(scorer);
+            fragment.querySelector(`:scope .damagetool2-zantai-set-${inputCN}`).value = `${score}`;
+            return true;
+        }
+        catch (err) {
+            if (err instanceof ExprSyntaxError) {
+                dialogAlert(`${title}の式にエラー: ${err.getMessage()}`);
+            }
+            else {
+                dialogAlert(`${title}の式にエラー: ${err}`);
+            }
+            console.log(err);
+            return false;
+        }
+    };
+    const ok = fill(form.powerUse, form.powerExpr, "power", "力")
+        && fill(form.attackMagicUse, form.attackMagicExpr, "attackmagic", "攻魔")
+        && fill(form.skillZangekiUse, form.skillZangekiExpr, "skill-zangeki", "斬D")
+        && fill(form.skillTaigiUse, form.skillTaigiExpr, "skill-taigi", "体D")
+        && fill(form.skillZantaiUse, form.skillZantaiExpr, "skill-zantai", "斬体D")
+        && fill(form.jumonUse, form.jumonExpr, "jumon", "呪文D")
+        && fill(form.zenzokuseiUse, form.zenzokuseiExpr, "zenzokusei", "全属性D")
+        && fill(form.zokuseiZantaiUse[0], form.zokuseiZantaiExpr[0], "zokusei1-zantai", "属性1-斬体D")
+        && fill(form.zokuseiZantaiUse[1], form.zokuseiZantaiExpr[1], "zokusei2-zantai", "属性2-斬体D")
+        && fill(form.zokuseiZantaiUse[2], form.zokuseiZantaiExpr[2], "zokusei3-zantai", "属性3-斬体D")
+        && fill(form.zokuseiZantaiUse[3], form.zokuseiZantaiExpr[3], "zokusei4-zantai", "属性4-斬体D")
+        && fill(form.zokuseiJumonUse[0], form.zokuseiJumonExpr[0], "zokusei1-jumon", "属性1-呪文D")
+        && fill(form.zokuseiJumonUse[1], form.zokuseiJumonExpr[1], "zokusei2-jumon", "属性2-呪文D")
+        && fill(form.zokuseiJumonUse[2], form.zokuseiJumonExpr[2], "zokusei3-jumon", "属性3-呪文D")
+        && fill(form.zokuseiJumonUse[3], form.zokuseiJumonExpr[3], "zokusei4-jumon", "属性4-呪文D")
+        && fill(form.zokuseiZokuseiUse[0], form.zokuseiZokuseiExpr[0], "zokusei1-zokusei", "属性1-属性D")
+        && fill(form.zokuseiZokuseiUse[1], form.zokuseiZokuseiExpr[1], "zokusei2-zokusei", "属性2-属性D")
+        && fill(form.zokuseiZokuseiUse[2], form.zokuseiZokuseiExpr[2], "zokusei3-zokusei", "属性3-属性D")
+        && fill(form.zokuseiZokuseiUse[3], form.zokuseiZokuseiExpr[3], "zokusei4-zokusei", "属性4-属性D")
+        && fill(form.monsterUse[0], form.monsterExpr[0], "monster1-rate", "モンスター系統1")
+        && fill(form.monsterUse[1], form.monsterExpr[1], "monster2-rate", "モンスター系統2")
+        && fill(form.monsterUse[2], form.monsterExpr[2], "monster3-rate", "モンスター系統3")
+        && fill(form.monsterUse[3], form.monsterExpr[3], "monster4-rate", "モンスター系統4")
+        && fill(form.spskillUse[0], form.spskillExpr[0], "spskill1", "特定スキル1")
+        && fill(form.spskillUse[1], form.spskillExpr[1], "spskill2", "特定スキル2")
+        && fill(form.spskillUse[2], form.spskillExpr[2], "spskill3", "特定スキル3");
+    if (!ok) {
+        return;
+    }
+    DT2HeartsetStatusId++;
+    const id = `A${DT2HeartsetStatusId}`;
+    const name = `こころセット(${id})`;
+    const sel = document.getElementById("damagetool2_zantai_calc_pair_from_heartset");
+    const opt = sel.firstElementChild.nextElementSibling === null
+        ? sel.appendChild(document.createElement("option"))
+        : sel.insertBefore(document.createElement("option"), sel.firstElementChild.nextElementSibling);
+    opt.value = id;
+    opt.textContent = name;
+    fragment.querySelector(":scope .damagetool2-zantai-set-id").textContent = id;
+    fragment.querySelector(":scope .damagetool2-zantai-set-name").value = name;
+    const list = document.getElementById("damagetool2_zantai_heartset_status_list");
+    list.insertBefore(fragment, list.firstElementChild);
+    const nameElem = list.firstElementChild.querySelector(":scope .damagetool2-zantai-set-name");
+    nameElem.addEventListener("input", () => {
+        opt.textContent = nameElem.value;
+        const cpList = document.getElementById("damagetool2_zantai_calc_pair_list");
+        const cpItems = cpList.querySelectorAll(":scope > .outline");
+        for (const item of cpItems) {
+            const cpId = item.querySelector(":scope .damagetool2-zantai-calc-pair-heartset-status-id").textContent;
+            if (cpId === id) {
+                item.querySelector(":scope .damagetool2-zantai-calc-pair-heartset-status-name").textContent = nameElem.value;
+            }
+        }
+    });
+    DT2HeartsetByStatusId.set(id, heartset);
+    if (DEBUG) {
+        console.log(`added Status from Heartset: ID: ${id}, NAME: ${name}, HEARTSET: ${heartset}`);
+    }
 });
 // こころセット由来の手入力用ステータスの追加
 document.getElementById("damagetool2_zantai_add_heartset_status_by_manual")
