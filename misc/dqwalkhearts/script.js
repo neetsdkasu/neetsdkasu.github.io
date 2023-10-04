@@ -17,6 +17,7 @@ const STORAGE_KEY_EXPR_RECORD = LOCAL_STORAGE_PATH + ".expr_rec";
 const STORAGE_KEY_ADOPT_HEARTSET = LOCAL_STORAGE_PATH + ".adopt_heartset";
 const STORAGE_KEY_HEARTSET_SEARCH = LOCAL_STORAGE_PATH + ".heartset_search";
 const STORAGE_KEY_REALLYNEEDED_FORM = LOCAL_STORAGE_PATH + ".reallyneeded_form";
+const STORAGE_KEY_DAMAGETOOL2_FORM = LOCAL_STORAGE_PATH + ".damagetool2_form";
 function dialogAlert(msg) {
     if (DEBUG) {
         console.log(`dialogAlert: ${msg}`);
@@ -1760,6 +1761,7 @@ function makeSimpleScorer(param) {
             }
             const heart = monster.hearts.find(h => h.rank === monster.target);
             if ((color & monster.curColor) !== 0) {
+                // TOOD 色一致は端数切り上げでいいの？
                 return Math.ceil(powerUp * heart[param]);
             }
             else {
@@ -7931,7 +7933,7 @@ function getDT2CalcPairList() {
     }
     return result;
 }
-function getDt2DamgeupRateFormList() {
+function getDT2DamgeupRateFormList() {
     const result = [];
     const list = document.getElementById("damagetool2_zantai_damageup_rate_list");
     const items = list.querySelectorAll(":scope > .outline");
@@ -8063,6 +8065,132 @@ function parseDT2CalcSettingForm(form) {
         targetMonsterKind: toInt(form.targetMonsterKind, 0)
     };
     return result;
+}
+const DT2_SESSION_STORAGE_KEY = STORAGE_KEY_DAMAGETOOL2_FORM + "-session";
+const DT2_ETERNAL_STORAGE_KEY = STORAGE_KEY_DAMAGETOOL2_FORM + "-eternal";
+function saveSessionDamageTool2Form() {
+    if (DEBUG) {
+        console.log("call saveSessionDamageTool2Form");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    try {
+        const statusIdAndHeartsetList = Array.from(DT2HeartsetByStatusId);
+        const data = {
+            heartsetStatusFormList: getDT2StatusFormList("damagetool2_zantai_heartset_status_list"),
+            nonHeartsetStatusFormList: getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list"),
+            skillFormList: getDT2SkillFormList(),
+            damageupRateFormList: getDT2DamgeupRateFormList(),
+            calcPairList: getDT2CalcPairList(),
+            calcSettingForm: getDT2CalcSettingForm(),
+            skillId: DT2SkillId,
+            heartsetStatusId: DT2HeartsetStatusId,
+            nonHeartsetStatusId: DT2NonHeartsetStatusId,
+            statusIdAndHeartsetList: statusIdAndHeartsetList
+        };
+        const json = JSON.stringify(data);
+        window.sessionStorage.setItem(DT2_SESSION_STORAGE_KEY, json);
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+function loadSessionDamageTool2Form() {
+    if (DEBUG) {
+        console.log("call loadSessionDamageTool2Form");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.sessionStorage.getItem(DT2_SESSION_STORAGE_KEY);
+        if (json !== null) {
+            const data = JSON.parse(json);
+            // TODO
+        }
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+function saveEternalDamageTool2Form() {
+    if (DEBUG) {
+        console.log("call saveEternalDamageTool2Form");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    try {
+        const data = {
+            importSettingForm: getDT2ImportSettingForm()
+        };
+        const json = JSON.stringify(data);
+        window.localStorage.setItem(DT2_ETERNAL_STORAGE_KEY, json);
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+function loadEternalDamageTool2Form() {
+    if (DEBUG) {
+        console.log("call loadEternalDamageTool2Form");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.localStorage.getItem(DT2_ETERNAL_STORAGE_KEY);
+        if (json !== null) {
+            const data = JSON.parse(json);
+            // TODO
+        }
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+function saveDamageTool2Form() {
+    if (DEBUG) {
+        console.log("call saveDamageTool2Form");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save from storage");
+        }
+        return;
+    }
+    saveSessionDamageTool2Form();
+    saveEternalDamageTool2Form();
+}
+function loadDamageTool2Form() {
+    if (DEBUG) {
+        console.log("call loadDamageTool2Form");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    loadSessionDamageTool2Form();
+    loadEternalDamageTool2Form();
 }
 (function () {
     const list = [
@@ -8313,6 +8441,7 @@ document.getElementById("damagetool2_zantai_clear_heartset_status_list")
     for (const cpItem of removes) {
         cpList.removeChild(cpItem);
     }
+    DT2HeartsetByStatusId.clear();
 });
 // こころセット以外のステータスの追加
 document.getElementById("damagetool2_zantai_add_non_heartset_status")
@@ -8475,8 +8604,9 @@ document.getElementById("damagetool2_zantai_calc")
         statusMap.set(nhs.id, nhs);
     }
     const skillList = parseDT2SkillForms(getDT2SkillFormList());
-    const damageupRateList = parseDt2DamgeupRateForms(getDt2DamgeupRateFormList());
+    const damageupRateList = parseDt2DamgeupRateForms(getDT2DamgeupRateFormList());
     const calcPairList = getDT2CalcPairList();
+    // TODO 端数は切捨てでいいの？
     const baseDamage = (p, d) => Math.max(0, Math.floor(p / 2) - Math.floor(d / 4));
     for (let defence = 0; defence <= 2000; defence += 100) {
         const defDetails = document.createElement("details");
@@ -8533,6 +8663,7 @@ document.getElementById("damagetool2_zantai_calc")
                         if (!skill.attackUse[i]) {
                             continue;
                         }
+                        // TODO 各計算の端数は切捨てでいいの？
                         const isZan = (skill.attackType[i] & 1) === 0;
                         const isMix = skill.attackType[i] >= 2;
                         const pwr = Math.floor((st1.power + st2.power) * pwrup / 100)
