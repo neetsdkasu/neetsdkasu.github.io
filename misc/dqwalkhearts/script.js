@@ -7510,12 +7510,23 @@ const DT2_KEY_IMPORT_TARGET_MANUALSET = "manualset";
 const DT2_KEY_IMPORT_TARGET_ADOPTION_LIST = "adoption-list";
 const DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS = "reallyneeded-results";
 const DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS = "reallyneeded-bests";
+const DT2_ZOKUSEI_KIND_NAME_BY_ID = ["", "メラ", "ギラ", "ヒャド", "バギ", "デイン", "ジバリア", "イオ", "ドルマ"];
+const DT2_MONSTER_KIND_NAME_BY_ID = [
+    "", "スライム", "けもの", "ドラゴン", "虫", "鳥",
+    "植物", "物質", "マシン", "ゾンビ", "悪魔",
+    "エレメント", "怪人", "水", "？？？？",
+    "特定モンスターX", "特定モンスターY", "特定モンスターZ"
+];
 let DT2SkillId = 0;
 let DT2HeartsetStatusId = 0;
 let DT2NonHeartsetStatusId = 0;
 const DT2UniqCalcPair = new Map();
 const DT2HeartsetListReference = new Map();
 const DT2HeartsetByStatusId = new Map();
+const DT2MemoExprImportZokuseiZantai = new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill("");
+const DT2MemoExprImportZokuseiJumon = new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill("");
+const DT2MemoExprImportZokuseiZokusei = new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill("");
+const DT2MemoExprImportMonsterRate = new Array(DT2_MONSTER_KIND_MAX + 1).fill("");
 function updateDT2ImportTargetIdOption() {
     const key = document.getElementById("damagetool2_zantai_heartset_target").value;
     const list = DT2HeartsetListReference.get(key) ?? [];
@@ -7659,6 +7670,120 @@ function getDT2ImportSettingForm() {
         ]
     };
     return form;
+}
+function fillDT2ImportSettingForm(form) {
+    const sel = (id, v) => document.getElementById(id).value = v;
+    const value = (id, v) => document.getElementById(id).value = v;
+    const checked = (id, c) => document.getElementById(id).checked = c;
+    checked("damagetool2_zantai_import_power_use", form.powerUse);
+    value("damagetool2_zantai_import_power_expr", form.powerExpr);
+    checked("damagetool2_zantai_import_attackmagic_use", form.attackMagicUse);
+    value("damagetool2_zantai_import_attackmagic_expr", form.attackMagicExpr);
+    checked("damagetool2_zantai_import_skill_zangeki_use", form.skillZangekiUse);
+    value("damagetool2_zantai_import_skill_zangeki_expr", form.skillZangekiExpr);
+    checked("damagetool2_zantai_import_skill_taigi_use", form.skillTaigiUse);
+    value("damagetool2_zantai_import_skill_taigi_expr", form.skillTaigiExpr);
+    checked("damagetool2_zantai_import_skill_zantai_use", form.skillZantaiUse);
+    value("damagetool2_zantai_import_skill_zantai_expr", form.skillZantaiExpr);
+    checked("damagetool2_zantai_import_jumon_use", form.jumonUse);
+    value("damagetool2_zantai_import_jumon_expr", form.jumonExpr);
+    checked("damagetool2_zantai_import_zenzokusei_use", form.zenzokuseiUse);
+    value("damagetool2_zantai_import_zenzokusei_expr", form.zenzokuseiExpr);
+    sel("damagetool2_zantai_import_zokusei1_kind", form.zokuseiKind[0]);
+    sel("damagetool2_zantai_import_zokusei2_kind", form.zokuseiKind[1]);
+    sel("damagetool2_zantai_import_zokusei3_kind", form.zokuseiKind[2]);
+    sel("damagetool2_zantai_import_zokusei4_kind", form.zokuseiKind[3]);
+    checked("damagetool2_zantai_import_zokusei1_zantai_use", form.zokuseiZantaiUse[0]);
+    checked("damagetool2_zantai_import_zokusei2_zantai_use", form.zokuseiZantaiUse[1]);
+    checked("damagetool2_zantai_import_zokusei3_zantai_use", form.zokuseiZantaiUse[2]);
+    checked("damagetool2_zantai_import_zokusei4_zantai_use", form.zokuseiZantaiUse[3]);
+    value("damagetool2_zantai_import_zokusei1_zantai_expr", form.zokuseiZantaiExpr[0]);
+    value("damagetool2_zantai_import_zokusei2_zantai_expr", form.zokuseiZantaiExpr[1]);
+    value("damagetool2_zantai_import_zokusei3_zantai_expr", form.zokuseiZantaiExpr[2]);
+    value("damagetool2_zantai_import_zokusei4_zantai_expr", form.zokuseiZantaiExpr[3]);
+    checked("damagetool2_zantai_import_zokusei1_jumon_use", form.zokuseiJumonUse[0]);
+    checked("damagetool2_zantai_import_zokusei2_jumon_use", form.zokuseiJumonUse[1]);
+    checked("damagetool2_zantai_import_zokusei3_jumon_use", form.zokuseiJumonUse[2]);
+    checked("damagetool2_zantai_import_zokusei4_jumon_use", form.zokuseiJumonUse[3]);
+    value("damagetool2_zantai_import_zokusei1_jumon_expr", form.zokuseiJumonExpr[0]);
+    value("damagetool2_zantai_import_zokusei2_jumon_expr", form.zokuseiJumonExpr[1]);
+    value("damagetool2_zantai_import_zokusei3_jumon_expr", form.zokuseiJumonExpr[2]);
+    value("damagetool2_zantai_import_zokusei4_jumon_expr", form.zokuseiJumonExpr[3]);
+    checked("damagetool2_zantai_import_zokusei1_zokusei_use", form.zokuseiZokuseiUse[0]);
+    checked("damagetool2_zantai_import_zokusei2_zokusei_use", form.zokuseiZokuseiUse[1]);
+    checked("damagetool2_zantai_import_zokusei3_zokusei_use", form.zokuseiZokuseiUse[2]);
+    checked("damagetool2_zantai_import_zokusei4_zokusei_use", form.zokuseiZokuseiUse[3]);
+    value("damagetool2_zantai_import_zokusei1_zokusei_expr", form.zokuseiZokuseiExpr[0]);
+    value("damagetool2_zantai_import_zokusei2_zokusei_expr", form.zokuseiZokuseiExpr[1]);
+    value("damagetool2_zantai_import_zokusei3_zokusei_expr", form.zokuseiZokuseiExpr[2]);
+    value("damagetool2_zantai_import_zokusei4_zokusei_expr", form.zokuseiZokuseiExpr[3]);
+    checked("damagetool2_zantai_import_monster1_use", form.monsterUse[0]);
+    checked("damagetool2_zantai_import_monster2_use", form.monsterUse[1]);
+    checked("damagetool2_zantai_import_monster3_use", form.monsterUse[2]);
+    checked("damagetool2_zantai_import_monster4_use", form.monsterUse[3]);
+    sel("damagetool2_zantai_import_monster1_kind", form.monsterKind[0]);
+    sel("damagetool2_zantai_import_monster2_kind", form.monsterKind[1]);
+    sel("damagetool2_zantai_import_monster3_kind", form.monsterKind[2]);
+    sel("damagetool2_zantai_import_monster4_kind", form.monsterKind[3]);
+    value("damagetool2_zantai_import_monster1_expr", form.monsterExpr[0]);
+    value("damagetool2_zantai_import_monster2_expr", form.monsterExpr[1]);
+    value("damagetool2_zantai_import_monster3_expr", form.monsterExpr[2]);
+    value("damagetool2_zantai_import_monster4_expr", form.monsterExpr[3]);
+    checked("damagetool2_zantai_import_spskill1_use", form.spskillUse[0]);
+    checked("damagetool2_zantai_import_spskill2_use", form.spskillUse[1]);
+    checked("damagetool2_zantai_import_spskill3_use", form.spskillUse[2]);
+    value("damagetool2_zantai_import_spskill1_expr", form.spskillExpr[0]);
+    value("damagetool2_zantai_import_spskill2_expr", form.spskillExpr[1]);
+    value("damagetool2_zantai_import_spskill3_expr", form.spskillExpr[2]);
+}
+function updateDT2MemoExpr(form) {
+    let updated = false;
+    for (let i = 0; i < form.zokuseiKind.length; i++) {
+        const zk = parseInt(form.zokuseiKind[i]);
+        if (form.zokuseiZantaiUse[i]) {
+            const expr = form.zokuseiZantaiExpr[i].trim();
+            if (expr.length > 0) {
+                const oldExpr = DT2MemoExprImportZokuseiZantai[zk];
+                if (oldExpr !== expr) {
+                    DT2MemoExprImportZokuseiZantai[zk] = expr;
+                    updated = true;
+                }
+            }
+        }
+        if (form.zokuseiJumonUse[i]) {
+            const expr = form.zokuseiJumonExpr[i].trim();
+            if (expr.length > 0) {
+                const oldExpr = DT2MemoExprImportZokuseiJumon[zk];
+                if (oldExpr !== expr) {
+                    DT2MemoExprImportZokuseiJumon[zk] = expr;
+                    updated = true;
+                }
+            }
+        }
+        if (form.zokuseiZokuseiUse[i]) {
+            const expr = form.zokuseiZokuseiExpr[i].trim();
+            if (expr.length > 0) {
+                const oldExpr = DT2MemoExprImportZokuseiZokusei[zk];
+                if (oldExpr !== expr) {
+                    DT2MemoExprImportZokuseiZokusei[zk] = expr;
+                    updated = true;
+                }
+            }
+        }
+    }
+    for (let i = 0; i < form.monsterKind.length; i++) {
+        if (!form.monsterUse[i]) {
+            continue;
+        }
+        const mk = parseInt(form.monsterKind[i]);
+        const oldExpr = DT2MemoExprImportMonsterRate[mk];
+        const expr = form.monsterExpr[i].trim();
+        if (expr.length > 0 && oldExpr !== expr) {
+            DT2MemoExprImportMonsterRate[mk] = expr;
+            updated = true;
+        }
+    }
+    return updated;
 }
 function getDT2StatusFormList(listId) {
     if (DEBUG) {
@@ -8114,6 +8239,10 @@ function loadSessionDamageTool2Form() {
         const json = window.sessionStorage.getItem(DT2_SESSION_STORAGE_KEY);
         if (json !== null) {
             const data = JSON.parse(json);
+            data.statusIdAndHeartsetList.forEach(item => DT2HeartsetByStatusId.set(item[0], item[1]));
+            DT2SkillId = data.skillId;
+            DT2HeartsetStatusId = data.heartsetStatusId;
+            DT2NonHeartsetStatusId = data.nonHeartsetStatusId;
             // TODO
         }
     }
@@ -8134,7 +8263,11 @@ function saveEternalDamageTool2Form() {
     }
     try {
         const data = {
-            importSettingForm: getDT2ImportSettingForm()
+            importSettingForm: getDT2ImportSettingForm(),
+            memoExprZokuseiZantai: DT2MemoExprImportZokuseiZantai,
+            memoExprZokuseiJumon: DT2MemoExprImportZokuseiJumon,
+            memoExprZokuseiZokusei: DT2MemoExprImportZokuseiZokusei,
+            memoExprMonsterRate: DT2MemoExprImportMonsterRate
         };
         const json = JSON.stringify(data);
         window.localStorage.setItem(DT2_ETERNAL_STORAGE_KEY, json);
@@ -8158,7 +8291,12 @@ function loadEternalDamageTool2Form() {
         const json = window.localStorage.getItem(DT2_ETERNAL_STORAGE_KEY);
         if (json !== null) {
             const data = JSON.parse(json);
-            // TODO
+            fillDT2ImportSettingForm(data.importSettingForm);
+            // forEachじゃなくconst解除すればいいだけでは？
+            data.memoExprZokuseiZantai.forEach((expr, i) => DT2MemoExprImportZokuseiZantai[i] = expr);
+            data.memoExprZokuseiJumon.forEach((expr, i) => DT2MemoExprImportZokuseiJumon[i] = expr);
+            data.memoExprZokuseiZokusei.forEach((expr, i) => DT2MemoExprImportZokuseiZokusei[i] = expr);
+            data.memoExprMonsterRate.forEach((expr, i) => DT2MemoExprImportMonsterRate[i] = expr);
         }
     }
     catch (err) {
@@ -8231,6 +8369,56 @@ function loadDamageTool2Form() {
                 showExprRecordDialog(exprId);
             });
         })(id, id + "_from");
+    }
+})();
+(function () {
+    for (let i = 1; i <= 4; i++) {
+        (function (kindId, zantaiId, jumonId, zokuseiId) {
+            document.getElementById(kindId)
+                .addEventListener("change", () => {
+                const kind = parseInt(document.getElementById(kindId).value);
+                const elem = (id) => document.getElementById(id);
+                if (DT2MemoExprImportZokuseiZantai[kind].length !== 0) {
+                    const elem = document.getElementById(zantaiId);
+                    const expr = elem.value.trim();
+                    if (expr.length === 0 || !expr.includes(DT2_ZOKUSEI_KIND_NAME_BY_ID[kind])) {
+                        elem.value = DT2MemoExprImportZokuseiZantai[kind];
+                    }
+                }
+                if (DT2MemoExprImportZokuseiJumon[kind].length !== 0) {
+                    const elem = document.getElementById(jumonId);
+                    const expr = elem.value.trim();
+                    if (expr.length === 0 || !expr.includes(DT2_ZOKUSEI_KIND_NAME_BY_ID[kind])) {
+                        elem.value = DT2MemoExprImportZokuseiJumon[kind];
+                    }
+                }
+                if (DT2MemoExprImportZokuseiZokusei[kind].length !== 0) {
+                    const elem = document.getElementById(zokuseiId);
+                    const expr = elem.value.trim();
+                    if (expr.length === 0 || !expr.includes(DT2_ZOKUSEI_KIND_NAME_BY_ID[kind])) {
+                        elem.value = DT2MemoExprImportZokuseiZokusei[kind];
+                    }
+                }
+            });
+        })(`damagetool2_zantai_import_zokusei${i}_kind`, `damagetool2_zantai_import_zokusei${i}_zantai_expr`, `damagetool2_zantai_import_zokusei${i}_jumon_expr`, `damagetool2_zantai_import_zokusei${i}_zokusei_expr`);
+    }
+})();
+(function () {
+    for (let i = 1; i <= 4; i++) {
+        (function (kindId, rateId) {
+            document.getElementById(kindId)
+                .addEventListener("change", () => {
+                const kind = parseInt(document.getElementById(kindId).value);
+                const elem = (id) => document.getElementById(id);
+                if (DT2MemoExprImportMonsterRate[kind].length !== 0) {
+                    const elem = document.getElementById(rateId);
+                    const expr = elem.value.trim();
+                    if (expr.length === 0 || !expr.includes(DT2_MONSTER_KIND_NAME_BY_ID[kind])) {
+                        elem.value = DT2MemoExprImportMonsterRate[kind];
+                    }
+                }
+            });
+        })(`damagetool2_zantai_import_monster${i}_kind`, `damagetool2_zantai_import_monster${i}_expr`);
     }
 })();
 // こころセット由来のインポート用ステータスの追加
@@ -8345,6 +8533,9 @@ document.getElementById("damagetool2_zantai_add_heartset_status_from_heartset")
         && fill(form.spskillUse[2], form.spskillExpr[2], "spskill3", "特定スキル3");
     if (!ok) {
         return;
+    }
+    if (updateDT2MemoExpr(form)) {
+        saveEternalDamageTool2Form();
     }
     DT2HeartsetStatusId++;
     const id = `A${DT2HeartsetStatusId}`;
@@ -8703,6 +8894,7 @@ document.getElementById("damagetool2_zantai_calc")
 window.addEventListener("pagehide", () => {
     saveHeartSetSearchForm();
     saveRNForm();
+    saveDamageTool2Form();
 });
 // ページのURLのパラメータの処理
 (function () {
@@ -8775,6 +8967,7 @@ window.addEventListener("pagehide", () => {
         loadAdoptionHeartSetList();
         loadHeartSetSearchForm();
         loadRNForm();
+        loadDamageTool2Form();
     }
 })();
 // デバッグモードであることの確認
