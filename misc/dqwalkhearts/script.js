@@ -891,6 +891,7 @@ function removeAdaptionHeartSet(heartset) {
         const ahsList1 = adoptionHeartSetList.slice(0, index);
         const ahsList2 = adoptionHeartSetList.slice(index + 1);
         adoptionHeartSetList = ahsList1.concat(ahsList2);
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_ADOPTION_LIST, adoptionHeartSetList);
         saveAdoptionHeartSetList();
         dialogAlert("採用リストからこころセットを１つ除去しました");
     }
@@ -935,6 +936,7 @@ function addToAdoptionHeartSetList() {
     };
     currentAdoptionHeartSet = null;
     adoptionHeartSetList.push(heartset);
+    setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_ADOPTION_LIST, adoptionHeartSetList);
     const list = document.getElementById("adoption_heartset_list");
     const template = document.getElementById("result_item");
     const fragment = template.content.cloneNode(true);
@@ -5364,9 +5366,12 @@ function loadRNForm() {
     }
 }
 const RN_MAX_BEST_LEN = 20;
-const RNBestRefExprScores = new Array(6).fill(0);
-const RNBestRefExprPenalties = new Array(6).fill(Number.MAX_VALUE);
-const RNBestRefExprBonuses = new Array(6).fill(0);
+const RN_BEST_REF_EXPR_COUNT = 6;
+const RNBestRefExprScores = new Array(RN_BEST_REF_EXPR_COUNT).fill(0);
+const RNBestRefExprPenalties = new Array(RN_BEST_REF_EXPR_COUNT).fill(Number.MAX_VALUE);
+const RNBestRefExprBonuses = new Array(RN_BEST_REF_EXPR_COUNT).fill(0);
+const RNBestRefExprHeartsets = new Array(RN_BEST_REF_EXPR_COUNT).fill(null);
+const RNHeartsetResults = new Array(RN_MAX_BEST_LEN).fill(null);
 function updateRNBestRefExpr(i, heartset, score) {
     const isBest = heartset.penalty < RNBestRefExprPenalties[i]
         || (heartset.penalty === RNBestRefExprPenalties[i]
@@ -5481,7 +5486,7 @@ function showRNHeartset(target, heartsets) {
         for (let z = 0; z < statusValues.length; z++) {
             target.scoreres[z].refSetter(status, statusValues[z]);
         }
-        const hasRefExprBest = new Array(6).fill(false);
+        const hasRefExprBest = new Array(RN_BEST_REF_EXPR_COUNT).fill(false);
         if (target.useRefExpr) {
             const refScore = target.refExpr.calc(Color.Unset, refMonster);
             scoreStr += `, 参考値1: ${refScore}`;
@@ -5532,20 +5537,25 @@ function showRNHeartset(target, heartsets) {
                     heart: h.heart
                 };
             }
+            RNHeartsetResults[pos] = adoptionHeartSet;
             const adoptor = () => adoptHeartSet(adoptionHeartSet);
             elem("adoption").onclick = adoptor;
             if (hasRefExprBest[0]) {
+                RNBestRefExprHeartsets[0] = adoptionHeartSet;
                 const refexpr1BestElem = document.getElementById("reallyneeded_refexpr_best");
                 refexpr1BestElem.innerHTML = "";
-                refexpr1BestElem.appendChild(item.cloneNode(true))
-                    .querySelector(".result-item-adoption").onclick = adoptor;
+                const reb1Elem = refexpr1BestElem.appendChild(item.cloneNode(true));
+                reb1Elem.querySelector(":scope .result-item-number").textContent = "参考値1ベスト";
+                reb1Elem.querySelector(":scope .result-item-adoption").onclick = adoptor;
             }
-            for (let i = 1; i < hasRefExprBest.length; i++) {
+            for (let i = 1; i < RN_BEST_REF_EXPR_COUNT; i++) {
                 if (hasRefExprBest[i]) {
+                    RNBestRefExprHeartsets[i] = adoptionHeartSet;
                     const refexprBestElem = document.getElementById(`reallyneeded_refexpr${i + 1}_best`);
                     refexprBestElem.innerHTML = "";
-                    refexprBestElem.appendChild(item.cloneNode(true))
-                        .querySelector(".result-item-adoption").onclick = adoptor;
+                    const rebElem = refexprBestElem.appendChild(item.cloneNode(true));
+                    rebElem.querySelector(":scope .result-item-number").textContent = `参考値${i + 1}ベスト`;
+                    rebElem.querySelector(".result-item-adoption").onclick = adoptor;
                 }
             }
         }
@@ -5605,6 +5615,8 @@ function calcRNHeartsetScore(target, heartset) {
 // ReallyNeededのこころセットを探索する (Simulated Annealing)
 // TODO 配列初期化バグを修正した影響で挙動が変わるかも、パラメータ等の見直しが必要かも？
 function searchRNHeartsetSA(target) {
+    const oldPowerUp = powerUp;
+    powerUp = target.job.powerUp;
     const perm = permutation(target.setSize);
     const copy = (hs) => {
         const res = {
@@ -5814,9 +5826,12 @@ function searchRNHeartsetSA(target) {
         return null;
     };
     const close = (res) => {
+        powerUp = oldPowerUp;
         if (res === null) {
             dialogAlert("探索を中止しました");
         }
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS, RNHeartsetResults.filter(hs => hs !== null));
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS, RNBestRefExprHeartsets);
     };
     const task = {
         interval: 1,
@@ -5827,6 +5842,8 @@ function searchRNHeartsetSA(target) {
 }
 // ReallyNeededのこころセットを探索する (Hill Climbing)
 function searchRNHeartsetHC(target) {
+    const oldPowerUp = powerUp;
+    powerUp = target.job.powerUp;
     const perm = permutation(target.setSize);
     const copy = (hs) => {
         const res = {
@@ -6022,9 +6039,12 @@ function searchRNHeartsetHC(target) {
         return null;
     };
     const close = (res) => {
+        powerUp = oldPowerUp;
         if (res === null) {
             dialogAlert("探索を中止しました");
         }
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS, RNHeartsetResults.filter(hs => hs !== null));
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS, RNBestRefExprHeartsets);
     };
     const task = {
         interval: 1,
@@ -6035,6 +6055,8 @@ function searchRNHeartsetHC(target) {
 }
 // ReallyNeededのこころセットを探索する (Hill Climbing with Greedy)
 function searchRNHeartsetHCG(target) {
+    const oldPowerUp = powerUp;
+    powerUp = target.job.powerUp;
     const perm = permutation(target.setSize);
     const copy = (hs) => {
         const res = {
@@ -6234,9 +6256,12 @@ function searchRNHeartsetHCG(target) {
         return null;
     };
     const close = (res) => {
+        powerUp = oldPowerUp;
         if (res === null) {
             dialogAlert("探索を中止しました");
         }
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS, RNHeartsetResults.filter(hs => hs !== null));
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS, RNBestRefExprHeartsets);
     };
     const task = {
         interval: 1,
@@ -6247,6 +6272,8 @@ function searchRNHeartsetHCG(target) {
 }
 // ReallyNeededのこころセットを探索する (Greedy)
 function searchRNHeartsetGr(target) {
+    const oldPowerUp = powerUp;
+    powerUp = target.job.powerUp;
     const perm = permutation(target.setSize);
     const copy = (hs) => {
         const res = {
@@ -6425,9 +6452,12 @@ function searchRNHeartsetGr(target) {
         return null;
     };
     const close = (res) => {
+        powerUp = oldPowerUp;
         if (res === null) {
             dialogAlert("探索を中止しました");
         }
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS, RNHeartsetResults.filter(hs => hs !== null));
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS, RNBestRefExprHeartsets);
     };
     const task = {
         interval: 1,
@@ -6438,6 +6468,8 @@ function searchRNHeartsetGr(target) {
 }
 // ReallyNeededのこころセットを探索する (Brute Force)
 function searchRNHeartsetBF(target) {
+    const oldPowerUp = powerUp;
+    powerUp = target.job.powerUp;
     const perm = permutation(target.setSize);
     const copy = (hs) => {
         const res = {
@@ -6720,9 +6752,12 @@ function searchRNHeartsetBF(target) {
         return null;
     };
     const close = (res) => {
+        powerUp = oldPowerUp;
         if (res === null) {
             dialogAlert("探索を中止しました");
         }
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS, RNHeartsetResults.filter(hs => hs !== null));
+        setDT2ImportHeartsetList(DT2_KEY_IMPORT_TARGET_REALLYNEEDED_BESTS, RNBestRefExprHeartsets);
     };
     const task = {
         interval: 1,
@@ -7020,14 +7055,14 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
     RNBestRefExprScores.fill(0);
     RNBestRefExprPenalties.fill(Number.MAX_VALUE);
     RNBestRefExprBonuses.fill(0);
+    RNBestRefExprHeartsets.fill(null);
+    RNHeartsetResults.fill(null);
     document.getElementById("reallyneeded_refexpr_best").innerHTML = "";
     document.getElementById("reallyneeded_refexpr2_best").innerHTML = "";
     document.getElementById("reallyneeded_refexpr3_best").innerHTML = "";
     document.getElementById("reallyneeded_refexpr4_best").innerHTML = "";
     document.getElementById("reallyneeded_refexpr5_best").innerHTML = "";
     document.getElementById("reallyneeded_refexpr6_best").innerHTML = "";
-    const oldPowerUp = powerUp;
-    powerUp = job.powerUp;
     switch (algorithm) {
         case "bf":
             searchRNHeartsetBF(target);
@@ -7048,7 +7083,6 @@ document.getElementById("reallyneeded_start").addEventListener("click", () => {
             dialogAlert(`エラー: algorithmは? ${algorithm}`);
             break;
     }
-    powerUp = oldPowerUp;
 });
 // 登録済み式の挿入ダイアログを開く　（特殊なこころセット検索、式A）
 document.getElementById("reallyneeded_expr1_from")
@@ -7485,7 +7519,7 @@ function updateDT2ImportTargetIdOption() {
     const list = DT2HeartsetListReference.get(key) ?? [];
     const targetIdElem = document.getElementById("damagetool2_zantai_heartset_target_id");
     targetIdElem.innerHTML = "";
-    if (list.length === 0) {
+    if (list.length === 0 || list.every(hs => hs === null)) {
         const opt0 = targetIdElem.appendChild(document.createElement("option"));
         opt0.value = "-1";
         opt0.textContent = "-";
@@ -7494,7 +7528,7 @@ function updateDT2ImportTargetIdOption() {
     if (key === DT2_KEY_IMPORT_TARGET_MANUALSET) {
         const opt0 = targetIdElem.appendChild(document.createElement("option"));
         opt0.value = "0";
-        opt0.textContent = "-";
+        opt0.textContent = "*";
         return;
     }
     for (let i = 0; i < list.length; i++) {
@@ -7509,7 +7543,7 @@ function updateDT2ImportTargetIdOption() {
                 opt.textContent = `候補: ${i + 1}`;
                 break;
             case DT2_KEY_IMPORT_TARGET_ADOPTION_LIST:
-                opt.textContent = `候補: ${item.jobName} (${i + 1})`;
+                opt.textContent = `候補: ${item.jobName} (${i + 1} / ${list.length})`;
                 break;
             case DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS:
                 opt.textContent = `候補: ${i + 1} / ${list.length}`;
@@ -8078,8 +8112,11 @@ document.getElementById("damagetool2_zantai_add_heartset_status_from_heartset")
         console.log("click damagetool2_zantai_add_heartset_status_from_heartset Button");
     }
     const form = getDT2ImportSettingForm();
-    const target = document.getElementById("damagetool2_zantai_heartset_target").value;
-    const targetId = parseInt(document.getElementById("damagetool2_zantai_heartset_target_id").value);
+    const targetSel = document.getElementById("damagetool2_zantai_heartset_target");
+    const target = targetSel.value;
+    const targetIdSel = document.getElementById("damagetool2_zantai_heartset_target_id");
+    const targetId = parseInt(targetIdSel.value);
+    const basename = `${targetSel.selectedOptions[0].textContent}-${targetIdSel.selectedOptions[0].textContent}`;
     const heartsetList = DT2HeartsetListReference.get(target) ?? [];
     if (heartsetList.length === 0 || targetId < 0 || heartsetList.length <= targetId) {
         dialogAlert("候補がありません");
@@ -8183,7 +8220,7 @@ document.getElementById("damagetool2_zantai_add_heartset_status_from_heartset")
     }
     DT2HeartsetStatusId++;
     const id = `A${DT2HeartsetStatusId}`;
-    const name = `こころセット(${id})`;
+    const name = `[${id}]${basename}`;
     const sel = document.getElementById("damagetool2_zantai_calc_pair_from_heartset");
     const opt = sel.firstElementChild.nextElementSibling === null
         ? sel.appendChild(document.createElement("option"))
@@ -8221,7 +8258,7 @@ document.getElementById("damagetool2_zantai_add_heartset_status_by_manual")
     const fragment = template.content.cloneNode(true);
     DT2HeartsetStatusId++;
     const id = `A${DT2HeartsetStatusId}`;
-    const name = `こころセット(${id})`;
+    const name = `[${id}]こころセット`;
     const sel = document.getElementById("damagetool2_zantai_calc_pair_from_heartset");
     const opt = sel.firstElementChild.nextElementSibling === null
         ? sel.appendChild(document.createElement("option"))
@@ -8287,7 +8324,7 @@ document.getElementById("damagetool2_zantai_add_non_heartset_status")
     const fragment = template.content.cloneNode(true);
     DT2NonHeartsetStatusId++;
     const id = `B${DT2NonHeartsetStatusId}`;
-    const name = `こころ以外(${id})`;
+    const name = `[${id}]こころ以外`;
     const sel = document.getElementById("damagetool2_zantai_calc_pair_from_non_heartset");
     const opt = sel.firstElementChild.nextElementSibling === null
         ? sel.appendChild(document.createElement("option"))
