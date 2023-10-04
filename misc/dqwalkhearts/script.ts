@@ -4909,6 +4909,12 @@ document.getElementById("heart_require_skill_expression_4_from")!
     showExprRecordDialog("heart_require_skill_expression_4");
 });
 
+
+/////////////////////////////////////////////////////////////////////////////////////
+// データのダウンロード
+/////////////////////////////////////////////////////////////////////////////////////
+
+
 function showDownloadDataLink(linkId: string, data: any): void {
     const link = document.getElementById(linkId)!;
     link.hidden = true;
@@ -5016,6 +5022,80 @@ document.getElementById("data_file_expr_rec_load")!
             const newList = mergeList(data, exprRecordLists, erlMerge).sort((a, b) => a.category.localeCompare(b.category));
             exprRecordLists = newList;
             update();
+        }
+    });
+});
+
+
+// データファイルのダウンロード （ダメージの目安の計算（斬撃・体技）のこころセット取り込み設定）
+document.getElementById("data_file_damagetool2_import_setting_download")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_damagetool2_import_setting_download");
+    }
+    const data: DT2EternalFormData = {
+        importSettingForm: getDT2ImportSettingForm(),
+        memoExprZokuseiZantai: DT2MemoExprImportZokuseiZantai,
+        memoExprZokuseiJumon: DT2MemoExprImportZokuseiJumon,
+        memoExprZokuseiZokusei: DT2MemoExprImportZokuseiZokusei,
+        memoExprMonsterRate: DT2MemoExprImportMonsterRate
+    };
+    showDownloadDataLink("data_file_damagetool2_import_setting_downloadlink", data);
+});
+
+// データファイルの読み込み （ダメージの目安の計算（斬撃・体技）のこころセット取り込み設定）
+document.getElementById("data_file_damagetool2_import_setting_load")!
+.addEventListener("click", () => {
+    if (DEBUG) {
+        console.log("click data_file_damagetool2_import_setting_load");
+    }
+    const merge = (newer: DT2ImportSettingForm, older: DT2ImportSettingForm) => {
+        if (newer.powerExpr === "") { newer.powerExpr = older.powerExpr; }
+        if (newer.attackMagicExpr === "") { newer.attackMagicExpr = older.attackMagicExpr; }
+        if (newer.skillZangekiExpr === "") { newer.skillZangekiExpr = older.skillZangekiExpr; }
+        if (newer.skillTaigiExpr === "") { newer.skillTaigiExpr = older.skillTaigiExpr; }
+        if (newer.skillZantaiExpr === "") { newer.skillZantaiExpr = older.skillZantaiExpr; }
+        if (newer.jumonExpr === "") { newer.jumonExpr = older.jumonExpr; }
+        if (newer.zenzokuseiExpr === "") { newer.zenzokuseiExpr = older.zenzokuseiExpr; }
+        for (let i = 0; i < 4; i++) {
+            if (newer.zokuseiZantaiExpr[i] === "") { newer.zokuseiZantaiExpr[i] = older.zokuseiZantaiExpr[i]; }
+            if (newer.zokuseiJumonExpr[i] === "") { newer.zokuseiJumonExpr[i] = older.zokuseiJumonExpr[i]; }
+            if (newer.zokuseiZokuseiExpr[i] === "") { newer.zokuseiZokuseiExpr[i] = older.zokuseiZokuseiExpr[i]; }
+            if (newer.monsterExpr[i] === "") { newer.monsterExpr[i] = older.monsterExpr[i]; }
+            if (i < 3 && newer.spskillExpr[i] === "") { newer.spskillExpr[i] = older.spskillExpr[i]; }
+        }
+        fillDT2ImportSettingForm(newer);
+    };
+    loadDataFile("data_file_damagetool2_import_setting_load_file", "data_file_damagetool2_import_setting_load_option", {
+        isValid: isValidDT2EternalFormData,
+        truncate: (data: DT2EternalFormData) => {
+            fillDT2ImportSettingForm(data.importSettingForm);
+            const copy = (src: string[], dst: string[]) => src.forEach((e, i) => dst[i] = e);
+            copy(data.memoExprZokuseiZantai, DT2MemoExprImportZokuseiZantai);
+            copy(data.memoExprZokuseiJumon, DT2MemoExprImportZokuseiJumon);
+            copy(data.memoExprZokuseiZokusei, DT2MemoExprImportZokuseiZokusei);
+            copy(data.memoExprMonsterRate, DT2MemoExprImportMonsterRate);
+            dialogAlert("読み込み完了しました");
+        },
+        fileAsNewer: (data: DT2EternalFormData) => {
+            const form = getDT2ImportSettingForm();
+            merge(data.importSettingForm, form);
+            const copy = (src: string[], dst: string[]) => src.forEach((e, i) => { if (e !== "") dst[i] = e; });
+            copy(data.memoExprZokuseiZantai, DT2MemoExprImportZokuseiZantai);
+            copy(data.memoExprZokuseiJumon, DT2MemoExprImportZokuseiJumon);
+            copy(data.memoExprZokuseiZokusei, DT2MemoExprImportZokuseiZokusei);
+            copy(data.memoExprMonsterRate, DT2MemoExprImportMonsterRate);
+            dialogAlert("読み込み完了しました");
+        },
+        fileAsOlder: (data: DT2EternalFormData) => {
+            const form = getDT2ImportSettingForm();
+            merge(form, data.importSettingForm);
+            const copy = (src: string[], dst: string[]) => src.forEach((e, i) => { if (dst[i] === "") dst[i] = e; });
+            copy(data.memoExprZokuseiZantai, DT2MemoExprImportZokuseiZantai);
+            copy(data.memoExprZokuseiJumon, DT2MemoExprImportZokuseiJumon);
+            copy(data.memoExprZokuseiZokusei, DT2MemoExprImportZokuseiZokusei);
+            copy(data.memoExprMonsterRate, DT2MemoExprImportMonsterRate);
+            dialogAlert("読み込み完了しました");
         }
     });
 });
@@ -8191,6 +8271,69 @@ function fillDT2ImportSettingForm(form: DT2ImportSettingForm): void {
     value("damagetool2_zantai_import_spskill3_expr", form.spskillExpr[2]);
 }
 
+function isValidDT2ImportSettingForm(data: DT2ImportSettingForm | unknown): data is DT2ImportSettingForm {
+    if (typeof data !== "object" || data === null) {
+        console.log("object型じゃない");
+        console.log(data);
+        return false;
+    }
+    const obj1: {[key: string]: any} = data; // TSでここキャストできる理由わからない(JS的には意味の無い代入だな、型情報があるわけじゃないし)
+    const listSingleField = [
+        "power", "attackMagic",
+        "skillZangeki", "skillTaigi", "skillZantai",
+        "jumon", "zenzokusei"
+    ];
+    for (const field of listSingleField) {
+        const b = field + "Use";
+        if (!(b in obj1) || typeof obj1[b] !== "boolean") {
+            return false;
+        }
+        const s = field + "Expr";
+        if (!(s in obj1) || typeof obj1[s] !== "string") {
+            return false;
+        }
+    }
+    const listArrayField = [
+        ["zokuseiZantai", 4], ["zokuseiJumon", 4], ["zokuseiZokusei", 4],
+        ["monster", 4], ["spskill", 3]
+    ];
+    for (const field of listArrayField) {
+        const b = field[0] + "Use";
+        if (!(b in obj1) || !Array.isArray(obj1[b])) {
+            return false;
+        } else {
+            const list = obj1[b] as unknown[];
+            if (list.length !== field[1] || !list.every(x => typeof x === "boolean")) {
+                return false;
+            }
+        }
+        const s = field[0] + "Expr";
+        if (!(s in obj1) || !Array.isArray(obj1[s])) {
+            return false;
+        } else {
+            const list = obj1[s] as unknown[];
+            if (list.length !== field[1] || !list.every(x => typeof x === "string")) {
+                return false;
+            }
+        }
+    }
+    const listKindField = [["zokuseiKind", DT2_ZOKUSEI_KIND_MAX], ["monsterKind", DT2_MONSTER_KIND_MAX]];
+    for (const field of listKindField) {
+        const f = field[0];
+        if (!(f in obj1) || !Array.isArray(obj1[f])) {
+            return false;
+        }
+        const list = obj1[f] as unknown[];
+        if (list.length !== 4 || !list.every(x => typeof x === "string")) {
+            return false;
+        }
+        if (!(list as string[]).map(s => parseInt(s)).every(n => !isNaN(n) && 1 <= n && n <= field[1])) {
+            return false;
+        }
+    }
+    return true;
+}
+
 function updateDT2MemoExpr(form: DT2ImportSettingForm): boolean {
     let updated = false;
     for (let i = 0; i < form.zokuseiKind.length; i++) {
@@ -8792,6 +8935,68 @@ interface DT2EternalFormData {
     memoExprZokuseiJumon: string[];
     memoExprZokuseiZokusei: string[];
     memoExprMonsterRate: string[];
+}
+
+function isValidDT2EternalFormData(data: DT2EternalFormData | unknown): data is DT2EternalFormData {
+    if (typeof data !== "object" || data === null) {
+        console.log("object型じゃない");
+        console.log(data);
+        return false;
+    }
+    const obj1: {[key: string]: any} = data; // ここキャストできる理由わからない
+    if (!("memoExprZokuseiZantai" in obj1) || !Array.isArray(obj1["memoExprZokuseiZantai"])) {
+        return false;
+    } else {
+        const list = obj1["memoExprZokuseiZantai"] as unknown[];
+        if (list.length !== DT2_ZOKUSEI_KIND_MAX + 1) {
+            return false;
+        }
+        if (!list.every(s => typeof s === "string")) {
+            return false;
+        }
+    }
+    if (!("memoExprZokuseiJumon" in obj1) || !Array.isArray(obj1["memoExprZokuseiJumon"])) {
+        return false;
+    } else {
+        const list = obj1["memoExprZokuseiJumon"] as unknown[];
+        if (list.length !== DT2_ZOKUSEI_KIND_MAX + 1) {
+            return false;
+        }
+        if (!list.every(s => typeof s === "string")) {
+            return false;
+        }
+    }
+    if (!("memoExprZokuseiZokusei" in obj1) || !Array.isArray(obj1["memoExprZokuseiZokusei"])) {
+        return false;
+    } else {
+        const list = obj1["memoExprZokuseiZokusei"] as unknown[];
+        if (list.length !== DT2_ZOKUSEI_KIND_MAX + 1) {
+            return false;
+        }
+        if (!list.every(s => typeof s === "string")) {
+            return false;
+        }
+    }
+    if (!("memoExprMonsterRate" in obj1) || !Array.isArray(obj1["memoExprMonsterRate"])) {
+        return false;
+    } else {
+        const list = obj1["memoExprMonsterRate"] as unknown[];
+        if (list.length !== DT2_MONSTER_KIND_MAX + 1) {
+            return false;
+        }
+        if (!list.every(s => typeof s === "string")) {
+            return false;
+        }
+    }
+    if (!("importSettingForm" in obj1) || (typeof obj1["importSettingForm"] !== "object") || obj1["importSettingForm"] === null) {
+        return false;
+    }
+    if (isValidDT2ImportSettingForm(obj1["importSettingForm"])) {
+        return true;
+    } else {
+        return false;
+    }
+    return true;
 }
 
 function saveSessionDamageTool2Form(): void {
