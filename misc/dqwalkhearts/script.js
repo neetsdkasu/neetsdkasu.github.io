@@ -7656,7 +7656,7 @@ function updateDT2ImportTargetIdOption() {
                 opt.textContent = `候補: ${i + 1}`;
                 break;
             case DT2_KEY_IMPORT_TARGET_ADOPTION_LIST:
-                opt.textContent = `候補: ${item.jobName} (${i + 1} / ${list.length})`;
+                opt.textContent = `[${i + 1} / ${list.length}] 候補: ${item.jobName}`;
                 break;
             case DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS:
                 opt.textContent = `候補: ${i + 1} / ${list.length}`;
@@ -8247,7 +8247,7 @@ function putDT2SkillFormList(formList) {
         list.appendChild(fragment);
     }
 }
-function getDT2CalcPairList() {
+function getDT2ExpandedCalcPairList() {
     const hsList = getDT2StatusFormList("damagetool2_zantai_heartset_status_list");
     const nhsList = getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list");
     const list = document.getElementById("damagetool2_zantai_calc_pair_list");
@@ -8337,6 +8337,45 @@ function getDT2CalcPairList() {
         dup.set(keyX, true);
     }
     return result;
+}
+function getDT2RawCalcPairList() {
+    const list = document.getElementById("damagetool2_zantai_calc_pair_list");
+    const items = list.querySelectorAll(":scope > .outline");
+    const result = [];
+    for (const item of items) {
+        const text = (cn) => (item.querySelector(`:scope .${cn}`).textContent ?? "");
+        const hsId = text("damagetool2-zantai-calc-pair-heartset-status-id");
+        const hsName = text("damagetool2-zantai-calc-pair-heartset-status-name");
+        const nhsId = text("damagetool2-zantai-calc-pair-non-heartset-status-id");
+        const nhsName = text("damagetool2-zantai-calc-pair-non-heartset-status-name");
+        const pair = {
+            heartsetStatusId: hsId,
+            heartsetStatusName: hsName,
+            nonHeartsetStatusId: nhsId,
+            nonHeartsetStatusName: nhsName
+        };
+        result.push(pair);
+    }
+    return result;
+}
+function putDT2RawCalcPairList(calcPairList) {
+    const list = document.getElementById("damagetool2_zantai_calc_pair_list");
+    for (const item of calcPairList) {
+        const hsId = item.heartsetStatusId;
+        const hsName = item.heartsetStatusName;
+        const nhsId = item.nonHeartsetStatusId;
+        const nhsName = item.nonHeartsetStatusName;
+        const key = makeDT2CalcPairKey(hsId, nhsId);
+        DT2UniqCalcPair.set(key, true);
+        const template = document.getElementById("damagetool2_zantai_calc_pair_template");
+        const fragment = template.content.cloneNode(true);
+        const text = (cn, t) => fragment.querySelector(`:scope .${cn}`).textContent = t;
+        text("damagetool2-zantai-calc-pair-heartset-status-id", hsId);
+        text("damagetool2-zantai-calc-pair-heartset-status-name", hsName);
+        text("damagetool2-zantai-calc-pair-non-heartset-status-id", nhsId);
+        text("damagetool2-zantai-calc-pair-non-heartset-status-name", nhsName);
+        list.appendChild(fragment);
+    }
 }
 function getDT2DamgeupRateFormList() {
     const result = [];
@@ -8556,7 +8595,7 @@ function saveSessionDamageTool2Form() {
             nonHeartsetStatusFormList: getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list"),
             skillFormList: getDT2SkillFormList(),
             damageupRateFormList: getDT2DamgeupRateFormList(),
-            calcPairList: getDT2CalcPairList(),
+            rawCalcPairList: getDT2RawCalcPairList(),
             calcSettingForm: getDT2CalcSettingForm(),
             skillId: DT2SkillId,
             heartsetStatusId: DT2HeartsetStatusId,
@@ -8610,6 +8649,7 @@ function loadSessionDamageTool2Form() {
             putDT2StatusFormList(false, data.heartsetStatusFormList);
             putDT2StatusFormList(true, data.nonHeartsetStatusFormList);
             putDT2SkillFormList(data.skillFormList);
+            putDT2RawCalcPairList(data.rawCalcPairList);
             // TODO
         }
     }
@@ -9163,7 +9203,7 @@ document.getElementById("damagetool2_zantai_calc")
     }
     const skillList = parseDT2SkillForms(getDT2SkillFormList());
     const damageupRateList = parseDt2DamgeupRateForms(getDT2DamgeupRateFormList());
-    const calcPairList = getDT2CalcPairList();
+    const calcPairList = getDT2ExpandedCalcPairList();
     // TODO 端数は切捨てでいいの？
     const baseDamage = (p, d) => Math.max(0, Math.floor(p / 2) - Math.floor(d / 4));
     for (let defence = 0; defence <= 2000; defence += 100) {

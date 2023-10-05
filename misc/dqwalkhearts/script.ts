@@ -8056,7 +8056,7 @@ function updateDT2ImportTargetIdOption(): void {
                 opt.textContent = `候補: ${i+1}`;
                 break;
             case DT2_KEY_IMPORT_TARGET_ADOPTION_LIST:
-                opt.textContent = `候補: ${item.jobName} (${i+1} / ${list.length})`;
+                opt.textContent = `[${i+1} / ${list.length}] 候補: ${item.jobName}`;
                 break;
             case DT2_KEY_IMPORT_TARGET_REALLYNEEDED_RESULTS:
                 opt.textContent = `候補: ${i+1} / ${list.length}`;
@@ -8772,7 +8772,7 @@ interface DT2CalcPair {
     nonHeartsetStatusName: string;
 }
 
-function getDT2CalcPairList(): DT2CalcPair[] {
+function getDT2ExpandedCalcPairList(): DT2CalcPair[] {
     const hsList = getDT2StatusFormList("damagetool2_zantai_heartset_status_list");
     const nhsList = getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list");
     const list = document.getElementById("damagetool2_zantai_calc_pair_list")!;
@@ -8859,6 +8859,54 @@ function getDT2CalcPairList(): DT2CalcPair[] {
         dup.set(keyX, true);
     }
     return result;
+}
+
+function getDT2RawCalcPairList(): DT2CalcPair[] {
+    const list = document.getElementById("damagetool2_zantai_calc_pair_list")!;
+    const items = list.querySelectorAll(":scope > .outline");
+    const result: DT2CalcPair[] = [];
+    for (const item of items) {
+        const text = (cn: string) => (item.querySelector(`:scope .${cn}`)!.textContent ?? "");
+        const hsId = text("damagetool2-zantai-calc-pair-heartset-status-id");
+        const hsName = text("damagetool2-zantai-calc-pair-heartset-status-name");
+        const nhsId = text("damagetool2-zantai-calc-pair-non-heartset-status-id");
+        const nhsName = text("damagetool2-zantai-calc-pair-non-heartset-status-name");
+        const pair: DT2CalcPair = {
+            heartsetStatusId: hsId,
+            heartsetStatusName: hsName,
+            nonHeartsetStatusId: nhsId,
+            nonHeartsetStatusName: nhsName
+        };
+        result.push(pair);
+    }
+    return result;
+}
+
+function putDT2RawCalcPairList(calcPairList: DT2CalcPair[]): void {
+    const list = document.getElementById("damagetool2_zantai_calc_pair_list")!;
+
+    for (const item of calcPairList) {
+        const hsId = item.heartsetStatusId;
+        const hsName = item.heartsetStatusName;
+        const nhsId = item.nonHeartsetStatusId;
+        const nhsName = item.nonHeartsetStatusName;
+
+        const key = makeDT2CalcPairKey(hsId, nhsId);
+        DT2UniqCalcPair.set(key, true);
+
+        const template = document.getElementById("damagetool2_zantai_calc_pair_template") as HTMLTemplateElement;
+        const fragment = template.content.cloneNode(true) as DocumentFragment;
+
+        const text = (cn: string, t: string) => fragment.querySelector(`:scope .${cn}`)!.textContent = t;
+
+        text("damagetool2-zantai-calc-pair-heartset-status-id", hsId);
+        text("damagetool2-zantai-calc-pair-heartset-status-name", hsName);
+
+        text("damagetool2-zantai-calc-pair-non-heartset-status-id", nhsId);
+        text("damagetool2-zantai-calc-pair-non-heartset-status-name", nhsName);
+
+        list.appendChild(fragment);
+    }
 }
 
 interface DT2DamageupRate {
@@ -9052,7 +9100,7 @@ interface DT2SessionFormData {
     nonHeartsetStatusFormList: DT2StatusForm[];
     skillFormList: DT2SkillForm[];
     damageupRateFormList: DT2DamageupRateForm[];
-    calcPairList: DT2CalcPair[];
+    rawCalcPairList: DT2CalcPair[];
     calcSettingForm: DT2CalcSettingForm;
     skillId: number;
     heartsetStatusId: number;
@@ -9147,7 +9195,7 @@ function saveSessionDamageTool2Form(): void {
             nonHeartsetStatusFormList: getDT2StatusFormList("damagetool2_zantai_non_heartset_status_list"),
             skillFormList: getDT2SkillFormList(),
             damageupRateFormList: getDT2DamgeupRateFormList(),
-            calcPairList: getDT2CalcPairList(),
+            rawCalcPairList: getDT2RawCalcPairList(),
             calcSettingForm: getDT2CalcSettingForm(),
             skillId: DT2SkillId,
             heartsetStatusId: DT2HeartsetStatusId,
@@ -9201,6 +9249,7 @@ function loadSessionDamageTool2Form(): void {
             putDT2StatusFormList(false, data.heartsetStatusFormList);
             putDT2StatusFormList(true, data.nonHeartsetStatusFormList);
             putDT2SkillFormList(data.skillFormList);
+            putDT2RawCalcPairList(data.rawCalcPairList);
             // TODO
 
         }
@@ -9802,7 +9851,7 @@ document.getElementById("damagetool2_zantai_calc")!
     }
     const skillList = parseDT2SkillForms(getDT2SkillFormList());
     const damageupRateList = parseDt2DamgeupRateForms(getDT2DamgeupRateFormList());
-    const calcPairList = getDT2CalcPairList();
+    const calcPairList = getDT2ExpandedCalcPairList();
 
     // TODO 端数は切捨てでいいの？
     const baseDamage = (p: number, d: number) => Math.max(0, Math.floor(p / 2) - Math.floor(d / 4));
