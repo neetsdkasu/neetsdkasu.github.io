@@ -8717,6 +8717,54 @@ function parseDT2SkillForms(formList: DT2SkillForm[]): DT2Skill[] {
     return result;
 }
 
+function putDT2SkillFormList(formList: DT2SkillForm[]): void {
+    const list = document.getElementById("damagetool2_zantai_skill_list")!;
+
+    for (const form of formList) {
+
+        const template = document.getElementById("damagetool2_zantai_skill_template") as HTMLTemplateElement;
+        const fragment = template.content.cloneNode(true) as DocumentFragment;
+
+        const sel = (cn: string, v: string) => (fragment.querySelector(`:scope .${cn}`) as HTMLSelectElement).value = v;
+        const value = (cn: string, v: string) => (fragment.querySelector(`:scope .${cn}`) as HTMLInputElement).value = v;
+        const checked = (cn: string, b: boolean) => (fragment.querySelector(`:scope .${cn}`) as HTMLInputElement).checked = b;
+
+        value("damagetool2-zantai-skill-name", form.name);
+        sel("damagetool2-zantai-skill-spskill", form.spskill);
+        checked("damagetool2-zantai-skill-restrict-monster-use", form.restrictMonsterUse);
+        sel("damagetool2-zantai-skill-restrict-monster-kind", form.restrictMonsterKind);
+        sel("damagetool2-zantai-skill-restrict-monster-is-only", form.restrictMonsterIsOnly);
+        checked("damagetool2-zantai-skill-attack1-use", form.attackUse[0]);
+        checked("damagetool2-zantai-skill-attack2-use", form.attackUse[1]);
+        checked("damagetool2-zantai-skill-attack3-use", form.attackUse[2]);
+        checked("damagetool2-zantai-skill-attack4-use", form.attackUse[3]);
+        checked("damagetool2-zantai-skill-attack5-use", form.attackUse[4]);
+        sel("damagetool2-zantai-skill-attack1-kind", form.attackKind[0]);
+        sel("damagetool2-zantai-skill-attack2-kind", form.attackKind[1]);
+        sel("damagetool2-zantai-skill-attack3-kind", form.attackKind[2]);
+        sel("damagetool2-zantai-skill-attack4-kind", form.attackKind[3]);
+        sel("damagetool2-zantai-skill-attack5-kind", form.attackKind[4]);
+        sel("damagetool2-zantai-skill-attack1-type", form.attackType[0]);
+        sel("damagetool2-zantai-skill-attack2-type", form.attackType[1]);
+        sel("damagetool2-zantai-skill-attack3-type", form.attackType[2]);
+        sel("damagetool2-zantai-skill-attack4-type", form.attackType[3]);
+        sel("damagetool2-zantai-skill-attack5-type", form.attackType[4]);
+        value("damagetool2-zantai-skill-attack1-rate", form.attackRate[0]);
+        value("damagetool2-zantai-skill-attack2-rate", form.attackRate[1]);
+        value("damagetool2-zantai-skill-attack3-rate", form.attackRate[2]);
+        value("damagetool2-zantai-skill-attack4-rate", form.attackRate[3]);
+        value("damagetool2-zantai-skill-attack5-rate", form.attackRate[4]);
+        value("damagetool2-zantai-skill-attack1-repeat", form.attackRepeat[0]);
+        value("damagetool2-zantai-skill-attack2-repeat", form.attackRepeat[1]);
+        value("damagetool2-zantai-skill-attack3-repeat", form.attackRepeat[2]);
+        value("damagetool2-zantai-skill-attack4-repeat", form.attackRepeat[3]);
+        value("damagetool2-zantai-skill-attack5-repeat", form.attackRepeat[4]);
+        value("damagetool2-zantai-skill-id-reference", form.idReference);
+
+        list.appendChild(fragment);
+    }
+}
+
 interface DT2CalcPair {
     heartsetStatusId: string;
     heartsetStatusName: string;
@@ -9152,7 +9200,7 @@ function loadSessionDamageTool2Form(): void {
             DT2NonHeartsetStatusId = data.nonHeartsetStatusId;
             putDT2StatusFormList(false, data.heartsetStatusFormList);
             putDT2StatusFormList(true, data.nonHeartsetStatusFormList);
-
+            putDT2SkillFormList(data.skillFormList);
             // TODO
 
         }
