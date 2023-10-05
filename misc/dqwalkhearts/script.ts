@@ -8525,6 +8525,89 @@ function parseDT2StatusForms(formList: DT2StatusForm[]): DT2Status[] {
     return result;
 }
 
+function putDT2StatusFormList(targetIsNonHeartSet: boolean, formList: DT2StatusForm[]): void {
+    const listId = targetIsNonHeartSet
+                 ? "damagetool2_zantai_non_heartset_status_list"
+                 : "damagetool2_zantai_heartset_status_list";
+    const list = document.getElementById(listId)!;
+    const calcPairSelId = targetIsNonHeartSet
+                        ? "damagetool2_zantai_calc_pair_from_non_heartset"
+                        : "damagetool2_zantai_calc_pair_from_heartset";
+    const calcPairSel = document.getElementById(calcPairSelId)!;
+
+    for (const form of formList) {
+
+        const template = document.getElementById("damagetool2_zantai_set_template") as HTMLTemplateElement;
+        const fragment = template.content.cloneNode(true) as DocumentFragment;
+
+        const sel = (cn: string, value: string) => (fragment.querySelector(`:scope .${cn}`) as HTMLSelectElement).value = value;
+        const value = (cn: string, value: string) => (fragment.querySelector(`:scope .${cn}`) as HTMLInputElement).value = value;
+
+        fragment.querySelector(":scope .damagetool2-zantai-set-id")!.textContent = form.id;
+        value("damagetool2-zantai-set-name", form.name);
+        value("damagetool2-zantai-set-power", form.power);
+        value("damagetool2-zantai-set-attackmagic", form.attackMagic);
+        value("damagetool2-zantai-set-skill-zangeki", form.skillZan);
+        value("damagetool2-zantai-set-skill-taigi", form.skillTai);
+        value("damagetool2-zantai-set-skill-zantai", form.skillZantai);
+        value("damagetool2-zantai-set-jumon", form.jumon);
+        value("damagetool2-zantai-set-zenzokusei", form.zenzokusei);
+        sel("damagetool2-zantai-set-zokusei1-kind", form.zokuseiKind[0]);
+        sel("damagetool2-zantai-set-zokusei2-kind", form.zokuseiKind[1]);
+        sel("damagetool2-zantai-set-zokusei3-kind", form.zokuseiKind[2]);
+        sel("damagetool2-zantai-set-zokusei4-kind", form.zokuseiKind[3]);
+        value("damagetool2-zantai-set-zokusei1-zantai", form.zokuseiZantai[0]);
+        value("damagetool2-zantai-set-zokusei2-zantai", form.zokuseiZantai[1]);
+        value("damagetool2-zantai-set-zokusei3-zantai", form.zokuseiZantai[2]);
+        value("damagetool2-zantai-set-zokusei4-zantai", form.zokuseiZantai[3]);
+        value("damagetool2-zantai-set-zokusei1-jumon", form.zokuseiJumon[0]);
+        value("damagetool2-zantai-set-zokusei2-jumon", form.zokuseiJumon[1]);
+        value("damagetool2-zantai-set-zokusei3-jumon", form.zokuseiJumon[2]);
+        value("damagetool2-zantai-set-zokusei4-jumon", form.zokuseiJumon[3]);
+        value("damagetool2-zantai-set-zokusei1-zokusei", form.zokuseiZokusei[0]);
+        value("damagetool2-zantai-set-zokusei2-zokusei", form.zokuseiZokusei[1]);
+        value("damagetool2-zantai-set-zokusei3-zokusei", form.zokuseiZokusei[2]);
+        value("damagetool2-zantai-set-zokusei4-zokusei", form.zokuseiZokusei[3]);
+        sel("damagetool2-zantai-set-monster1-kind", form.monsterKind[0]);
+        sel("damagetool2-zantai-set-monster2-kind", form.monsterKind[1]);
+        sel("damagetool2-zantai-set-monster3-kind", form.monsterKind[2]);
+        sel("damagetool2-zantai-set-monster4-kind", form.monsterKind[3]);
+        value("damagetool2-zantai-set-monster1-rate", form.monsterRate[0]);
+        value("damagetool2-zantai-set-monster2-rate", form.monsterRate[1]);
+        value("damagetool2-zantai-set-monster3-rate", form.monsterRate[2]);
+        value("damagetool2-zantai-set-monster4-rate", form.monsterRate[3]);
+        value("damagetool2-zantai-set-spskill1", form.spskill[0]);
+        value("damagetool2-zantai-set-spskill2", form.spskill[1]);
+        value("damagetool2-zantai-set-spskill3", form.spskill[2]);
+
+        list.appendChild(fragment);
+
+        const opt = calcPairSel.appendChild(document.createElement("option"));
+        opt.value = form.id;
+        opt.textContent = form.name;
+
+        const cnCpStatusId = targetIsNonHeartSet
+                           ? "damagetool2-zantai-calc-pair-non-heartset-status-id"
+                           : "damagetool2-zantai-calc-pair-heartset-status-id";
+        const cnCpStatusName = targetIsNonHeartSet
+                             ? "damagetool2-zantai-calc-pair-non-heartset-status-name"
+                             : "damagetool2-zantai-calc-pair-heartset-status-name";
+        const nameElem = list.lastElementChild!.querySelector(":scope .damagetool2-zantai-set-name") as HTMLInputElement;
+        nameElem.addEventListener("input", () => {
+            opt.textContent = nameElem.value;
+            const cpList = document.getElementById("damagetool2_zantai_calc_pair_list")!;
+            const cpItems = cpList.querySelectorAll(":scope > .outline");
+            for (const item of cpItems) {
+                const cpId = item.querySelector(`:scope .${cnCpStatusId}`)!.textContent!;
+                if (cpId === opt.value) {
+                    item.querySelector(`:scope .${cnCpStatusName}`)!.textContent = nameElem.value;
+                }
+            }
+        });
+
+    }
+}
+
 interface DT2Skill {
     name: string;
     spskill: number;
@@ -9045,11 +9128,33 @@ function loadSessionDamageTool2Form(): void {
         const json = window.sessionStorage.getItem(DT2_SESSION_STORAGE_KEY);
         if (json !== null) {
             const data: DT2SessionFormData = JSON.parse(json);
-            data.statusIdAndHeartsetList.forEach(item => DT2HeartsetByStatusId.set(item[0], item[1]));
+            data.statusIdAndHeartsetList.forEach(item => {
+                const id = item[0];
+                const ahs = item[1];
+                for (let i = 0; i < ahs.hearts.length; i++) {
+                    const mh = ahs.hearts[i];
+                    if (mh === null) {
+                        continue;
+                    }
+                    if (monsterMap.has(mh.monster.name)) {
+                        mh.monster = monsterMap.get(mh.monster.name)!;
+                    }
+                    const rank = mh.heart.rank;
+                    const heart = mh.monster.hearts.find(h => h.rank === rank);
+                    if (heart) {
+                        mh.heart = heart;
+                    }
+                }
+                DT2HeartsetByStatusId.set(id, ahs);
+            });
             DT2SkillId = data.skillId;
             DT2HeartsetStatusId = data.heartsetStatusId;
             DT2NonHeartsetStatusId = data.nonHeartsetStatusId;
+            putDT2StatusFormList(false, data.heartsetStatusFormList);
+            putDT2StatusFormList(true, data.nonHeartsetStatusFormList);
+
             // TODO
+
         }
     } catch (err) {
         NO_STORAGE = true;
