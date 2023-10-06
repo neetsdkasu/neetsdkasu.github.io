@@ -315,6 +315,19 @@
       </form>
     </dialog>
 
+    <dialog id="heartset_view_dialog">
+      <div>こころセットの確認</div>
+      <hr />
+      <form method="dialog">
+        <div>
+          <button>オーケイ</button>
+        </div>
+      </form>
+      <hr />
+      <div id="heartset_view_dialog_comment" class="small"></div>
+      <div id="heartset_view_dialog_view" class="yscroll"></div>
+    </dialog>
+
     <dialog id="search_heart_dialog">
       <div>探索対象</div>
       <hr />
@@ -2146,7 +2159,7 @@
         <div><span>スキル・特殊効果2:</span> <span class="result-item-effects2"></span></div>
         <div><span>スキル・特殊効果3:</span> <span class="result-item-effects3"></span></div>
         <div><span>スキル・特殊効果4:</span> <span class="result-item-effects4"></span></div>
-        <details class="hover-outline">
+        <details class="hover-outline secret">
           <summary class="small">操作</summary>
           <div class="buttons mar1"><button type="button" class="result-item-adoption secret">このこころセットを採用</button></div>
         </details>
@@ -2156,7 +2169,7 @@
     <template id="damagetool2_zantai_set_template">
       <div class="pad1 outline">
         <div><span>ID:</span> <span class="damagetool2-zantai-set-id"></span></div>
-        <div>
+        <div class="buttons">
           <label>セット名:<input type="text" class="damagetool2-zantai-set-name" size="50" /></label>
         </div>
         <div>

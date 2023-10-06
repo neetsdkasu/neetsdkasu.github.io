@@ -3701,6 +3701,142 @@ function convertToDummy(list: Monster[]): void {
 
 /////////////////////////////////////////////////////////////////////////////////////
 
+function showHeartsetViewDialog(heartset: AdoptionHeartSet, comment?: string): void {
+    const dialog = document.getElementById("heartset_view_dialog") as HTMLDialogElement;
+
+    document.getElementById("heartset_view_dialog_comment")!.textContent = comment ?? "";
+
+    const oldPowerUp = powerUp;
+    powerUp = heartset.powerUp;
+
+    const res = document.getElementById("heartset_view_dialog_view")!;
+    const elem = (name: string) => res.querySelector(`.result-item-${name}`)!;
+    const text = (name: string, value: any) => elem(name).textContent = `${value}`;
+    if (res.children.length === 0) {
+        const template = document.getElementById("result_item") as HTMLTemplateElement;
+        const fragment = template.content.cloneNode(true) as DocumentFragment;
+        if (EXPOSE_MODE) {
+            for (const sec of fragment.querySelectorAll(".secret")) {
+                sec.classList.remove("secret");
+            }
+        }
+        res.appendChild(fragment);
+    }
+
+    elem("adoption").addEventListener("click", () => adoptHeartSet(heartset));
+
+    elem("number").textContent = heartset.jobName;
+    elem("score").textContent = heartset.score;
+
+    const maximumCost = heartset.maximumCost;
+
+    const status: Status = {
+        maximumHP: 0,
+        maximumMP: 0,
+        power: 0,
+        defence: 0,
+        attackMagic: 0,
+        recoverMagic: 0,
+        speed: 0,
+        dexterity: 0
+    };
+    let cost = 0;
+    let additionalMaximumCost = 0;
+
+    for (let i = 0; i < 4; i++) {
+        const mh = heartset.hearts.at(i) ?? null;
+        if (mh === null) {
+            text(`heart${i+1}`, "－");
+            text(`effects${i+1}`, "");
+
+            continue;
+        }
+        const name = mh.monster.name;
+        if (!monsterMap.has(name)) {
+            text(`heart${i+1}`, "");
+            text(`effects${i+1}`, "");
+
+            continue;
+        }
+        const monster = monsterMap.get(name)!;
+        const oldCurCost = monster.curCost;
+        const oldCurColor = monster.curColor;
+        const oldTarget = monster.target;
+        monster.curCost = mh.heart.cost;
+        monster.curColor = mh.heart.color;
+        monster.target = mh.heart.rank;
+
+        const he = elem(`heart${i+1}`);
+        he.innerHTML = "";
+        if (monster.target === null) {
+            he.appendChild(document.createElement("span")).textContent = "------";
+            he.appendChild(document.createElement("span")).textContent = "--";
+            he.appendChild(document.createElement("span")).textContent = monster.name;
+            he.appendChild(document.createElement("span")).textContent = "(ランク未指定)";
+            text(`effects${i+1}`, "");
+
+            monster.curCost = oldCurCost;
+            monster.curColor = oldCurColor;
+            monster.target = oldTarget;
+
+            continue;
+        }
+
+        const heart = monster.hearts.find(h => h.rank === monster.target)!;
+
+        cost += heart.cost;
+        additionalMaximumCost += heart.maximumCost;
+
+        const colorSpan = he.appendChild(document.createElement("span"));
+        showHeartColor(colorSpan, heart.color);
+        he.appendChild(document.createElement("span")).textContent = `${heart.cost}`;
+
+        const monsterName = (heart.rank === Rank.S_plus && monster.splusName !== null)
+                   ? monster.splusName : monster.name;
+        he.appendChild(document.createElement("span")).textContent = monsterName;
+        he.appendChild(document.createElement("span")).textContent = Rank[heart.rank].replace("_plus", "+");
+        text(`effects${i+1}`, heart.effects);
+
+        const c = heartset.colors.at(i) ?? Color.Unset;
+        status.maximumHP    += MaximumHPScorer.calc(c, monster);
+        status.maximumMP    += MaximumMPScorer.calc(c, monster);
+        status.power        += PowerScorer.calc(c, monster);
+        status.defence      += DefenceScorer.calc(c, monster);
+        status.attackMagic  += AttackMagicScorer.calc(c, monster);
+        status.recoverMagic += RecoverMagicScorer.calc(c, monster);
+        status.speed        += SpeedScorer.calc(c, monster);
+        status.dexterity    += DexterityScorer.calc(c, monster);
+
+        monster.curCost = oldCurCost;
+        monster.curColor = oldCurColor;
+        monster.target = oldTarget;
+    }
+
+    if (isNaN(maximumCost)) {
+        text("cost", `${cost} / ??? + ${additionalMaximumCost}`);
+        elem("cost").classList.remove("bold");
+
+    } else {
+        text("cost", `${cost} / ${maximumCost} + ${additionalMaximumCost}`);
+                elem("cost").classList.remove("bold");
+        if (cost > maximumCost + additionalMaximumCost) {
+            elem("cost").classList.add("bold");
+        }
+    }
+    text("maximumhp", `${status.maximumHP}`);
+    text("maximummp", `${status.maximumMP}`);
+    text("power", `${status.power}`);
+    text("defence", `${status.defence}`);
+    text("attackmagic", `${status.attackMagic}`);
+    text("recovermagic", `${status.recoverMagic}`);
+    text("speed", `${status.speed}`);
+    text("dexterity", `${status.dexterity}`);
+
+    powerUp = oldPowerUp;
+
+    dialog.showModal();
+}
+
 (function() {
     // デフォルトの職業のこころ最大コストのリストを設定する
     const sel = document.getElementById("preset_heartset") as HTMLSelectElement;
@@ -8604,7 +8740,15 @@ function putDT2StatusFormList(targetIsNonHeartSet: boolean, formList: DT2StatusF
                 }
             }
         });
-
+        if (DT2HeartsetByStatusId.has(form.id)) {
+            const heartset = DT2HeartsetByStatusId.get(form.id)!;
+            const viewButton = nameElem.parentElement!.parentElement!.appendChild(document.createElement("button"));
+            viewButton.classList.add("small");
+            viewButton.textContent = "こころセットの確認";
+            viewButton.addEventListener("click", () => {
+                showHeartsetViewDialog(heartset, `セット名: ${nameElem.value}`);
+            });
+        }
     }
 }
 
@@ -9643,6 +9787,12 @@ document.getElementById("damagetool2_zantai_add_heartset_status_from_heartset")!
                 item.querySelector(":scope .damagetool2-zantai-calc-pair-heartset-status-name")!.textContent = nameElem.value;
             }
         }
+    });
+    const viewButton = nameElem.parentElement!.parentElement!.appendChild(document.createElement("button"));
+    viewButton.classList.add("small");
+    viewButton.textContent = "こころセットの確認";
+    viewButton.addEventListener("click", () => {
+        showHeartsetViewDialog(heartset, `セット名: ${nameElem.value}`);
     });
     DT2HeartsetByStatusId.set(id, heartset);
     if (DEBUG) {
