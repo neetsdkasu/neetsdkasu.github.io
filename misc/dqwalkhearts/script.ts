@@ -3680,6 +3680,10 @@ function convertToDummy(list: Monster[]): void {
         list[i].splusName = null;
         for (const h of list[i].hearts) {
             h.effects = h.effects
+                .replace(/受けるHP回復/g, "受けるスキル道具HP回復")
+                .replace(/ホイミHP回復/g, "戦闘時ホイミHP回復")
+                .replace(/終了(HP|MP)/g, "戦闘終了時$1")
+                .replace(/ターン(HP|MP)/g, "ターン開始時$1")
                 .replace(/(メラ|ヒャド|イオ|ギラ|バギ|デイン|ジバリア|ドルマ)(斬|体|呪|R)/g, "$1属性$2")
                 .replace(/スキル(斬|体)/g, "スキルの$1")
                 .replace(/体D/g, "体技D")
