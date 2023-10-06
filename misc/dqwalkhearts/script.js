@@ -8470,6 +8470,36 @@ function getDT2DamageupRate(list, hsId, nhsId) {
     }
     return result;
 }
+function putDT2DamgeupRateFormList(formList) {
+    const list = document.getElementById("damagetool2_zantai_damageup_rate_list");
+    for (const form of formList) {
+        const template = document.getElementById("damagetool2_zantai_damageup_rate_template");
+        const fragment = template.content.cloneNode(true);
+        const sel = (cn, v) => fragment.querySelector(`:scope .${cn}`).value = v;
+        const value = (cn, v) => fragment.querySelector(`:scope .${cn}`).value = v;
+        value("damagetool2-zantai-damageup-rate-zangeki", form.zan);
+        value("damagetool2-zantai-damageup-rate-taigi", form.tai);
+        value("damagetool2-zantai-damageup-rate-zantai", form.zantai);
+        sel("damagetool2-zantai-damageup-rate-zokusei1-kind", form.zokuseiKind[0]);
+        sel("damagetool2-zantai-damageup-rate-zokusei2-kind", form.zokuseiKind[1]);
+        sel("damagetool2-zantai-damageup-rate-zokusei3-kind", form.zokuseiKind[2]);
+        sel("damagetool2-zantai-damageup-rate-zokusei4-kind", form.zokuseiKind[3]);
+        value("damagetool2-zantai-damageup-rate-zokusei1-rate", form.zokuseiRate[0]);
+        value("damagetool2-zantai-damageup-rate-zokusei2-rate", form.zokuseiRate[1]);
+        value("damagetool2-zantai-damageup-rate-zokusei3-rate", form.zokuseiRate[2]);
+        value("damagetool2-zantai-damageup-rate-zokusei4-rate", form.zokuseiRate[3]);
+        sel("damagetool2-zantai-damageup-rate-monster1-kind", form.monsterKind[0]);
+        sel("damagetool2-zantai-damageup-rate-monster2-kind", form.monsterKind[1]);
+        sel("damagetool2-zantai-damageup-rate-monster3-kind", form.monsterKind[2]);
+        sel("damagetool2-zantai-damageup-rate-monster4-kind", form.monsterKind[3]);
+        value("damagetool2-zantai-damageup-rate-monster1-rate", form.monsterRate[0]);
+        value("damagetool2-zantai-damageup-rate-monster2-rate", form.monsterRate[1]);
+        value("damagetool2-zantai-damageup-rate-monster3-rate", form.monsterRate[2]);
+        value("damagetool2-zantai-damageup-rate-monster4-rate", form.monsterRate[3]);
+        value("damagetool2-zantai-damageup-rate-id-reference", form.idReference);
+        list.appendChild(fragment);
+    }
+}
 function getDT2CalcSettingForm() {
     const sel = (id) => document.getElementById(id).value;
     const value = (id) => document.getElementById(id).value;
@@ -8649,6 +8679,7 @@ function loadSessionDamageTool2Form() {
             putDT2StatusFormList(false, data.heartsetStatusFormList);
             putDT2StatusFormList(true, data.nonHeartsetStatusFormList);
             putDT2SkillFormList(data.skillFormList);
+            putDT2DamgeupRateFormList(data.damageupRateFormList);
             putDT2RawCalcPairList(data.rawCalcPairList);
             // TODO
         }
