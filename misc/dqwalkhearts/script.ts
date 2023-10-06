@@ -9124,6 +9124,25 @@ function parseDT2CalcSettingForm(form: DT2CalcSettingForm): DT2CalcSetting {
     return result;
 }
 
+function putDT2CalcSettingForm(form: DT2CalcSettingForm): void {
+
+    const sel = (id: string, v: string) => (document.getElementById(id) as HTMLSelectElement).value = v;
+    const value = (id: string, v: string) => (document.getElementById(id) as HTMLInputElement).value = v;
+
+    value("damagetool2_zantai_calc_setting_weak_resist_zan", form.wrZan);
+    value("damagetool2_zantai_calc_setting_weak_resist_tai", form.wrTai);
+    value("damagetool2_zantai_calc_setting_weak_resist_zantai", form.wrZantai);
+    sel("damagetool2_zantai_calc_setting_weak_resist_zokusei1_kind", form.wrZokuseiKind[0]);
+    sel("damagetool2_zantai_calc_setting_weak_resist_zokusei2_kind", form.wrZokuseiKind[1]);
+    sel("damagetool2_zantai_calc_setting_weak_resist_zokusei3_kind", form.wrZokuseiKind[2]);
+    sel("damagetool2_zantai_calc_setting_weak_resist_zokusei4_kind", form.wrZokuseiKind[3]);
+    value("damagetool2_zantai_calc_setting_weak_resist_zokusei1_rate", form.wrZokuseiRate[0]);
+    value("damagetool2_zantai_calc_setting_weak_resist_zokusei2_rate", form.wrZokuseiRate[1]);
+    value("damagetool2_zantai_calc_setting_weak_resist_zokusei3_rate", form.wrZokuseiRate[2]);
+    value("damagetool2_zantai_calc_setting_weak_resist_zokusei4_rate", form.wrZokuseiRate[3]);
+    sel("damagetool2_zantai_calc_target_monster", form.targetMonsterKind);
+}
+
 const DT2_SESSION_STORAGE_KEY = STORAGE_KEY_DAMAGETOOL2_FORM + "-session";
 const DT2_ETERNAL_STORAGE_KEY = STORAGE_KEY_DAMAGETOOL2_FORM + "-eternal";
 
@@ -9285,7 +9304,7 @@ function loadSessionDamageTool2Form(): void {
             putDT2SkillFormList(data.skillFormList);
             putDT2DamgeupRateFormList(data.damageupRateFormList);
             putDT2RawCalcPairList(data.rawCalcPairList);
-            // TODO
+            putDT2CalcSettingForm(data.calcSettingForm);
 
         }
     } catch (err) {
