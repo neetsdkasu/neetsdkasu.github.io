@@ -9213,6 +9213,7 @@ interface DT2CalcSetting {
     wrZantai: number;
     wrZokuseiRate: number[];
     targetMonsterKind: number;
+    showNormalAttack: boolean;
 }
 
 interface DT2CalcSettingForm {
@@ -9222,11 +9223,13 @@ interface DT2CalcSettingForm {
     wrZokuseiKind: string[];
     wrZokuseiRate: string[];
     targetMonsterKind: string;
+    showNormalAttack: boolean;
 }
 
 function getDT2CalcSettingForm(): DT2CalcSettingForm {
     const sel = (id: string) => (document.getElementById(id) as HTMLSelectElement).value;
     const value = (id: string) => (document.getElementById(id) as HTMLInputElement).value;
+    const checked = (id: string) => (document.getElementById(id) as HTMLInputElement).checked;
     const result: DT2CalcSettingForm = {
         wrZan: value("damagetool2_zantai_calc_setting_weak_resist_zan"),
         wrTai: value("damagetool2_zantai_calc_setting_weak_resist_tai"),
@@ -9243,7 +9246,8 @@ function getDT2CalcSettingForm(): DT2CalcSettingForm {
             value("damagetool2_zantai_calc_setting_weak_resist_zokusei3_rate"),
             value("damagetool2_zantai_calc_setting_weak_resist_zokusei4_rate")
         ],
-        targetMonsterKind: sel("damagetool2_zantai_calc_target_monster")
+        targetMonsterKind: sel("damagetool2_zantai_calc_target_monster"),
+        showNormalAttack: checked("damagetool2_zantai_calc_setting_show_normal_attack")
     };
     return result;
 }
@@ -9263,7 +9267,8 @@ function parseDT2CalcSettingForm(form: DT2CalcSettingForm): DT2CalcSetting {
             },
             new Array(DT2_ZOKUSEI_KIND_MAX + 1).fill(0)
         ),
-        targetMonsterKind: toInt(form.targetMonsterKind, 0)
+        targetMonsterKind: toInt(form.targetMonsterKind, 0),
+        showNormalAttack: form.showNormalAttack
     }
     return result;
 }
@@ -9272,6 +9277,7 @@ function putDT2CalcSettingForm(form: DT2CalcSettingForm): void {
 
     const sel = (id: string, v: string) => (document.getElementById(id) as HTMLSelectElement).value = v;
     const value = (id: string, v: string) => (document.getElementById(id) as HTMLInputElement).value = v;
+    const checked = (id: string, c: boolean) => (document.getElementById(id) as HTMLInputElement).checked = c;
 
     value("damagetool2_zantai_calc_setting_weak_resist_zan", form.wrZan);
     value("damagetool2_zantai_calc_setting_weak_resist_tai", form.wrTai);
@@ -9285,6 +9291,7 @@ function putDT2CalcSettingForm(form: DT2CalcSettingForm): void {
     value("damagetool2_zantai_calc_setting_weak_resist_zokusei3_rate", form.wrZokuseiRate[2]);
     value("damagetool2_zantai_calc_setting_weak_resist_zokusei4_rate", form.wrZokuseiRate[3]);
     sel("damagetool2_zantai_calc_target_monster", form.targetMonsterKind);
+    checked("damagetool2_zantai_calc_setting_show_normal_attack", form.showNormalAttack);
 }
 
 const DT2_SESSION_STORAGE_KEY = STORAGE_KEY_DAMAGETOOL2_FORM + "-session";
@@ -9795,6 +9802,7 @@ document.getElementById("damagetool2_zantai_add_heartset_status_from_heartset")!
         showHeartsetViewDialog(heartset, `セット名: ${nameElem.value}`);
     });
     DT2HeartsetByStatusId.set(id, heartset);
+    list.scrollTop = 0;
     if (DEBUG) {
         console.log(`added Status from Heartset: ID: ${id}, NAME: ${name}, HEARTSET: ${heartset}`);
     }
@@ -9833,6 +9841,7 @@ document.getElementById("damagetool2_zantai_add_heartset_status_by_manual")!
             }
         }
     });
+    list.scrollTop = 0;
     if (DEBUG) {
         console.log(`added empty Status: ID: ${id}, NAME: ${name}`);
     }
@@ -9904,6 +9913,7 @@ document.getElementById("damagetool2_zantai_add_non_heartset_status")!
             }
         }
     });
+    list.scrollTop = 0;
     if (DEBUG) {
         console.log(`added empty Status: ID: ${id}, NAME: ${name}`);
     }
@@ -9955,6 +9965,7 @@ document.getElementById("damagetool2_zantai_add_skill")!
 
     const list = document.getElementById("damagetool2_zantai_skill_list")!;
     list.insertBefore(fragment, list.firstElementChild);
+    list.scrollTop = 0;
 });
 
 // スキルリストの削除
@@ -9977,6 +9988,7 @@ document.getElementById("damagetool2_zantai_add_damageup_rate")!
 
     const list = document.getElementById("damagetool2_zantai_damageup_rate_list")!;
     list.insertBefore(fragment, list.firstElementChild);
+    list.scrollTop = 0;
 });
 
 // ダメージアップ倍率リストの削除
@@ -10005,6 +10017,7 @@ document.getElementById("damagetool2_zantai_add_calc_pair")!
 
     const key = makeDT2CalcPairKey(hsId, nhsId);
     if (DT2UniqCalcPair.has(key)) {
+        dialogAlert("既に存在します");
         return;
     }
     DT2UniqCalcPair.set(key, true);
@@ -10022,6 +10035,7 @@ document.getElementById("damagetool2_zantai_add_calc_pair")!
 
     const list = document.getElementById("damagetool2_zantai_calc_pair_list")!;
     list.insertBefore(fragment, list.firstElementChild);
+    list.scrollTop = 0;
 });
 
 // 計算組み合わせリストの削除
@@ -10042,6 +10056,7 @@ document.getElementById("damagetool2_zantai_calc")!
     }
     const resultElem = document.getElementById("damagetool2_zantai_calc_result")!;
     resultElem.innerHTML = "";
+    resultElem.scrollTop = 0;
 
     const calcSetting = parseDT2CalcSettingForm(getDT2CalcSettingForm());
     const targetMonsterKind = calcSetting.targetMonsterKind;
@@ -10076,21 +10091,23 @@ document.getElementById("damagetool2_zantai_calc")!
 
         const tbody = table.appendChild(document.createElement("tbody"));
 
-        const normalAttackHeader = tbody.appendChild(document.createElement("tr")).appendChild(document.createElement("th"));
-        normalAttackHeader.colSpan = 6;
-        normalAttackHeader.textContent = "通常攻撃";
+        if (calcSetting.showNormalAttack) {
+            const normalAttackHeader = tbody.appendChild(document.createElement("tr")).appendChild(document.createElement("th"));
+            normalAttackHeader.colSpan = 6;
+            normalAttackHeader.textContent = "通常攻撃";
 
-        for (const cp of calcPairList) {
-            const tr = tbody.appendChild(document.createElement("tr"));
-            tr.appendChild(document.createElement("td")).textContent = cp.heartsetStatusName;
-            tr.appendChild(document.createElement("td")).textContent = cp.nonHeartsetStatusName;
-            const st1 = statusMap.get(cp.heartsetStatusId)!;
-            const st2 = statusMap.get(cp.nonHeartsetStatusId)!;
-            const mr = (100 + st1.monsterRate[targetMonsterKind] + st2.monsterRate[targetMonsterKind]) / 100;
-            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(st1.power + st2.power, defence))}`;
-            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.2), defence))}`;
-            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.4), defence))}`;
-            tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.6), defence))}`;
+            for (const cp of calcPairList) {
+                const tr = tbody.appendChild(document.createElement("tr"));
+                tr.appendChild(document.createElement("td")).textContent = cp.heartsetStatusName;
+                tr.appendChild(document.createElement("td")).textContent = cp.nonHeartsetStatusName;
+                const st1 = statusMap.get(cp.heartsetStatusId)!;
+                const st2 = statusMap.get(cp.nonHeartsetStatusId)!;
+                const mr = (100 + st1.monsterRate[targetMonsterKind] + st2.monsterRate[targetMonsterKind]) / 100;
+                tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(st1.power + st2.power, defence))}`;
+                tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.2), defence))}`;
+                tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.4), defence))}`;
+                tr.appendChild(document.createElement("td")).textContent = `${Math.floor(mr * baseDamage(Math.floor((st1.power + st2.power) * 1.6), defence))}`;
+            }
         }
 
         for (const skill of skillList) {
