@@ -8,15 +8,43 @@ footer
     margin: 2rem 0px;
 }
 
-.extend:focus {
+.extend:focus
+{
     position: absolute;
     z-index: 3;
     width: 50em;
     padding: 1em;
 }
 
-.pad1 {
+.mar05
+{
+    margin: 0.5em;
+}
+
+.mar1
+{
+    margin: 1em;
+}
+
+.pad05
+{
+    padding: 0.5em;
+}
+
+.pad1
+{
     padding: 1em;
+}
+
+.hover-outline
+{
+    border: 1px solid rgba(0,0,0,0);
+    margin: 5px;
+}
+
+.hover-outline:hover
+{
+    border: 1px solid gray;
 }
 
 .outline
@@ -37,6 +65,7 @@ section.outline
     margin-bottom: 1rem;
 }
 
+.subtitle,
 #damage_result > details > summary,
 .damagetool > details > div.outline > div.small,
 section.reallyneeded > details > div.outline > div.small,
@@ -218,6 +247,13 @@ input[type="checkbox"]:disabled + label,
     overflow-y: scroll;
 }
 
+.yscroll-half
+{
+    height: 24rem;
+    overflow-y: scroll;
+}
+
+.yscroll,
 #adoption_heartset_list,
 #reallyneeded_result,
 #heart_list
@@ -279,6 +315,7 @@ td
     font-size: 0.5rem;
 }
 
+table.tr-hover > tbody > tr:hover,
 table.reallyneeded > tbody > tr:hover
 {
     background-color: #aaeeee;
@@ -329,4 +366,9 @@ div.outline.reallyneeded
 .changed-rank-info > span
 {
     margin-left: 2em;
+}
+
+::placeholder
+{
+    color: silver;
 }
