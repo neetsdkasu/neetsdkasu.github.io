@@ -18,6 +18,7 @@ const STORAGE_KEY_ADOPT_HEARTSET = LOCAL_STORAGE_PATH + ".adopt_heartset";
 const STORAGE_KEY_HEARTSET_SEARCH = LOCAL_STORAGE_PATH + ".heartset_search";
 const STORAGE_KEY_REALLYNEEDED_FORM = LOCAL_STORAGE_PATH + ".reallyneeded_form";
 const STORAGE_KEY_DAMAGETOOL2_FORM = LOCAL_STORAGE_PATH + ".damagetool2_form";
+const STORAGE_KEY_MANUAL_HEAERTSET_FORM = LOCAL_STORAGE_PATH + ".manual_heartset_form";
 function dialogAlert(msg) {
     if (DEBUG) {
         console.log(`dialogAlert: ${msg}`);
@@ -313,6 +314,7 @@ const JobPresetMaximumCost = [
         ]
     },
     { id: 300, maximumCostList: [
+            { level: 24, maximumCost: 378 },
             { level: 23, maximumCost: 374 },
             { level: 22, maximumCost: 368 },
             { level: 21, maximumCost: 364 },
@@ -2918,6 +2920,21 @@ function loadHeartSetSearchForm() {
             elem("heart_require_skill_expression_2").required = data.reqSkill && data.reqSkill2;
             elem("heart_require_skill_expression_3").required = data.reqSkill && data.reqSkill2 && data.reqSkill3;
             elem("heart_require_skill_expression_4").required = data.reqSkill && data.reqSkill2 && data.reqSkill3 && data.reqSkill4;
+            const maximumCostList = document.getElementById("job_preset_maximum_cost_list");
+            maximumCostList.innerHTML = "";
+            const jobId = parseInt(data.jobId);
+            for (const x of JobPresetMaximumCost) {
+                if (jobId < x.id || x.id + 100 <= jobId) {
+                    continue;
+                }
+                currentJobPresetMaximumCostId = x.id;
+                for (const item of x.maximumCostList) {
+                    const op = maximumCostList.appendChild(document.createElement("option"));
+                    op.value = `${item.maximumCost}`;
+                    op.textContent = ` Lv ${item.level}`;
+                }
+                break;
+            }
         }
     }
     catch (err) {
@@ -7615,9 +7632,7 @@ document.getElementById("manualset_as_limit_heart_cost")
     showManualHeartset();
 });
 let currentManualsetJobPresetMaximumCostId = 0;
-// マニュアルこころセットのフォームにて
-// 職業ごとのこころ枠の組み合わせをフォームに設定する
-document.getElementById("manualset_job").addEventListener("change", () => {
+function setManualsetJobPreset() {
     const sel = document.getElementById("manualset_job");
     const value = parseInt(sel.value ?? "0");
     for (const job of JobPreset) {
@@ -7668,64 +7683,97 @@ document.getElementById("manualset_job").addEventListener("change", () => {
             }
         }
         document.getElementById("manualset_power_up").textContent = `${job.powerUp}`;
-        showManualHeartset();
-        return;
+        return true;
     }
-    dialogAlert(`Unknown ID: ${value}`);
+    return false;
+}
+// マニュアルこころセットのフォームにて
+// 職業ごとのこころ枠の組み合わせをフォームに設定する
+document.getElementById("manualset_job").addEventListener("change", () => {
+    if (setManualsetJobPreset()) {
+        showManualHeartset();
+    }
+    else {
+        dialogAlert("Error");
+    }
 });
 // マニュアルこころセットのフォームにて
 // 初期値の職業のこころ枠の組み合わせをフォームに設定する
 (function () {
-    const sel = document.getElementById("manualset_job");
-    const value = parseInt(sel.value ?? "0");
-    for (const job of JobPreset) {
-        if (job.id !== value) {
-            continue;
+    setManualsetJobPreset();
+})();
+// マニュアルこころセットのフォームをブラウザのセッションストレージに保存
+function saveManualHeartsetForm() {
+    if (DEBUG) {
+        console.log("call saveManualHeartsetForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no save to storage");
         }
-        const maximumCostList = document.getElementById("manualset_job_preset_maximum_cost_list");
-        maximumCostList.innerHTML = "";
-        for (const x of JobPresetMaximumCost) {
-            if (job.id < x.id || x.id + 100 <= job.id) {
-                continue;
-            }
-            for (const item of x.maximumCostList) {
-                const op = maximumCostList.appendChild(document.createElement("option"));
-                op.value = `${item.maximumCost}`;
-                op.textContent = ` Lv ${item.level}`;
-            }
-        }
-        const COLORS = [Color.Yellow, Color.Purple, Color.Green, Color.Red, Color.Blue];
-        for (let i = 0; i < 4; i++) {
-            const e = document.getElementById(`manualset_heart${i + 1}`);
-            e.innerHTML = "";
-            let foundColor = false;
-            if (i < job.colors.length) {
-                const color = job.colors[i];
-                for (const c of COLORS) {
-                    if ((c & color) === 0) {
-                        continue;
-                    }
-                    foundColor = true;
-                    const info = SingleColorInfoMap.get(c);
-                    const span = e.appendChild(document.createElement("span"));
-                    span.classList.add(info.colorName);
-                    span.textContent = info.text;
-                }
-            }
-            const t = document.getElementById(`manualset_heart${i + 1}_name`);
-            if (!foundColor) {
-                e.textContent = "－";
-                t.value = "";
-                t.disabled = true;
-            }
-            else {
-                t.disabled = false;
-            }
-        }
-        document.getElementById("manualset_power_up").textContent = `${job.powerUp}`;
         return;
     }
-})();
+    try {
+        const checked = (id) => document.getElementById(id).checked;
+        const value = (id) => document.getElementById(id).value;
+        const sel = (id) => document.getElementById(id).value;
+        const data = {
+            jobId: sel("manualset_job"),
+            hearts: [
+                value("manualset_heart1_name"),
+                value("manualset_heart2_name"),
+                value("manualset_heart3_name"),
+                value("manualset_heart4_name")
+            ],
+            maximuCost: value("manualset_heart_maximum_cost"),
+            asLimit: checked("manualset_as_limit_heart_cost")
+        };
+        const json = JSON.stringify(data);
+        window.sessionStorage.setItem(STORAGE_KEY_MANUAL_HEAERTSET_FORM, json);
+        if (DEBUG) {
+            console.log("saved to storage");
+        }
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
+// マニュアルこころセットのフォームをブラウザのセッションストレージから読み込む
+function loadManualHeartsetForm() {
+    if (DEBUG) {
+        console.log("call saveManualHeartsetForm");
+    }
+    if (NO_STORAGE) {
+        if (DEBUG) {
+            console.log("no load from storage");
+        }
+        return;
+    }
+    try {
+        const json = window.sessionStorage.getItem(STORAGE_KEY_MANUAL_HEAERTSET_FORM);
+        if (json !== null) {
+            const checked = (id, c) => document.getElementById(id).checked = c;
+            const value = (id, v) => document.getElementById(id).value = v;
+            const sel = (id, v) => document.getElementById(id).value = v;
+            const data = JSON.parse(json);
+            sel("manualset_job", data.jobId);
+            value("manualset_heart1_name", data.hearts[0]);
+            value("manualset_heart2_name", data.hearts[1]);
+            value("manualset_heart3_name", data.hearts[2]);
+            value("manualset_heart4_name", data.hearts[3]);
+            value("manualset_heart_maximum_cost", data.maximuCost);
+            checked("manualset_as_limit_heart_cost", data.asLimit);
+            if (setManualsetJobPreset()) {
+                showManualHeartset();
+            }
+        }
+    }
+    catch (err) {
+        NO_STORAGE = true;
+        console.log(err);
+    }
+}
 /////////////////////////////////////////////////////////////////////////////////////
 // ダメージ計算ツール（雑） v2
 /////////////////////////////////////////////////////////////////////////////////////
@@ -9505,6 +9553,7 @@ window.addEventListener("pagehide", () => {
     saveHeartSetSearchForm();
     saveRNForm();
     saveDamageTool2Form();
+    saveManualHeartsetForm();
 });
 // ページのURLのパラメータの処理
 (function () {
@@ -9578,6 +9627,7 @@ window.addEventListener("pagehide", () => {
         loadHeartSetSearchForm();
         loadRNForm();
         loadDamageTool2Form();
+        loadManualHeartsetForm();
     }
 })();
 // デバッグモードであることの確認
