@@ -3106,6 +3106,23 @@ function loadHeartSetSearchForm(): void {
             elem("heart_require_skill_expression_2").required = data.reqSkill && data.reqSkill2;
             elem("heart_require_skill_expression_3").required = data.reqSkill && data.reqSkill2 && data.reqSkill3;
             elem("heart_require_skill_expression_4").required = data.reqSkill && data.reqSkill2 && data.reqSkill3 && data.reqSkill4;
+
+            const maximumCostList = document.getElementById("job_preset_maximum_cost_list")!;
+            maximumCostList.innerHTML = "";
+            const jobId = parseInt(data.jobId);
+            for (const x of JobPresetMaximumCost) {
+                if (jobId < x.id || x.id + 100 <= jobId) {
+                    continue;
+                }
+                currentJobPresetMaximumCostId = x.id;
+                for (const item of x.maximumCostList) {
+                    const op = maximumCostList.appendChild(document.createElement("option"));
+                    op.value = `${item.maximumCost}`;
+                    op.textContent = ` Lv ${item.level}`;
+                }
+                break;
+            }
+
         }
     } catch (err) {
         NO_STORAGE = true;
