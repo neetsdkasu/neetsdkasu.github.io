@@ -314,6 +314,7 @@ const JobPresetMaximumCost = [
         ]
     },
     { id: 300, maximumCostList: [
+            { level: 25, maximumCost: 384 },
             { level: 24, maximumCost: 378 },
             { level: 23, maximumCost: 374 },
             { level: 22, maximumCost: 368 },
