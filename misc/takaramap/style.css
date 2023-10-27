@@ -1,0 +1,33 @@
+
+body {
+    padding: 5rem;
+}
+
+#map_list {
+    height: 32rem;
+    overflow-y: scroll;
+    border: 1px solid black;
+    padding: 2px;
+}
+
+.mr > * {
+    margin-right: 1em;
+}
+
+.blue {
+    color: blue;
+}
+
+.red {
+    color: red;
+}
+
+.small {
+    font-size: x-small;
+}
+
+.outline {
+  outline: 1px solid black;
+  padding: 5px;
+  margin: 5px;
+}
