@@ -183,7 +183,7 @@ function deleteTakaraMap(id: number): void {
         return;
     }
     const list1 = takaraMapList.slice(0, index);
-    const list2 = takaraMapList.slice(index);
+    const list2 = takaraMapList.slice(index + 1);
     takaraMapList = list1.concat(list2);
 }
 
@@ -461,7 +461,8 @@ function showList(): void {
         (elem("mark") as HTMLSelectElement).value = tm.mark;
 
         const mark = elem("mark") as HTMLSelectElement;
-        const button = elem("delete");
+        const deleteButton = elem("delete");
+        const copyButton = elem("copy");
         const check = elem("check") as HTMLInputElement;
 
         listElem.appendChild(fragment);
@@ -471,18 +472,42 @@ function showList(): void {
             saveData();
         });
 
-        button.addEventListener("click", () => {
+        deleteButton.addEventListener("click", () => {
             if (!check.checked) {
                 alert("DELにチェックを入れないと削除できません");
                 return;
             }
             deleteTakaraMap(tm.id);
             saveData();
+            updateSuggestion();
             showList();
         });
+        copyButton.addEventListener("click", () => {
+            const form = document.getElementById("add_form") as HTMLFormElement;
+            const elems = form.elements;
+            const sel = (name: string, v: string) => (elems.namedItem(name) as HTMLSelectElement).value = v;
+            const value = (name: string, v: string) => (elems.namedItem(name) as HTMLInputElement).value = v;
+            sel("grade", tm.form.grade);
+            sel("location", tm.form.location);
+            sel("jobclass", tm.form.jobclass);
+            value("level", tm.form.level);
+            sel("field", tm.form.field);
+            value("name", tm.form.name);
+            value("monster1", tm.form.monster[0]);
+            value("monster2", tm.form.monster[1]);
+            value("monster3", tm.form.monster[2]);
+            value("monster1count", tm.form.count[0]);
+            value("monster2count", tm.form.count[1]);
+            value("monster3count", tm.form.count[2]);
+            value("boss", tm.form.boss);
+            value("special", tm.form.special.join(" "));
+            value("standard", tm.form.standard.join(" "));
+            value("metal", tm.form.metal);
+            const dialog = document.getElementById("add_dialog") as HTMLDialogElement;
+            dialog.showModal();
+        });0
     });
 }
-
 
 function addToList(form: TakaraMapForm): number {
     const id = takaraMapId++;

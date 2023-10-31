@@ -138,7 +138,7 @@ function deleteTakaraMap(id) {
         return;
     }
     const list1 = takaraMapList.slice(0, index);
-    const list2 = takaraMapList.slice(index);
+    const list2 = takaraMapList.slice(index + 1);
     takaraMapList = list1.concat(list2);
 }
 function getFilterParams() {
@@ -388,22 +388,49 @@ function showList() {
         text("metal", tm.form.metal);
         elem("mark").value = tm.mark;
         const mark = elem("mark");
-        const button = elem("delete");
+        const deleteButton = elem("delete");
+        const copyButton = elem("copy");
         const check = elem("check");
         listElem.appendChild(fragment);
         mark.addEventListener("change", () => {
             tm.mark = mark.value;
             saveData();
         });
-        button.addEventListener("click", () => {
+        deleteButton.addEventListener("click", () => {
             if (!check.checked) {
                 alert("DELにチェックを入れないと削除できません");
                 return;
             }
             deleteTakaraMap(tm.id);
             saveData();
+            updateSuggestion();
             showList();
         });
+        copyButton.addEventListener("click", () => {
+            const form = document.getElementById("add_form");
+            const elems = form.elements;
+            const sel = (name, v) => elems.namedItem(name).value = v;
+            const value = (name, v) => elems.namedItem(name).value = v;
+            sel("grade", tm.form.grade);
+            sel("location", tm.form.location);
+            sel("jobclass", tm.form.jobclass);
+            value("level", tm.form.level);
+            sel("field", tm.form.field);
+            value("name", tm.form.name);
+            value("monster1", tm.form.monster[0]);
+            value("monster2", tm.form.monster[1]);
+            value("monster3", tm.form.monster[2]);
+            value("monster1count", tm.form.count[0]);
+            value("monster2count", tm.form.count[1]);
+            value("monster3count", tm.form.count[2]);
+            value("boss", tm.form.boss);
+            value("special", tm.form.special.join(" "));
+            value("standard", tm.form.standard.join(" "));
+            value("metal", tm.form.metal);
+            const dialog = document.getElementById("add_dialog");
+            dialog.showModal();
+        });
+        0;
     });
 }
 function addToList(form) {
