@@ -405,6 +405,7 @@ function showList() {
             saveData();
             updateSuggestion();
             showList();
+            alert(`『${tm.form.name}』を削除しました`);
         });
         copyButton.addEventListener("click", () => {
             const form = document.getElementById("add_form");
