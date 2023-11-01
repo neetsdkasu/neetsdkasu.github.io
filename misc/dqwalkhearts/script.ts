@@ -1753,7 +1753,7 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         for (const param in heart) {
             if (param in h === false) {
                 if (param === "dexterity" && ("deftness" in h)) {
-                    h["dexterity"] = h["deftness"];
+                    h["dexterity"] = h["deftness"] as number;
                     delete h["deftness"];
                 } else if (isOldFormatColor && param === "color") {
                     h["color"] = m.curColor;
@@ -7533,7 +7533,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr = parseExpression(refExprSrc);
         } catch (ex) {
-            dialogAlert(`参考値1の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値1の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7545,7 +7545,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr2 = parseExpression(refExpr2Src);
         } catch (ex) {
-            dialogAlert(`参考値2の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値2の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7557,7 +7557,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr3 = parseExpression(refExpr3Src);
         } catch (ex) {
-            dialogAlert(`参考値3の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値3の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7569,7 +7569,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr4 = parseExpression(refExpr4Src);
         } catch (ex) {
-            dialogAlert(`参考値4の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値4の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7581,7 +7581,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr5 = parseExpression(refExpr5Src);
         } catch (ex) {
-            dialogAlert(`参考値5の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値5の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7593,7 +7593,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr6 = parseExpression(refExpr6Src);
         } catch (ex) {
-            dialogAlert(`参考値6の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値6の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7657,7 +7657,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
             try {
                 scorer = parseExpression(expr);
             } catch (ex) {
-                dialogAlert(`${spec.refName}でエラー: ${ex.getMessage()}`);
+                dialogAlert(`${spec.refName}でエラー: ${(ex as ExprSyntaxError).getMessage()}`);
                 return;
             }
         }
@@ -8528,7 +8528,7 @@ function isValidDT2ImportSettingForm(data: DT2ImportSettingForm | unknown): data
             }
         }
     }
-    const listKindField = [["zokuseiKind", DT2_ZOKUSEI_KIND_MAX], ["monsterKind", DT2_MONSTER_KIND_MAX]];
+    const listKindField: [string, number][] = [["zokuseiKind", DT2_ZOKUSEI_KIND_MAX], ["monsterKind", DT2_MONSTER_KIND_MAX]];
     for (const field of listKindField) {
         const f = field[0];
         if (!(f in obj1) || !Array.isArray(obj1[f])) {
