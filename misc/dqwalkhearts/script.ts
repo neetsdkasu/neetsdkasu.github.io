@@ -17,7 +17,7 @@ if (DEBUG) {
     console.log("DEBUG MODE");
 }
 
-const LIMIT_OF_HEARTEST = 300;
+const LIMIT_OF_HEARTEST = 50;
 
 let EXPOSE_MODE = false;
 
@@ -284,6 +284,8 @@ const JobPreset: Job[] = [
     { id: 305, name: "魔剣士", powerUp: 1.3,
         colors: [Color.Red|Color.Purple, Color.Rainbow, Color.Red|Color.Purple, Color.Red|Color.Purple] },
     { id: 306, name: "守護天使", powerUp: 1.3,
+        colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow|Color.Blue, Color.Yellow] },
+    { id: 307, name: "守り人", powerUp: 1.3,
         colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow|Color.Blue, Color.Yellow] }
 ];
 
@@ -1753,7 +1755,7 @@ function isMonster(anyobj: Monster | unknown): anyobj is Monster {
         for (const param in heart) {
             if (param in h === false) {
                 if (param === "dexterity" && ("deftness" in h)) {
-                    h["dexterity"] = h["deftness"];
+                    h["dexterity"] = h["deftness"] as number;
                     delete h["deftness"];
                 } else if (isOldFormatColor && param === "color") {
                     h["color"] = m.curColor;
@@ -3155,6 +3157,13 @@ interface NumState {
 
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
 // 組み合わせ爆発回避用
+// TODO バグがある？正しい組み合わせ数になっていない
+//      セットの重複を排除できていないせいかもしれない
+//      重複とは、赤枠と虹枠の両方とも赤こころのとき位置を入れ替えてもスコアが変わらないが別物として扱われる
+//        同様に、青枠と黄枠の両方とも赤こころのとき位置を入れ替えてもスコアが変わらないが別物として扱われる
+//      並び順の理屈的には重複は1つのセットあたり最大で4*3*2*1=12通りとなるはずだがそうはなっていない
+//        実際は1件しか表示されなくても、こちらでは384件見つかったことになる場合がある、謎
+//          384=32*12である…32とは…？ 2^5=32か？どこかで2倍2倍2倍…と増えていっている？
 // TODO 最終的なベストの組み合わせ数だけじゃなく、
 //      途中段階で異常な組み合わせ数が出る可能性を考慮したほうがいい
 //      メモリ不足回避のために
@@ -4367,8 +4376,18 @@ document.getElementById("search_heart_dialog")!
     try {
         const target = parseTarget(elements);
         const num = calcNumOfBestHeartSet(target);
-        if (num > LIMIT_OF_HEARTEST) {
-            dialogAlert(`該当する件数が多すぎる ${num}`);
+        // TODO 組み合わせ数が正しく計算されておらず
+        //      件数が実際の最大384倍になる可能性がある？
+        //      (384倍よりも大きくなる可能性もある…組み合わせの重複排除ができてないため…)
+        if (DEBUG) {
+            alert(`見つかる可能性の件数: ${Math.ceil(num/384)} ～ ${num}`);
+            console.log(`見つかる可能性の件数: ${Math.ceil(num/384)} ～ ${num}`);
+        }
+        // TODO 念のために適当な数で割ったものを暫定件数とみなす…
+        //      正しい組み合わせ数を求められないと
+        //      膨大な数の状態を保持する検索が実行されてしまうためメモリ不足でブラウザぶっこわれる
+        if (Math.ceil(num / 240) > LIMIT_OF_HEARTEST) {
+            dialogAlert("該当する件数が非常に多い可能性が高いため検索を中止しました");
             return;
         }
         searchHeartSet(target);
@@ -4800,6 +4819,7 @@ document.getElementById("expr_rec_dialog")!
         } else {
             targetElem.value = expr;
         }
+        checkExpressionValidity(targetId);
     } else {
         if (isAppend) {
             targetElem.textContent += expr;
@@ -7533,7 +7553,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr = parseExpression(refExprSrc);
         } catch (ex) {
-            dialogAlert(`参考値1の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値1の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7545,7 +7565,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr2 = parseExpression(refExpr2Src);
         } catch (ex) {
-            dialogAlert(`参考値2の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値2の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7557,7 +7577,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr3 = parseExpression(refExpr3Src);
         } catch (ex) {
-            dialogAlert(`参考値3の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値3の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7569,7 +7589,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr4 = parseExpression(refExpr4Src);
         } catch (ex) {
-            dialogAlert(`参考値4の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値4の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7581,7 +7601,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr5 = parseExpression(refExpr5Src);
         } catch (ex) {
-            dialogAlert(`参考値5の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値5の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7593,7 +7613,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
         try {
             refExpr6 = parseExpression(refExpr6Src);
         } catch (ex) {
-            dialogAlert(`参考値6の式にエラー: ${ex.getMessage()}`);
+            dialogAlert(`参考値6の式にエラー: ${(ex as ExprSyntaxError).getMessage()}`);
             return;
         }
     }
@@ -7657,7 +7677,7 @@ document.getElementById("reallyneeded_start")!.addEventListener("click", () => {
             try {
                 scorer = parseExpression(expr);
             } catch (ex) {
-                dialogAlert(`${spec.refName}でエラー: ${ex.getMessage()}`);
+                dialogAlert(`${spec.refName}でエラー: ${(ex as ExprSyntaxError).getMessage()}`);
                 return;
             }
         }
@@ -8528,7 +8548,7 @@ function isValidDT2ImportSettingForm(data: DT2ImportSettingForm | unknown): data
             }
         }
     }
-    const listKindField = [["zokuseiKind", DT2_ZOKUSEI_KIND_MAX], ["monsterKind", DT2_MONSTER_KIND_MAX]];
+    const listKindField: [string, number][] = [["zokuseiKind", DT2_ZOKUSEI_KIND_MAX], ["monsterKind", DT2_MONSTER_KIND_MAX]];
     for (const field of listKindField) {
         const f = field[0];
         if (!(f in obj1) || !Array.isArray(obj1[f])) {

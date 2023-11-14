@@ -9,7 +9,7 @@ const DEBUG = DEVELOP || new URLSearchParams(window.location.search).has("DEBUG"
 if (DEBUG) {
     console.log("DEBUG MODE");
 }
-const LIMIT_OF_HEARTEST = 300;
+const LIMIT_OF_HEARTEST = 50;
 let EXPOSE_MODE = false;
 const LOCAL_STORAGE_PATH = "dqwalkhearts";
 const STORAGE_KEY_MONSTER_LIST = LOCAL_STORAGE_PATH;
@@ -218,6 +218,8 @@ const JobPreset = [
     { id: 305, name: "魔剣士", powerUp: 1.3,
         colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple] },
     { id: 306, name: "守護天使", powerUp: 1.3,
+        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow] },
+    { id: 307, name: "守り人", powerUp: 1.3,
         colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow] }
 ];
 const JobPresetMaximumCost = [
@@ -2949,6 +2951,13 @@ function loadHeartSetSearchForm() {
 }
 // 最大スコアのこころセットの組み合わせ数を求めるだけ
 // 組み合わせ爆発回避用
+// TODO バグがある？正しい組み合わせ数になっていない
+//      セットの重複を排除できていないせいかもしれない
+//      重複とは、赤枠と虹枠の両方とも赤こころのとき位置を入れ替えてもスコアが変わらないが別物として扱われる
+//        同様に、青枠と黄枠の両方とも赤こころのとき位置を入れ替えてもスコアが変わらないが別物として扱われる
+//      並び順の理屈的には重複は1つのセットあたり最大で4*3*2*1=12通りとなるはずだがそうはなっていない
+//        実際は1件しか表示されなくても、こちらでは384件見つかったことになる場合がある、謎
+//          384=32*12である…32とは…？ 2^5=32か？どこかで2倍2倍2倍…と増えていっている？
 // TODO 最終的なベストの組み合わせ数だけじゃなく、
 //      途中段階で異常な組み合わせ数が出る可能性を考慮したほうがいい
 //      メモリ不足回避のために
@@ -4108,8 +4117,18 @@ document.getElementById("search_heart_dialog")
     try {
         const target = parseTarget(elements);
         const num = calcNumOfBestHeartSet(target);
-        if (num > LIMIT_OF_HEARTEST) {
-            dialogAlert(`該当する件数が多すぎる ${num}`);
+        // TODO 組み合わせ数が正しく計算されておらず
+        //      件数が実際の最大384倍になる可能性がある？
+        //      (384倍よりも大きくなる可能性もある…組み合わせの重複排除ができてないため…)
+        if (DEBUG) {
+            alert(`見つかる可能性の件数: ${Math.ceil(num / 384)} ～ ${num}`);
+            console.log(`見つかる可能性の件数: ${Math.ceil(num / 384)} ～ ${num}`);
+        }
+        // TODO 念のために適当な数で割ったものを暫定件数とみなす…
+        //      正しい組み合わせ数を求められないと
+        //      膨大な数の状態を保持する検索が実行されてしまうためメモリ不足でブラウザぶっこわれる
+        if (Math.ceil(num / 240) > LIMIT_OF_HEARTEST) {
+            dialogAlert("該当する件数が非常に多い可能性が高いため検索を中止しました");
             return;
         }
         searchHeartSet(target);
@@ -4535,6 +4554,7 @@ document.getElementById("expr_rec_dialog")
         else {
             targetElem.value = expr;
         }
+        checkExpressionValidity(targetId);
     }
     else {
         if (isAppend) {
