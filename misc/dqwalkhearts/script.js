@@ -4537,6 +4537,7 @@ document.getElementById("expr_rec_dialog")
         else {
             targetElem.value = expr;
         }
+        checkExpressionValidity(targetId);
     }
     else {
         if (isAppend) {
