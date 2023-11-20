@@ -141,12 +141,16 @@ function getMonsterCountByGrade(grade: string): string | null {
     
     switch (gradeStr) {
         case "S+":
+        case "RS+":
             return "4";
         case "S":
+        case "RS":
             return "3";
         case "A":
+        case "RA":
             return "2";
         case "C":
+        case "RC":
             return "1";
         default:
             return null;
