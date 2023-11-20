@@ -256,6 +256,116 @@ function matchFilter(filter: FilterParams | null, tm: TakaraMap): boolean {
             t => tm.form.special.includes(t) || tm.form.standard.includes(t) || tm.form.metal === t);
 }
 
+interface Area {
+    areaId: string;
+    areaName: string;
+    locationId: string;
+    locationName: string;
+    order: number;
+}
+
+const areaByIdMap: Map<string, Area> = new Map();
+
+(function() {
+    const elems = document.getElementById("location")!.querySelectorAll(":scope > option");
+    for (const opt of elems) {
+        const locationId = (opt as HTMLOptionElement).value;
+        const locationName = opt.textContent!;
+        const area: Area = { 
+            areaId: "0",
+            areaName: "？",
+            locationId: locationId,
+            locationName: locationName,
+            order: 0
+        };
+        switch (locationName) {
+            case "北海道":
+                area.areaId = "1";
+                area.areaName = "北海道";
+                break;
+            case "青森": area.order++;
+            case "岩手": area.order++;
+            case "宮城": area.order++;
+            case "秋田": area.order++;
+            case "山形": area.order++;
+            case "福島":
+                area.areaId = "2";
+                area.areaName = "東北";
+                break;
+            case "茨城": area.order++;
+            case "栃木": area.order++;
+            case "群馬": area.order++;
+            case "埼玉": area.order++;
+            case "千葉": area.order++;
+            case "東京": area.order++;
+            case "神奈川":
+                area.areaId = "3";
+                area.areaName = "関東";
+                break;
+            case "新潟": area.order++;
+            case "富山": area.order++;
+            case "石川": area.order++;
+            case "福井": area.order++;
+            case "山梨": area.order++;
+            case "長野": area.order++;
+            case "岐阜": area.order++;
+            case "静岡": area.order++;
+            case "愛知":
+                area.areaId = "4";
+                area.areaName = "中部";
+                break;
+            case "三重": area.order++;
+            case "滋賀": area.order++;
+            case "京都": area.order++;
+            case "大阪": area.order++;
+            case "兵庫": area.order++;
+            case "奈良": area.order++;
+            case "和歌山":
+                area.areaId = "5";
+                area.areaName = "近畿";
+                break;
+            case "鳥取": area.order++;
+            case "島根": area.order++;
+            case "岡山": area.order++;
+            case "広島": area.order++;
+            case "山口":
+                area.areaId = "6";
+                area.areaName = "中国";
+                break;
+            case "徳島": area.order++;
+            case "香川": area.order++;
+            case "愛媛": area.order++;
+            case "高知":
+                area.areaId = "7";
+                area.areaName = "四国";
+                break;
+            case "福岡": area.order++;
+            case "佐賀": area.order++;
+            case "長崎": area.order++;
+            case "熊本": area.order++;
+            case "大分": area.order++;
+            case "宮崎": area.order++;
+            case "鹿児島": area.order++;
+            case "沖縄":
+                area.areaId = "8";
+                area.areaName = "九州・沖縄";
+                break;
+            default:
+                area.areaId = "0";
+                area.areaName = "？";
+                break;
+        }
+        areaByIdMap.set(locationId, area);
+    }
+
+
+})();
+
+function comapreArea(a: Area, b: Area): number {
+    const cmp = a.areaId.localeCompare(b.areaId);
+    return cmp !== 0 ? cmp : (b.order - a.order);
+}
+
 function sortList(): void {
     const order = (document.getElementById("list_order") as HTMLSelectElement).value;
     switch (order) {
@@ -267,6 +377,9 @@ function sortList(): void {
             break;
         case "location":
             takaraMapList.sort((a, b) => a.form.location.localeCompare(b.form.location));
+            break;
+        case "area":
+            takaraMapList.sort((a, b) => comapreArea(areaByIdMap.get(a.form.location)!, areaByIdMap.get(b.form.location)!));
             break;
         case "level":
             takaraMapList.sort((a, b) => compareLevel(a.form, b.form));
@@ -298,6 +411,7 @@ function showList(): void {
     const fieldMap: Map<string, number> = new Map();
     const gradeMap: Map<string, number> = new Map();
     const markMap: Map<string, number> = new Map();
+    const areaMap: Map<string, number> = new Map();
 
     const count = (m: Map<string, number>, k: string) => m.set(k, (m.get(k) ?? 0) + 1);
 
@@ -310,6 +424,7 @@ function showList(): void {
         tm.form.standard.forEach(mon => count(standardMap, mon));
         count(metalMap, tm.form.metal);
         count(locationMap, tm.form.location);
+        count(areaMap, areaByIdMap.get(tm.form.location)!.areaId);
         count(fieldMap, tm.form.field);
         count(gradeMap, tm.form.grade);
         count(markMap, tm.mark);
@@ -327,6 +442,11 @@ function showList(): void {
     const locationStr = optionSet("location");
     const jobclassStr = optionSet("jobclass");
     const fieldStr = optionSet("field");
+
+    const areaStr: Map<string, string> = new Map();
+    for (const a of areaByIdMap.values()) {
+        areaStr.set(a.areaId, a.areaName);
+    }
 
     const markStr: Map<string, string> = new Map();
     for (const op of (document.getElementById("map_item_template") as HTMLTemplateElement).content.querySelectorAll(".item-mark option")) {
@@ -354,6 +474,15 @@ function showList(): void {
     showCount("monster_count_list", "monster_list", monsterMap, (n: string) => n);
     showCount("boss_count_list", "boss_list", bossMap, (n: string) => n);
     showCount("metal_count_list", "metal_list", metalMap, (n: string) => n);
+
+    const areaCountListElem = document.getElementById("area_count_list")!;
+    areaCountListElem.innerHTML = "";
+    for (const n of Array.from(areaMap.keys()).sort()) {
+        const c = areaMap.get(n) ?? 0;
+        const e = areaCountListElem.appendChild(document.createElement("span"));
+        e.textContent = `${areaStr.get(n)!}:${c}`;
+        if (c === 0) e.classList.add("red");
+    }
 
     const specialCountListElem = document.getElementById("special_count_list")!;
     specialCountListElem.innerHTML = "";
@@ -421,6 +550,7 @@ function showList(): void {
         if (locationMap.get(tm.form.location) !== 1) {
             elem("location").classList.add("red");
         }
+        text("area", areaByIdMap.get(tm.form.location)!.areaName);
         const lowLevel = getLowLevel(tm.form);
         text("jobclass", jobclassStr.get(lowLevel.jobclass)!);
         text("level", lowLevel.level);
@@ -525,6 +655,7 @@ function readForm(): TakaraMapForm {
     const elems = form.elements;
     const sel = (name: string) => (elems.namedItem(name) as HTMLSelectElement).value;
     const value = (name: string) => (elems.namedItem(name) as HTMLInputElement).value.trim();
+    const checked = (name: string) => (elems.namedItem(name) as HTMLInputElement).checked;
 
     const takaraMapForm: TakaraMapForm = {
         grade: sel("grade"),

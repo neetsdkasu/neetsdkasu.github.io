@@ -20,14 +20,21 @@
       <hr />
       <form id="add_form" method="dialog">
         <div>
-          <label title="グレードXはリセット不可能地図">グレード:
+          <label title="Lはご当地、Xはシェア不可リセット不可、Pはシェア可リセット不可、R*はシェア不可リセット可">グレード:
             <select name="grade" id="grade">
               <option value="0">S+</option>
               <option value="1">S</option>
               <option value="2">A</option>
               <option value="3" selected>B</option>
               <option value="4">C</option>
+              <option value="C">L</option>
               <option value="5">X</option>
+              <option value="6">P</option>
+              <option value="7">RS+</option>
+              <option value="8">RS</option>
+              <option value="9">RA</option>
+              <option value="A">RB</option>
+              <option value="B">RC</option>
             </select>
           </label>
           <label title="ふるさとスライムの経験値の地域">経験値:
@@ -113,7 +120,7 @@
         </div>
         <hr />
         <div>
-          <label>お宝モンスター:
+          <label title="仲間モンスターの場合は名前末尾に(仲間)を付記して入力">お宝モンスター:
             <input name="monster1" id="monster1" type="text" list="monster_list" required />
           </label>
           <label title="グレードXとグレードBのみ">回数:
@@ -121,7 +128,7 @@
           </label>
         </div>
         <div>
-          <label>お宝モンスター:
+          <label title="仲間モンスターの場合は名前末尾に(仲間)を付記して入力">お宝モンスター:
             <input name="monster2" id="monster2" type="text" list="monster_list" required />
           </label>
           <label title="グレードXとグレードBのみ">回数:
@@ -129,7 +136,7 @@
           </label>
         </div>
         <div>
-          <label>お宝モンスター:
+          <label title="仲間モンスターの場合は名前末尾に(仲間)を付記して入力">お宝モンスター:
             <input name="monster3" id="monster3" type="text" list="monster_list" required />
           </label>
           <label title="グレードXとグレードBのみ">回数:
@@ -179,6 +186,7 @@
             <option value="register">登録順</option>
             <option value="grade">グレード</option>
             <option value="location">経験値</option>
+            <option value="area">地域</option>
             <option value="level">推奨Lv</option>
             <option value="field">地形</option>
             <option value="boss">ボスモンスター</option>
@@ -209,7 +217,7 @@
 
       <details open>
         <summary>グレード</summary>
-        <div id="grade_count_list" class="mr"></div>
+        <div id="grade_count_list" class="mr"  title="Lはご当地、Xはシェア不可リセット不可、Pはシェア可リセット不可、R*はシェア不可リセット可"></div>
       </details>
 
       <hr />
@@ -217,6 +225,13 @@
       <details open>
         <summary>経験値</summary>
         <div id="location_count_list" class="mr"></div>
+      </details>
+
+      <hr />
+
+      <details open>
+        <summary>地域</summary>
+        <div id="area_count_list" class="mr"></div>
       </details>
 
       <hr />
@@ -288,11 +303,12 @@
       <div class="outline">
         <input type="hidden" class="item-id" />
         <div class="mr">
-          <span>グレード:
+          <span title="Lはご当地、Xはシェア不可リセット不可、Pはシェア可リセット不可、R*はシェア不可リセット可">グレード:
             <span class="item-grade"></span>
           </span>
           <span>経験値:
             <span class="item-location"></span>
+            (<span class="item-area"></span>)
           </span>
           <span>推奨:
             <span class="item-jobclass"></span>Lv<span class="item-level"></span>
