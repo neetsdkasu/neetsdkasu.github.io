@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>宝の地図の管理</title>
+    <link rel="stylesheet" href="./takaramap/style.css" />
+    <script src="./takaramap/script.js" defer></script>
+  </head>
+  <body>
+    <header>
+      <h4>宝の地図を管理</h4>
+    </header>
+
+    <datalist id="monster_list"></datalist>
+    <datalist id="boss_list"></datalist>
+    <datalist id="metal_list"></datalist>
+
+    <dialog id="add_dialog">
+      <div>宝の地図を追加</div>
+      <hr />
+      <form id="add_form" method="dialog">
+        <div>
+          <label title="Lはご当地、Xはシェア不可リセット不可、Pはシェア可リセット不可、R*はシェア不可リセット可">グレード:
+            <select name="grade" id="grade">
+              <option value="0">S+</option>
+              <option value="1">S</option>
+              <option value="2">A</option>
+              <option value="3" selected>B</option>
+              <option value="4">C</option>
+              <option value="C">L</option>
+              <option value="5">X</option>
+              <option value="6">P</option>
+              <option value="7">RS+</option>
+              <option value="8">RS</option>
+              <option value="9">RA</option>
+              <option value="A">RB</option>
+              <option value="B">RC</option>
+            </select>
+          </label>
+          <label title="ふるさとスライムの経験値の地域">経験値:
+            <select name="location" id="location">
+              <option value="00">愛知</option>
+              <option value="01">青森</option>
+              <option value="02">秋田</option>
+              <option value="03">石川</option>
+              <option value="04">茨城</option>
+              <option value="05">岩手</option>
+              <option value="06">愛媛</option>
+              <option value="07">大分</option>
+              <option value="08">大阪</option>
+              <option value="09">岡山</option>
+              <option value="10">沖縄</option>
+              <option value="11">香川</option>
+              <option value="12">鹿児島</option>
+              <option value="13" selected>神奈川</option>
+              <option value="14">岐阜</option>
+              <option value="15">京都</option>
+              <option value="16">熊本</option>
+              <option value="17">群馬</option>
+              <!-- ミスでvalue="18"は欠番… -->
+              <option value="19">高知</option>
+              <option value="20">埼玉</option>
+              <option value="21">佐賀</option>
+              <option value="22">滋賀</option>
+              <option value="23">静岡</option>
+              <option value="24">島根</option>
+              <option value="25">千葉</option>
+              <option value="26">東京</option>
+              <option value="27">徳島</option>
+              <option value="28">栃木</option>
+              <option value="29">鳥取</option>
+              <option value="30">富山</option>
+              <option value="31">長崎</option>
+              <option value="32">長野</option>
+              <option value="33">奈良</option>
+              <option value="34">新潟</option>
+              <option value="35">兵庫</option>
+              <option value="36">広島</option>
+              <option value="37">福井</option>
+              <option value="38">福岡</option>
+              <option value="39">福島</option>
+              <option value="40">北海道</option>
+              <option value="41">三重</option>
+              <option value="42">宮城</option>
+              <option value="43">宮崎</option>
+              <option value="44">山形</option>
+              <option value="45">山口</option>
+              <option value="46">山梨</option>
+              <option value="47">和歌山</option>
+              <option value="48">ランダム</option>
+            </select>
+          </label>
+          <label>推奨:
+            <select name="jobclass" id="jobclass">
+              <option value="0">基本職</option>
+              <option value="1" selected>上級職</option>
+              <option value="2">特級職</option>
+            </select>
+          </label>
+          <label>Lv
+            <input name="level" id="level" type="number" min="1" max="200" value="50" />
+          </label>
+          <label>地形:
+            <select name="field" id="field">
+              <option value="0">火山(メラ)</option>
+              <option value="1">火山(ギラ)</option>
+              <option value="2">雪原(ヒャド)</option>
+              <option value="3">海(バギ)</option>
+              <option value="4">天空(デイン)</option>
+              <option value="5">山岳(ジバリア)</option>
+              <option value="6">砂漠(イオ)</option>
+              <option value="7">魔界(ドルマ)</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <label>地図名:
+            <input name="name" id="name" type="text" size="60" autocomplete="off" required />
+          </label>
+        </div>
+        <hr />
+        <div>
+          <label title="仲間モンスターの場合は名前末尾に(仲間)を付記して入力">お宝モンスター:
+            <input name="monster1" id="monster1" type="text" list="monster_list" required />
+          </label>
+          <label title="グレードXとグレードBのみ">回数:
+            <input name="monster1count" id="monster1count" type="number" min="1" max="99" value="1" />
+          </label>
+        </div>
+        <div>
+          <label title="仲間モンスターの場合は名前末尾に(仲間)を付記して入力">お宝モンスター:
+            <input name="monster2" id="monster2" type="text" list="monster_list" required />
+          </label>
+          <label title="グレードXとグレードBのみ">回数:
+            <input name="monster2count" id="monster2count" type="number" min="1" max="99" value="1" />
+          </label>
+        </div>
+        <div>
+          <label title="仲間モンスターの場合は名前末尾に(仲間)を付記して入力">お宝モンスター:
+            <input name="monster3" id="monster3" type="text" list="monster_list" required />
+          </label>
+          <label title="グレードXとグレードBのみ">回数:
+            <input name="monster3count" id="monster3count" type="number" min="1" max="99" value="1" />
+          </label>
+        </div>
+        <div>
+          <label>ボスモンスター:
+            <input name="boss" id="boss" type="text" list="boss_list" required />
+          </label>
+        </div>
+        <hr />
+        <div>気になるフィールドモンスターのメモ</div>
+        <div>
+          <label title="イベントやコラボなどの限定モンスター、半角スペース区切りで複数列挙">限定枠:
+            <input name="special" id="special" type="text" size="60" autocomplete="off" />
+          </label>
+        </div>
+        <div>
+          <label title="メインストーリーのフィールドモンスター、半角スペース区切りで複数列挙">通常枠:
+            <input name="standard" id="standard" type="text" size="60" autocomplete="off" />
+          </label>
+        </div>
+        <div>
+          <label title="メタルスライム系モンスター">メタル:
+            <input name="metal" id="metal" type="text" list="metal_list" />
+          </label>
+        </div>
+        <hr />
+        <div class="mr">
+          <label title="誤確定防止用チェック"><input type="checkbox" required />OK</label>
+          <button value="submit">確定</button>
+          <button id="cancel" type="button" value="cancel">キャンセル</button>
+        </div>
+      </form>
+    </dialog>
+
+    <main>
+
+      <div><button type="button" id="open_dialog">宝の地図を追加</button></div>
+
+      <hr />
+      
+      <div>
+        <label>順序:
+          <select id="list_order">
+            <option value="register">登録順</option>
+            <option value="grade">グレード</option>
+            <option value="location">経験値</option>
+            <option value="area">地域</option>
+            <option value="level">推奨Lv</option>
+            <option value="field">地形</option>
+            <option value="boss">ボスモンスター</option>
+            <option value="mark">予定</option>
+          </select>
+        </label>
+      </div>
+
+      <hr />
+
+      <div>
+        <fieldset class="mr">
+          <legend>フィルター</legend>
+          <label><input type="checkbox" name="filter_monster" id="filter_monster" />お宝</label>
+          <label><input type="checkbox" name="filter_boss" id="filter_boss" />ボス</label>
+          <label><input type="checkbox" name="filter_fieldmonster" id="filter_fieldmonster" />フィールド</label>
+          <label title="半角スペース区切りで複数列挙時はいずれか含む地図">対象モンスター:
+            <input type="text" name="filter_targets" id="filter_targets" size="50" />
+          </label>
+        </fieldset>
+      </div>
+      
+      <hr />
+
+      <div id="map_list"></div>
+
+      <hr />
+
+      <details open>
+        <summary>グレード</summary>
+        <div id="grade_count_list" class="mr"  title="Lはご当地、Xはシェア不可リセット不可、Pはシェア可リセット不可、R*はシェア不可リセット可"></div>
+      </details>
+
+      <hr />
+
+      <details open>
+        <summary>経験値</summary>
+        <div id="location_count_list" class="mr"></div>
+      </details>
+
+      <hr />
+
+      <details open>
+        <summary>地域</summary>
+        <div id="area_count_list" class="mr"></div>
+      </details>
+
+      <hr />
+
+      <details open>
+        <summary>地形</summary>
+        <div id="field_count_list" class="mr"></div>
+      </details>
+
+      <hr />
+
+      <details>
+        <summary>お宝</summary>
+        <div id="monster_count_list" class="mr"></div>
+      </details>
+      
+      <hr />
+
+      <details open>
+        <summary>ボス</summary>
+        <div id="boss_count_list" class="mr"></div>
+      </details>
+
+      <hr />
+
+      <details>
+        <summary>フィールド(限定枠)</summary>
+        <div id="special_count_list" class="mr"></div>
+      </details>
+      
+      <hr />
+
+      <details>
+        <summary>フィールド(通常枠)</summary>
+        <div id="standard_count_list" class="mr"></div>
+      </details>
+      
+      <hr />
+
+      <details>
+        <summary>フィールド(メタル)</summary>
+        <div id="metal_count_list" class="mr"></div>
+      </details>
+      
+      <hr />
+
+      <details open>
+        <summary>予定</summary>
+        <div id="mark_count_list" class="mr"></div>
+      </details>
+
+      <hr />
+
+      <details>
+        <summary>ファイル</summary>
+        <div class="outline mr">
+          <button type="button" id="download">ダウンロード</button>
+          <span id="download_link" hidden class="mr"><a href="." download="takaramap.json">takaramap.json</a><span class="small"></span></span>
+        </div>
+        <div class="outline mr">
+          <button type="button" id="upload">アップロード</button>
+          <input type="file" name="upload_file" id="upload_file" />
+        </div>
+      </details>
+
+    </main>
+
+    <template id="map_item_template">
+      <div class="outline">
+        <input type="hidden" class="item-id" />
+        <div class="mr">
+          <span title="Lはご当地、Xはシェア不可リセット不可、Pはシェア可リセット不可、R*はシェア不可リセット可">グレード:
+            <span class="item-grade"></span>
+          </span>
+          <span>経験値:
+            <span class="item-location"></span>
+            (<span class="item-area"></span>)
+          </span>
+          <span>推奨:
+            <span class="item-jobclass"></span>Lv<span class="item-level"></span>
+            <span class="item-recomend-note"></span>
+          </span>
+          <span>地形:
+            <span class="item-field"></span>
+          </span>
+          <label class="small">予定:
+            <select class="item-mark small">
+              <option value="0">なし</option>
+              <option value="1">リセット</option>
+              <option value="2">シェア</option>
+              <option value="3">キープ</option>
+              <option value="4">交換</option>
+              <option value="5">廃棄</option>
+            </select>
+          </label>
+          <span>
+            <button type="button" class="item-copy small">複製</button>
+          </span>
+          <span>
+            <button type="button" class="item-delete small">削除</button>
+            <label class="small" title="誤削除防止用チェック">
+              <input type="checkbox" class="item-check" />DEL
+            </label>
+          </span>
+        </div>
+        <div>
+          <span>地図名:
+            <span class="item-name"></span>
+          </span>
+        </div>
+        <div class="mr">
+          <span class="mr">お宝:
+            <span>
+              <span class="item-monster1"></span>
+              *<span class="item-monster1count"></span>
+            </span>
+            <span>
+              <span class="item-monster2"></span>
+              *<span class="item-monster2count"></span>
+            </span>
+            <span>
+              <span class="item-monster3"></span>
+              *<span class="item-monster3count"></span>
+            </span>
+          </span>
+          <span>ボス:
+            <span class="item-boss"></span>
+          </span>
+        </div>
+        <div class="small">
+          フィールド:
+          <span class="mr">
+            <span>限定枠:
+              <span class="item-special mr"></span>
+            </span>
+            <span>通常枠:
+              <span class="item-standard mr"></span>
+            </span>
+            <span>メタル:
+              <span class="item-metal"></span>
+            </span>
+          </span>
+        </div>
+      </div>
+    </template>
+
+    <footer></footer>
+  </body>
+</html>
