@@ -178,49 +178,49 @@ var Color;
 })(Color || (Color = {}));
 const JobPreset = [
     { id: 101, name: "戦士", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.Omit] },
+        colors: [Color.Rainbow, Color.Yellow, Color.Yellow, Color.Omit], obsolete: false },
     { id: 102, name: "魔法使い", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.Omit] },
+        colors: [Color.Rainbow, Color.Purple, Color.Purple, Color.Omit], obsolete: false },
     { id: 103, name: "僧侶", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Green, Color.Green, Color.Omit] },
+        colors: [Color.Rainbow, Color.Green, Color.Green, Color.Omit], obsolete: false },
     { id: 104, name: "武闘家", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Red, Color.Red, Color.Omit] },
+        colors: [Color.Rainbow, Color.Red, Color.Red, Color.Omit], obsolete: false },
     { id: 105, name: "盗賊", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.Omit] },
+        colors: [Color.Rainbow, Color.Blue, Color.Blue, Color.Omit], obsolete: false },
     { id: 106, name: "踊り子", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Blue, Color.Green, Color.Omit] },
+        colors: [Color.Rainbow, Color.Blue, Color.Green, Color.Omit], obsolete: false },
     { id: 107, name: "遊び人", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.Omit] },
+        colors: [Color.Rainbow, Color.Blue, Color.Purple, Color.Omit], obsolete: false },
     { id: 201, name: "バトルマスター", powerUp: 1.2,
-        colors: [Color.Yellow | Color.Red, Color.Rainbow, Color.Red, Color.Red] },
+        colors: [Color.Yellow | Color.Red, Color.Rainbow, Color.Red, Color.Red], obsolete: false },
     { id: 202, name: "賢者", powerUp: 1.2,
-        colors: [Color.Green | Color.Purple, Color.Rainbow, Color.Green | Color.Purple, Color.Green | Color.Purple] },
+        colors: [Color.Green | Color.Purple, Color.Rainbow, Color.Green | Color.Purple, Color.Green | Color.Purple], obsolete: false },
     { id: 203, name: "レンジャー", powerUp: 1.2,
-        colors: [Color.Red | Color.Blue, Color.Rainbow, Color.Blue, Color.Blue] },
+        colors: [Color.Red | Color.Blue, Color.Rainbow, Color.Blue, Color.Blue], obsolete: false },
     { id: 204, name: "魔法戦士", powerUp: 1.2,
-        colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Yellow | Color.Purple] },
+        colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Yellow | Color.Purple], obsolete: false },
     { id: 205, name: "パラディン", powerUp: 1.2,
-        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow, Color.Yellow] },
+        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow, Color.Yellow], obsolete: false },
     { id: 206, name: "スーパースター", powerUp: 1.2,
-        colors: [Color.Blue | Color.Green, Color.Rainbow, Color.Blue, Color.Green] },
+        colors: [Color.Blue | Color.Green, Color.Rainbow, Color.Blue, Color.Green], obsolete: false },
     { id: 207, name: "海賊", powerUp: 1.2,
-        colors: [Color.Yellow | Color.Blue, Color.Rainbow, Color.Yellow, Color.Blue] },
+        colors: [Color.Yellow | Color.Blue, Color.Rainbow, Color.Yellow, Color.Blue], obsolete: false },
     { id: 208, name: "まものマスター", powerUp: 1.2,
-        colors: [Color.Rainbow, Color.Rainbow, Color.Blue | Color.Purple, Color.Blue | Color.Purple] },
+        colors: [Color.Rainbow, Color.Rainbow, Color.Blue | Color.Purple, Color.Blue | Color.Purple], obsolete: false },
     { id: 301, name: "ゴッドハンド", powerUp: 1.3,
-        colors: [Color.Yellow | Color.Red, Color.Rainbow, Color.Red, Color.Yellow] },
+        colors: [Color.Yellow | Color.Red, Color.Rainbow, Color.Red, Color.Yellow], obsolete: false },
     { id: 302, name: "大魔道士", powerUp: 1.3,
-        colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Purple] },
+        colors: [Color.Yellow | Color.Purple, Color.Rainbow, Color.Yellow | Color.Purple, Color.Purple], obsolete: false },
     { id: 303, name: "大神官", powerUp: 1.3,
-        colors: [Color.Blue | Color.Green, Color.Rainbow, Color.Blue | Color.Green, Color.Green] },
+        colors: [Color.Blue | Color.Green, Color.Rainbow, Color.Blue | Color.Green, Color.Green], obsolete: false },
     { id: 304, name: "ニンジャ", powerUp: 1.3,
-        colors: [Color.Blue | Color.Yellow, Color.Rainbow, Color.Blue | Color.Yellow, Color.Blue] },
+        colors: [Color.Blue | Color.Yellow, Color.Rainbow, Color.Blue | Color.Yellow, Color.Blue], obsolete: false },
     { id: 305, name: "魔剣士", powerUp: 1.3,
-        colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple] },
+        colors: [Color.Red | Color.Purple, Color.Rainbow, Color.Red | Color.Purple, Color.Red | Color.Purple], obsolete: false },
     { id: 306, name: "守護天使", powerUp: 1.3,
-        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow] },
+        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow], obsolete: true },
     { id: 307, name: "守り人", powerUp: 1.3,
-        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow] }
+        colors: [Color.Yellow | Color.Green, Color.Rainbow, Color.Yellow | Color.Blue, Color.Yellow], obsolete: false }
 ];
 const JobPresetMaximumCost = [
     { id: 100, maximumCostList: [
@@ -2653,6 +2653,9 @@ function inferSetName(colors) {
     }
     colors.sort((a, b) => a - b);
     for (const job of JobPreset) {
+        if (job.obsolete) {
+            continue;
+        }
         const jc = job.colors.slice().sort((a, b) => a - b);
         if (colors.every((v, i) => jc[i] === v)) {
             if (`${job.powerUp}` === `${powerUp}`) {
