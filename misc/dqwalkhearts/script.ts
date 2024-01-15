@@ -287,7 +287,9 @@ const JobPreset: Job[] = [
     { id: 306, name: "守護天使", powerUp: 1.3,
         colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow|Color.Blue, Color.Yellow], obsolete: true },
     { id: 307, name: "守り人", powerUp: 1.3,
-        colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow|Color.Blue, Color.Yellow], obsolete: false }
+        colors: [Color.Yellow|Color.Green, Color.Rainbow, Color.Yellow|Color.Blue, Color.Yellow], obsolete: false },
+    { id: 308, name: "ドラゴン", powerUp: 1.3,
+        colors: [Color.Rainbow, Color.Rainbow, Color.Yellow|Color.Blue, Color.Yellow], obsolete: false }
 ];
 
 interface JobMaximumCostItem {
