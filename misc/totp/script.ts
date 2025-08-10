@@ -43,8 +43,30 @@ function toBytes(s: string): ArrayBuffer {
     return buf;
 }
 
-function fromBase64(s: string): ArrayBuffer {
-    return Uint8Array.from(atob(s), c => c.codePointAt(0) ?? 0).buffer.slice(0);
+function fromBase32(s: string): ArrayBuffer {
+    const sz = Math.floor((s.length * 5 + 7) / 8);
+    const ret = new Uint8Array(sz);
+    let bit = 0;
+    let cnt = 0;
+    let pos = 0;
+    for (let i = 0; i < s.length; i++) {
+        const ch = s[i];
+        if ("A" <= ch && ch <= "Z") {
+            bit = (bit << 5) | ((ch.charCodeAt(0) - "A".charCodeAt(0)) & 31);
+        } else if ("2" <= ch && ch <= "7") {
+            bit = (bit << 5) | ((ch.charCodeAt(0) - "2".charCodeAt(0) + 26) & 31);
+        } else {
+            bit = bit << 5;
+        }
+        cnt += 5;
+        if (cnt >= 8) {
+            ret[pos] = (bit >> (cnt - 8)) & 0xFF;
+            bit = bit & ((1 << (cnt - 8)) - 1);
+            cnt -= 8;
+            pos++;
+        }
+    }
+    return ret.buffer;
 }
 
 function errMsg(err: any): void {
@@ -203,7 +225,7 @@ async function generateTotp(req: TotpRequest): Promise<string> {
     const T = Math.floor((time - req.initialTime) / req.timeSteps);
 
     const msg = toBytes(BigInt(T).toString(16).padStart(16, "0"));
-    const key = (req.tokenType === "base64") ? fromBase64(req.secretToken) : toBytes(req.secretToken);
+    const key = (req.tokenType === "base32") ? fromBase32(req.secretToken) : toBytes(req.secretToken);
 
     const algorithm = {
         name: "HMAC",
@@ -279,7 +301,7 @@ function getTotpFromUri(uri: string): void {
         const params = u.searchParams;
 
         const req: TotpRequest = {
-            tokenType: "base64",
+            tokenType: "base32",
             secretToken: params.get("secret") ?? "",
             timeSteps: toInt(params.get("period") ?? "30"),
             initialTime: 0,
