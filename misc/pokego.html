@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8" />
+        <title>PokeGo</title>
+        <link rel="stylesheet" href="./pokego/style.css" />
+        <script src="./pokego/script.js" defer></script>
+    </head>
+    <body>
+        <header>
+            <h4>PokeGo</h4>
+            <hr />
+        </header>
+        <main>
+            <h6>威力ランキング</h6>
+            <button id="calc_button" type="button">計算</button>
+            <div id="target_info"></div>
+            <ol id="ranking" class="list"></ol>
+            <hr />
+            <h6>モンスターリスト</h6>
+            <button id="add_button" type="button">追加</button>
+            <ul id="pokemon_list" class="list"></ul>
+        </main>
+        <footer></footer>
+
+        <!-- 攻撃種族値(ネットで調べた) -->
+        <datalist id="attack_list">
+            <option value="163">アーマーガア</option>
+            <option value="214">アップリュー</option>
+            <option value="104">イーブイ</option>
+            <option value="262">インテレオン</option>
+            <option value="254">ウーラオス</option>
+            <option value="238">エースバーン</option>
+            <option value="235">エンテイ</option>
+            <option value="207">オムスター</option>
+            <option value="234">カイリキー</option>
+            <option value="190">カビゴン</option>
+            <option value="220">カブトプス</option>
+            <option value="171">カメックス</option>
+            <option value="240">キングラー</option>
+            <option value="261">ゲンガー</option>
+            <otpion value="226">ケンホロウ</otpion>
+            <option value="239">ゴリランダー</option>
+            <option value="332">ザシアン(けんのおう)</option>
+            <option value="250">ザマゼンタ(たてのおう)</option>
+            <option value="253">サンダー</option>
+            <option value="180">スイクン</option>
+            <option value="224">ストリンダー</option>
+            <option value="193">タイレーツ</option>
+            <option value="170">ダクマ</option>
+            <option value="181">ダストダス</option>
+            <option value="178">タルップル</option>
+            <option value="17">ツボツボ</option>
+            <option value="255">ドリュウズ</option>
+            <option value="222">ナゲツケサル</option>
+            <option value="92">ニャース</option>
+            <option value="159">バイウールー</option>
+            <option value="167">バタフリー</option>
+            <option value="129">ハピナス</option>
+            <option value="112">ピカチュウ</option>
+            <option value="263">ヒヒダルマ</option>
+            <option value="251">ファイヤー</option>
+            <option value="271">フーディン</option>
+            <option value="198">フシギバナ</option>
+            <option value="192">フリーザー</option>
+            <option value="190">フリージオ</option>
+            <option value="237">ブリムオン</option>
+            <option value="175">ホエルオー</option>
+            <option value="220">マルヤクデ</option>
+            <option value="257">メタグロス</option>
+            <option value="226">メルメタル</option>
+            <option value="277">ムゲンダイナ</option>
+            <option value="141">ヤミラミ</option>
+            <option value="160">ヨクバリス</option>
+            <option value="241">ライコウ</option>
+            <option value="228">ラティアス</option>
+            <option value="268">ラティオス</option>
+            <option value="165">ラプラス</option>
+            <option value="223">リザードン</option>
+        </datalist>
+
+        <datalist id="candy_list"></datalist>
+        <datalist id="candy_list_xl"></datalist>
+
+        <dialog id="add_form_dialog">
+            <h6>モンスター追加</h6>
+            <hr />
+            <form id="add_form" method="dialog">
+                <div>
+                    <span>表示名:</span>
+                    <input name="name" type="text" placeholder="サンダー" required />
+                </div>
+                <div>
+                    <span>
+                        <span>タイプ1:</span>
+                        <select name="type1" class="types"></select>
+                    </span>
+                    <span>
+                        <span>タイプ2:</span>
+                        <select name="type2" class="types"></select>
+                    </span>
+                </div>
+                <div>
+                    <div>
+                        <span>レベル:</span>
+                        <input name="level" type="number" placeholder="39.0" min="1.0" max="51.0" step="0.5" required />
+                    </div>
+                    <div class="subform">
+                        <div><span>現在レベルから最大レベルまでの総コスト(レベル推定用):</span></div>
+                        <div>
+                            <span>
+                                <span>アメ:</span>
+                                <input name="candy" type="number" placeholder="30" min="0" max="9999" step="1" list="candy_list" />
+                            </span>
+                            <span>
+                                <span>アメXL:</span>
+                                <input name="candy_xl" type="number" placeholder="296" min="0" max="9999" step="1" list="candy_list_xl" />
+                            </span>
+                            <span>
+                                <label>
+                                    <input name="light" type="checkbox" />
+                                    <span>ライト</span>
+                                </label>
+                            </span>
+                        </div>
+                    </div>
+                </div>
+                <div>
+                    <span>こうげき種族値:</span>
+                    <input name="attack_base" type="number" placeholder="208" min="1" step="1" list="attack_list" required />
+                </div>
+                <div>
+                    <span>こうげき個体値:</span>
+                    <input name="attack_uniq" type="number" placeholder="12" min="0" max="15" step="1" required />
+                </div>
+                <div>
+                    <span>わざ1:</span>
+                    <select name="attack1_type" class="types"></select>
+                    <input name="attack1_value" type="number" placeholder="100" min="0" step="1" required />
+                </div>
+                <div>
+                    <span>わざ2:</span>
+                    <select name="attack2_type" class="types"></select>
+                    <input name="attack2_value" type="number" placeholder="120" min="0" step="1" />
+                </div>
+                <div>
+                    <span>わざ3:</span>
+                    <select name="attack3_type" class="types"></select>
+                    <input name="attack3_value" type="number" placeholder="85" min="0" step="1" />
+                </div>
+                <div>
+                    <span>わざ4:</span>
+                    <select name="attack4_type" class="types"></select>
+                    <input name="attack4_value" type="number" placeholder="350" min="0" step="1" />
+                </div>
+                <div>
+                    <span>わざ5:</span>
+                    <select name="attack5_type" class="types"></select>
+                    <input name="attack5_value" type="number" placeholder="55" min="0" step="1" />
+                </div>
+                <hr />
+                <div>
+                    <button type="button" class="cancel">キャンセル</button>
+                    <button type="submit">追加</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="calc_form_dialog">
+            <h6>計算の設定</h6>
+            <hr />
+            <form id="calc_form" method="dialog">
+                <fieldset>
+                    <legend>ボスポケモンのタイプ</legend>
+                    <div>
+                        <span>
+                            <span>タイプ1:</span>
+                            <select name="type1" class="types"></select>
+                        </span>
+                        <span>
+                            <span>タイプ2:</span>
+                            <select name="type2" class="types"></select>
+                        </span>
+                    </div>
+                </fieldset>
+                <fieldset>
+                    <legend>天候ブースト</legend>
+                    <div>
+                        <label>
+                            <input name="use_special_weather" type="checkbox" />
+                            <span>天候を指定する</span>
+                        </label>
+                        <select name="weather" class="weathers"></select>
+                    </div>
+                </fieldset>
+                <hr />
+                <div>
+                    <button type="button" class="cancel">キャンセル</button>
+                    <button type="submit">計算</button>
+                </div>
+            </form>
+        </dialog>
+    </body>
+</html>

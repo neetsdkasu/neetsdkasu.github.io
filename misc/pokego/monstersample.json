@@ -1,0 +1,430 @@
+[
+    {
+        "name": "ムゲンダイナ",
+        "types": ["どく", "ドラゴン"],
+        "level": 20,
+        "attackBase": 277,
+        "attackUniq": 13,
+        "attacks": [
+            {"type": "ドラゴン", "value": 350}
+        ]
+    },
+    {
+        "name": "ムゲンダイナ(強化)",
+        "types": ["どく", "ドラゴン"],
+        "level": 23,
+        "attackBase": 277,
+        "attackUniq": 13,
+        "attacks": [
+            {"type": "ドラゴン", "value": 350}
+        ]
+    },
+    {
+        "name": "フーディン(仮)",
+        "types": ["エスパー"],
+        "level": 20,
+        "attackBase": 271,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "かくとう", "value": 250},
+            {"type": "エスパー", "value": 250}
+        ]
+    },
+    {
+        "name": "ヒヒダルマ",
+        "types": ["ほのお"],
+        "level": 20,
+        "attackBase": 263,
+        "attackUniq": 14,
+        "attacks": [
+            {"type": "ノーマル", "value": 350},
+            {"type": "ほのお", "value": 350}
+        ]
+    },
+    {
+        "name": "インテレオン",
+        "types": ["みず"],
+        "level": 20,
+        "attackBase": 262,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ノーマル", "value": 350},
+            {"type": "みず", "value": 350}
+        ]
+    },
+    {
+        "name": "ゲンガー",
+        "types": ["どく", "ゴースト"],
+        "level": 20,
+        "attackBase": 261,
+        "attackUniq": 14,
+        "attacks": [
+            {"type": "ゴースト", "value": 350},
+            {"type": "あく", "value": 350}
+        ]
+    },
+    {
+        "name": "メタグロス",
+        "types": ["エスパー", "はがね"],
+        "level": 20,
+        "attackBase": 257,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 300},
+            {"type": "むし", "value": 300},
+            {"type": "はがね", "value": 300}
+        ]
+    },
+    {
+        "name": "メタグロス",
+        "types": ["エスパー", "はがね"],
+        "level": 15,
+        "attackBase": 257,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 300},
+            {"type": "むし", "value": 300},
+            {"type": "はがね", "value": 300}
+        ]
+    },
+    {
+        "name": "ドリュウズ",
+        "types": ["じめん", "はがね"],
+        "level": 20,
+        "attackBase": 255,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "じめん", "value": 350},
+            {"type": "はがね", "value": 350}
+        ]
+    },
+    {
+        "name": "サンダー(仮)",
+        "types": ["でんき", "ひこう"],
+        "level": 20,
+        "attackBase": 253,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "でんき", "value": 250}
+        ]
+    },
+    {
+        "name": "ファイヤー(仮)",
+        "types": ["ほのお", "ひこう"],
+        "level": 20,
+        "attackBase": 251,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "ほのお", "value": 250},
+            {"type": "ひこう", "value": 250}
+        ]
+    },
+    {
+        "name": "ライコウ(仮)",
+        "types": ["でんき"],
+        "level": 20,
+        "attackBase": 241,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "でんき", "value": 250}
+        ]
+    },
+    {
+        "name": "キングラー",
+        "types": ["みず"],
+        "level": 20,
+        "attackBase": 240,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "みず", "value": 350},
+            {"type": "じめん", "value": 350},
+            {"type": "はがね", "value": 350}
+        ]
+    },
+    {
+        "name": "ゴリランダー",
+        "types": ["くさ"],
+        "level": 47,
+        "attackBase": 239,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ノーマル", "value": 350},
+            {"type": "くさ", "value": 350}
+        ]
+    },
+    {
+        "name": "ゴリランダー(相棒B)",
+        "types": ["くさ"],
+        "level": 48,
+        "attackBase": 239,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ノーマル", "value": 350},
+            {"type": "くさ", "value": 350}
+        ]
+    },
+    {
+        "name": "G-MAXエースバーン",
+        "types": ["ほのお"],
+        "level": 20,
+        "attackBase": 238,
+        "attackUniq": 14,
+        "attacks": [
+            {"type": "ほのお", "value": 450}
+        ]
+    },
+    {
+        "name": "ブリムオン",
+        "types": ["エスパー", "フェアリー"],
+        "level": 20,
+        "attackBase": 237,
+        "attackUniq": 13,
+        "attacks": [
+            {"type": "エスパー", "value": 350},
+            {"type": "フェアリー", "value": 350}
+        ]
+    },
+    {
+        "name": "エンテイ(仮)",
+        "types": ["ほのお"],
+        "level": 20,
+        "attackBase": 235,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "ほのお", "value": 250}
+        ]
+    },
+    {
+        "name": "カイリキー",
+        "types": ["かくとう"],
+        "level": 20,
+        "attackBase": 234,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "かくとう", "value": 350},
+            {"type": "はがね", "value": 350}
+        ]
+    },
+    {
+        "name": "ケンホロウ",
+        "types": ["ノーマル", "ひこう"],
+        "level": 20,
+        "attackBase": 226,
+        "attackUniq": 14,
+        "attacks": [
+            {"type": "ひこう", "value": 350},
+            {"type": "はがね", "value": 350}
+        ]
+    },
+    {
+        "name": "ストリンダー(仮)",
+        "types": ["でんき", "どく"],
+        "level": 20,
+        "attackBase": 224,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "でんき", "value": 250},
+            {"type": "どく", "value": 250}
+        ]
+    },
+    {
+        "name": "リザードン",
+        "types": ["ほのお", "ひこう"],
+        "level": 20,
+        "attackBase": 223,
+        "attackUniq": 13,
+        "attacks": [
+            {"type": "ほのお", "value": 300},
+            {"type": "ひこう", "value": 300},
+            {"type": "ドラゴン", "value": 300}
+        ]
+    },
+    {
+        "name": "ナゲツケサル(仮)",
+        "types": ["かくとう"],
+        "level": 20,
+        "attackBase": 222,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "ノーマル", "value": 250},
+            {"type": "かくとう", "value": 250}
+        ]
+    },
+    {
+        "name": "カブトプス(仮)",
+        "types": ["みず", "いわ"],
+        "level": 20,
+        "attackBase": 220,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "みず", "value": 250},
+            {"type": "かくとう", "value": 250},
+            {"type": "じめん", "value": 250},
+            {"type": "むし", "value": 250}
+        ]
+    },
+    {
+        "name": "オムスター(仮)",
+        "types": ["みず", "いわ"],
+        "level": 20,
+        "attackBase": 207,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "みず", "value": 250},
+            {"type": "じめん", "value": 250},
+            {"type": "いわ", "value": 250}
+        ]
+    },
+    {
+        "name": "フシギバナ",
+        "types": ["くさ", "どく"],
+        "level": 20,
+        "attackBase": 198,
+        "attackUniq": 14,
+        "attacks": [
+            {"type": "くさ", "value": 300}
+        ]
+    },
+    {
+        "name": "タイレーツ(仮)",
+        "types": ["かくとう"],
+        "level": 20,
+        "attackBase": 193,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "かくとう", "value": 250}
+        ]
+    },
+    {
+        "name": "フリーザー",
+        "types": ["こおり", "ひこう"],
+        "level": 20,
+        "attackBase": 192,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "こおり", "value": 250}
+        ]
+    },
+    {
+        "name": "フリージオ",
+        "types": ["こおり"],
+        "level": 20,
+        "attackBase": 190,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "こおり", "value": 300}
+        ]
+    },
+    {
+        "name": "ダストダス(仮)",
+        "types": ["どく"],
+        "level": 20,
+        "attackBase": 181,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "ノーマル", "value": 250},
+            {"type": "むし", "value": 250}
+        ]
+    },
+    {
+        "name": "スイクン(仮)",
+        "types": ["みず"],
+        "level": 20,
+        "attackBase": 180,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "ノーマル", "value": 250},
+            {"type": "こおり", "value": 250},
+            {"type": "エスパー", "value": 250},
+            {"type": "あく", "value": 250}
+        ]
+    },
+    {
+        "name": "ホエルオー(仮)",
+        "types": ["みず"],
+        "level": 20,
+        "attackBase": 175,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "みず", "value": 250},
+            {"type": "エスパー", "value": 250},
+            {"type": "いわ", "value": 250}
+        ]
+    },
+    {
+        "name": "カメックス",
+        "types": ["みず"],
+        "level": 20,
+        "attackBase": 171,
+        "attackUniq": 12,
+        "attacks": [
+            {"type": "みず", "value": 300},
+            {"type": "いわ", "value": 300},
+            {"type": "あく", "value": 300}
+        ]
+    },
+    {
+        "name": "ダクマ",
+        "types": ["かくとう"],
+        "level": 40,
+        "attackBase": 170,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "かくとう", "value": 300}
+        ]
+    },
+    {
+        "name": "ダクマ(相棒B)",
+        "types": ["かくとう"],
+        "level": 41,
+        "attackBase": 170,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "かくとう", "value": 300}
+        ]
+    },
+    {
+        "name": "G-MAXバタフリー",
+        "types": ["ひこう", "むし"],
+        "level": 20,
+        "attackBase": 167,
+        "attackUniq": 12,
+        "attacks": [
+            {"type": "むし", "value": 400}
+        ]
+    },
+    {
+        "name": "バタフリー(仮)",
+        "types": ["ひこう", "むし"],
+        "level": 20,
+        "attackBase": 167,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "エスパー", "value": 250},
+            {"type": "むし", "value": 250}
+        ]
+    },
+    {
+        "name": "アーマーガア(仮)",
+        "types": ["ひこう", "はがね"],
+        "level": 20,
+        "attackBase": 163,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "じめん", "value": 250},
+            {"type": "ひこう", "value": 250},
+            {"type": "はがね", "value": 250}
+        ]
+    },
+    {
+        "name": "ヤミラミ(仮)",
+        "types": ["ゴースト", "あく"],
+        "level": 20,
+        "attackBase": 141,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "ゴースト", "value": 250},
+            {"type": "あく", "value": 250}
+        ]
+    }
+]
