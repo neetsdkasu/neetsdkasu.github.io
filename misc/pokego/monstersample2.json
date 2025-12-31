@@ -1,0 +1,234 @@
+[
+     {
+        "name": "ウーラオス",
+        "types": ["かくとう", "あく"],
+        "level": 40,
+        "attackBase": 254,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "かくとう", "value": 85},
+            {"type": "あく", "value": 95}
+        ]
+    },
+    {
+        "name": "カイリキー100",
+        "types": ["かくとう"],
+        "level": 50,
+        "attackBase": 234,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "かくとう", "value": 85},
+            {"type": "いわ", "value": 75}
+        ]
+    },
+    {
+        "name": "ギャラドス100",
+        "types": ["みず", "ひこう"],
+        "level": 50,
+        "attackBase": 237,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "みず", "value": 135},
+            {"type": "あく", "value": 65}
+        ]
+    },
+    {
+        "name": "ゲンガー100",
+        "types": ["ゴースト", "どく"],
+        "level": 50,
+        "attackBase": 261,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ゴースト", "value": 100},
+            {"type": "どく", "value": 85}
+        ]
+    },
+    {
+        "name": "コノヨザル100",
+        "types": ["ゴースト", "かくとう"],
+        "level": 50,
+        "attackBase": 220,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ゴースト", "value": 100},
+            {"type": "かくとう", "value": 105}
+        ]
+    },
+    {
+        "name": "ゴリランダー100",
+        "types": ["くさ"],
+        "level": 47,
+        "attackBase": 239,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "じめん", "value": 100},
+            {"type": "くさ", "value": 90}
+        ]
+    },
+    {
+        "name": "サーナイト100",
+        "types": ["エスパー", "フェアリー"],
+        "level": 50,
+        "attackBase": 237,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 80},
+            {"type": "フェアリー", "value": 100}
+        ]
+    },
+    {
+        "name": "ナッシー100",
+        "types": ["エスパー", "くさ"],
+        "level": 50,
+        "attackBase": 233,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 95},
+            {"type": "くさ", "value": 180}
+        ]
+    },
+    {
+        "name": "ニンフィア100",
+        "types": ["フェアリー"],
+        "level": 50,
+        "attackBase": 203,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 60},
+            {"type": "フェアリー", "value": 100}
+        ]
+    },
+    {
+        "name": "ピジョット100",
+        "types": ["ノーマル", "ひこう"],
+        "level": 50,
+        "attackBase": 166,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ノーマル", "value": 25},
+            {"type": "ひこう", "value": 55}
+        ]
+    },
+    {
+        "name": "ムゲンダイナ",
+        "types": ["どく", "ドラゴン"],
+        "level": 20,
+        "attackBase": 277,
+        "attackUniq": 13,
+        "attacks": [
+            {"type": "ドラゴン", "value": 215}
+        ]
+    },
+    {
+        "name": "ムゲンダイナ(強化)",
+        "types": ["どく", "ドラゴン"],
+        "level": 23,
+        "attackBase": 277,
+        "attackUniq": 13,
+        "attacks": [
+            {"type": "ドラゴン", "value": 215}
+        ]
+    },
+    {
+        "name": "メガギャラドス100",
+        "types": ["みず", "あく"],
+        "level": 50,
+        "attackBase": 292,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "みず", "value": 135},
+            {"type": "あく", "value": 65}
+        ]
+    },
+    {
+        "name": "メガゲンガー100",
+        "types": ["ゴースト", "どく"],
+        "level": 50,
+        "attackBase": 349,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ゴースト", "value": 100},
+            {"type": "どく", "value": 85}
+        ]
+    },
+    {
+        "name": "メガサーナイト100",
+        "types": ["エスパー", "フェアリー"],
+        "level": 50,
+        "attackBase": 326,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 80},
+            {"type": "フェアリー", "value": 100}
+        ]
+    },
+    {
+        "name": "メガピジョット100",
+        "types": ["ノーマル", "ひこう"],
+        "level": 50,
+        "attackBase": 280,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ノーマル", "value": 25},
+            {"type": "ひこう", "value": 55}
+        ]
+    },
+    {
+        "name": "メガメタグロス100",
+        "types": ["エスパー", "はがね"],
+        "level": 50,
+        "attackBase": 300,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 95},
+            {"type": "はがね", "value": 100}
+        ]
+    },
+    {
+        "name": "メガリザードンX100",
+        "types": ["ほのお", "ドラゴン"],
+        "level": 50,
+        "attackBase": 273,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ほのお", "value": 120},
+            {"type": "ひこう", "value": 55},
+            {"type": "ドラゴン", "value": 45}
+        ]
+    },
+    {
+        "name": "メガリザードンY100",
+        "types": ["ほのお", "ひこう"],
+        "level": 50,
+        "attackBase": 319,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ほのお", "value": 120},
+            {"type": "ひこう", "value": 55},
+            {"type": "ドラゴン", "value": 45}
+        ]
+    },
+    {
+        "name": "メタグロス100",
+        "types": ["エスパー", "はがね"],
+        "level": 50,
+        "attackBase": 257,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "エスパー", "value": 95},
+            {"type": "はがね", "value": 100}
+        ]
+    },
+    {
+        "name": "リザードン100",
+        "types": ["ほのお", "ひこう"],
+        "level": 50,
+        "attackBase": 223,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "ほのお", "value": 120},
+            {"type": "ひこう", "value": 55},
+            {"type": "ドラゴン", "value": 45}
+        ]
+    }
+]

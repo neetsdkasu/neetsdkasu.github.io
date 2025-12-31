@@ -2,16 +2,6 @@
     {
         "name": "ムゲンダイナ",
         "types": ["どく", "ドラゴン"],
-        "level": 20,
-        "attackBase": 277,
-        "attackUniq": 13,
-        "attacks": [
-            {"type": "ドラゴン", "value": 350}
-        ]
-    },
-    {
-        "name": "ムゲンダイナ(強化)",
-        "types": ["どく", "ドラゴン"],
         "level": 23,
         "attackBase": 277,
         "attackUniq": 13,
@@ -99,6 +89,17 @@
         ]
     },
     {
+        "name": "ウーラオス",
+        "types": ["かくとう", "あく"],
+        "level": 40,
+        "attackBase": 254,
+        "attackUniq": 15,
+        "attacks": [
+            {"type": "かくとう", "value": 350},
+            {"type": "あく", "value": 350}
+        ]
+    },
+    {
         "name": "サンダー(仮)",
         "types": ["でんき", "ひこう"],
         "level": 20,
@@ -145,17 +146,6 @@
         "name": "ゴリランダー",
         "types": ["くさ"],
         "level": 47,
-        "attackBase": 239,
-        "attackUniq": 15,
-        "attacks": [
-            {"type": "ノーマル", "value": 350},
-            {"type": "くさ", "value": 350}
-        ]
-    },
-    {
-        "name": "ゴリランダー(相棒B)",
-        "types": ["くさ"],
-        "level": 48,
         "attackBase": 239,
         "attackUniq": 15,
         "attacks": [
@@ -316,6 +306,16 @@
         ]
     },
     {
+        "name": "G-MAXダストダス",
+        "types": ["どく"],
+        "level": 20,
+        "attackBase": 181,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "どく", "value": 450}
+        ]
+    },
+    {
         "name": "ダストダス(仮)",
         "types": ["どく"],
         "level": 20,
@@ -340,6 +340,17 @@
         ]
     },
     {
+        "name": "カラマネロ(仮)",
+        "types": ["エスパー", "あく"],
+        "level": 20,
+        "attackBase": 177,
+        "attackUniq": 10,
+        "attacks": [
+            {"type": "ひこう", "value": 250},
+            {"type": "エスパー", "value": 250}
+        ]
+    },
+    {
         "name": "ホエルオー(仮)",
         "types": ["みず"],
         "level": 20,
@@ -361,26 +372,6 @@
             {"type": "みず", "value": 300},
             {"type": "いわ", "value": 300},
             {"type": "あく", "value": 300}
-        ]
-    },
-    {
-        "name": "ダクマ",
-        "types": ["かくとう"],
-        "level": 40,
-        "attackBase": 170,
-        "attackUniq": 15,
-        "attacks": [
-            {"type": "かくとう", "value": 300}
-        ]
-    },
-    {
-        "name": "ダクマ(相棒B)",
-        "types": ["かくとう"],
-        "level": 41,
-        "attackBase": 170,
-        "attackUniq": 15,
-        "attacks": [
-            {"type": "かくとう", "value": 300}
         ]
     },
     {

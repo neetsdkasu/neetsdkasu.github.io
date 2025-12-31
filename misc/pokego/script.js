@@ -5,6 +5,10 @@ class Lib {
         const n = parseInt(s);
         return isNaN(n) ? null : n;
     }
+    static parseFloat(s) {
+        const n = parseFloat(s);
+        return (isNaN(n ?? 0) || !isFinite(n ?? 0)) ? null : n;
+    }
     static bsearch(count, isLow) {
         let low = 0;
         let high = count;
@@ -647,7 +651,7 @@ function calcAttack(mon) {
     }
     else {
         const cpm = Math.sqrt((CPM[f] * CPM[f] + CPM[c] * CPM[c]) / 2);
-        return Math.floor((mon.attackBase + mon.attackBase) * cpm);
+        return Math.floor((mon.attackBase + mon.attackUniq) * cpm);
     }
 }
 function addList(mon) {
@@ -663,7 +667,7 @@ function addPokemon() {
     const mon = {
         name: el("name"),
         types: el("type1") === el("type2") ? [el("type1")] : [el("type1"), el("type2")],
-        level: Lib.parseInt(el("level")),
+        level: Lib.parseFloat(el("level")),
         attackBase: Lib.parseInt(el("attack_base")),
         attackUniq: Lib.parseInt(el("attack_uniq")),
         attacks: [
@@ -856,9 +860,24 @@ function loadMonsterSample() {
         console.log(err);
     });
 }
+function loadMonsterSample2() {
+    fetch("./pokego/monstersample2.json")
+        .then(b => b.json())
+        .then(json => {
+        const samples = json;
+        samples.forEach(mon => addList(mon));
+    })
+        .catch(err => {
+        console.log(`${err}`);
+        console.log(err);
+    });
+}
 (function () {
     const params = new URLSearchParams(location.search);
     if (params.has("sample")) {
         loadMonsterSample();
+    }
+    else if (params.has("sample2")) {
+        loadMonsterSample2();
     }
 })();
