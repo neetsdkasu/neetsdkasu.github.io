@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width" />
+        <title>glang</title>
+        <link rel="stylesheet" href="./glang/styles.css" />
+        <script type="importmap">
+            {
+                "imports": {
+                    "./charreader.js": "./glang/charreader.js",
+                    "./command.js":    "./glang/command.js",
+                    "./compiler.js":   "./glang/compiler.js",
+                    "./code.js":       "./glang/code.js",
+                    "./file.js":       "./glang/file.js",
+                    "./logger.js":     "./glang/logger.js",
+                    "./parser.js":     "./glang/parser.js",
+                    "./rqueue.js":     "./glang/rqueue.js",
+                    "./runner.js":     "./glang/runner.js",
+                    "./scanner.js":    "./glang/scanner.js",
+                    "./uiutils.js":    "./glang/uiutils.js",
+                    "./utils.js":      "./glang/utils.js",
+                    "./worker.js":     "./glang/worker.js",
+                    "./xorshift.js":   "./glang/xorshift.js"
+                }
+            }
+        </script>
+        <script type="module" src="./glang/script.js" defer></script>
+    </head>
+    <body>
+        <header>
+            <h4>glang</h4>
+            <hr />
+            <div>
+                <label><span>file:</span><select id="filelist" disabled>
+                    <option value="0"></option>
+                </select></label>
+                <button id="load_file" type="button" disabled>LOAD</button>
+                <button id="save_file" type="button" disabled>SAVE</button>
+                <button id="new_file" type="button" disabled>NEW</button>
+            </div>
+        </header>
+        
+        <hr />
+
+        <main>
+            <div>
+                <canvas id="canvas" width="640" height="480"></canvas>
+            </div>
+
+            <div>
+                <div>
+                    <button id="stop" type="button" disabled>STOP</button>
+                    <button id="run" type="button">RUN</button>
+                    <span>status:
+                        <span id="status" class="status">...</span>
+                    </span>
+                </div>
+                <details class="srcholder">
+                    <summary>source code</summary>
+                    <label for="code">source code</label>
+                    <textarea id="code" cols="100" rows="40">
+Sub Main()
+    DrawText 10, 10, "Hello,World!"
+    Flush
+End Sub
+</textarea>
+                </details>
+            </div>
+
+            <hr />
+
+            <details class="errcatch">
+                <summary><span class="cerr">err</span><span class="cin">,in</span><span class="cout">,out</span></summary>
+                <div class="indent con cerr">
+                    <details class="errcatch">
+                        <summary>err</summary>
+                        <label for="cerr">err</label>
+                        <textarea id="cerr" cols="80" rows="20" readonly></textarea>
+                    </details>
+                </div>
+                <div class="indent con cin">
+                    <details>
+                        <summary>in</summary>
+                        <label for="cin">in</label>
+                        <textarea id="cin" cols="80" rows="20"></textarea>
+                    </details>
+                </div>
+                <div class="indent con cout">
+                    <details>
+                        <summary>out</summary>
+                        <label for="cout">out</label>
+                        <textarea id="cout" cols="80" rows="20" readonly></textarea>
+                    </details>
+                </div>
+            </details>
+
+        </main>
+        
+        <hr />
+        
+        <footer></footer>
+    </body>
+</html>

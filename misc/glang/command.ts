@@ -1,0 +1,243 @@
+//
+// Command
+//
+
+import { Token } from "./scanner.js";
+import * as U from "./utils.js";
+
+export const GET_POINTER_EVENT_MIN_WAIT_COUNT = 0;
+export const GET_POINTER_EVENT_MAX_WAIT_COUNT = 100;
+export const AWAIT_MIN_WAIT_TIME = 1;
+export const AWAIT_MAX_WAIT_TIME = 1000;
+
+export class Source {
+    readonly addr: U.Range;
+    readonly src: Token | Readonly<Token[]>;
+
+    constructor(addr: U.Range, src: Token | Readonly<Token[]>) {
+        this.addr = addr;
+        this.src = src;
+    }
+
+    toString(): string {
+        if (this.src instanceof Token) {
+            return `Source{ addr: ${this.addr}, src: ${this.src} }`;
+        } else {
+            return `Source{ addr: ${this.addr}, src: ${Token.lineToString(this.src)} }`;
+        }
+    }
+
+}
+
+export class Program {
+    readonly program: Readonly<number[]>;
+    readonly litStrPool: Readonly<string[]>;
+    readonly totalBlockCount: number;
+    readonly sourceMap: Readonly<Source[]>;
+
+    constructor(program: number[], litStrPool: string[], totalBlockCount: number, sourceMap: Source[]) {
+        this.program = program;
+        this.litStrPool = litStrPool;
+        this.totalBlockCount = totalBlockCount;
+        this.sourceMap = sourceMap;
+    }
+
+    toString(): string {
+        return `Program{ size: ${this.program.length}, litStrPool: ${this.litStrPool.length}, totalBlockCount: ${this.totalBlockCount}, sourceMap: ${this.sourceMap.length} }`;
+    }
+}
+
+export enum Cmd {
+    NOP,           // NOP ()
+    END,           // END () : finish program
+    POP,           // POP () [..., value1-any] => [...] : pop a value from valueStack
+    DUP,           // DUP () [..., value1-any] => [..., value1-any, value1-any] : copy value1
+    DUPN,          // DUPN ( N ) [..., value1-any, value2-any, ... valueN-any] => [..., value1-any, value2-any, ... valueN-any, value1-any, value2-any, ... valueN-any] : copy N values
+    SWAP,          // SWAP () [..., value1-any, value2-any] => [..., value2-any, value1-any] : swap values
+    BPUSH_TRUE,    // BPUSH_TRUE () [...] => [..., true]
+    BPUSH_FALSE,   // BPUSH_FALSE () [...] => [..., false]
+    BNOT,          // BNOT () [..., value-boolean] => [..., not-boolean] : logical-not value
+    BAND,          // BAND () [..., left-boolean, right-booloan] => [..., and-boolean] : left logical-and right
+    BOR,           // BOR ()  [..., left-boolean, right-boolean] => [..., or-boolean] : left logical-or right
+    BEQ,           // BEQ ()  [..., left-boolean, right-boolean] => [..., eq-boolean] : left == right
+    BNE,           // BNE ()  [..., left-boolean, right-boolean] => [..., ne-boolean] : left != right
+    GET_BVAR,      // GET_BVAR ( blockId, blockVarId ) [...] => [..., value-boolean] : load value from var
+    SET_BVAR,      // SET_BVAR ( blockId, blockVarId ) [..., value-boolean] => [...] : store value into var
+    GET_BARR1D,    // GET_BARR1D ( blockId, blockVarId ) [..., index1-integer] => [..., value-boolean] : load value from arr[index1]
+    SET_BARR1D,    // SET_BARR1D ( blockId, blockVarId ) [..., index1-integer, value-boolean] => [...] : store value into arr[index1]
+    GET_BARR2D,    // GET_BARR2D ( blockId, blockVarId ) [..., index1-integer, index2-integer] => [..., value-boolean] : load value from arr[index1][index2]
+    SET_BARR2D,    // SET_BARR2D ( blockId, blockVarId ) [..., index1-integer, index2-integer, value-boolean] => [...] : store value into arr[index1][index2]
+    GET_BARR3D,    // GET_BARR3D ( blockId, blockVarId ) [..., index1-integer, index2-integer, index3-integer] => [..., value-boolean] : load value from arr[index1][index2][index3]
+    SET_BARR3D,    // SET_BARR3D ( blockId, blockVarId ) [..., index1-integer, index2-integer, index3-integer, value-boolean] => [...] : store value into arr[index1][index2][index3]
+    FPUSH,         // FPUSH ( floatValue ) [...] => [..., floatValue-float]
+    FADD,
+    FSUB,
+    FMUL,
+    FDIV,
+    FNEGA,
+    FEQ,
+    FNE,
+    FLT,
+    FLE,
+    FGT,
+    FGE,
+    GET_FVAR,
+    SET_FVAR,
+    GET_FARR1D,
+    SET_FARR1D,
+    GET_FARR2D,
+    SET_FARR2D,
+    GET_FARR3D,
+    SET_FARR3D,
+    IPUSH,       // IPUSH ( intValue ) [...] => [..., intValue-integer]
+    IADD,        // IADD () [..., left-integer, right-integer] => [..., add-integer] : left + right
+    ISUB,        // ISUB () [..., left-integer, right-integer] => [..., sub-integer] : left - right
+    IMUL,        // IMUL () [..., left-integer, right-integer] => [..., mul-integer] : left * right
+    IDIV,        // IDIV () [..., left-integer, right-integer] => [..., div-integer] : left \ right
+    IREM,        // IREM () [..., left-integer, right-integer] => [..., mod-integer] : left % right
+    INEGA,       // INEGA () [..., value-integer] => [..., negatived-integer] : - value
+    IASHIFTL,    // IASHIFTL () [..., left-integer, right-integer] => [..., asl-integer] : left << right (keep sign bit)
+    IASHIFTR,    // IASHIFTR () [..., left-integer, right-integer] => [..., asr-integer] : left >> right (keep sign bit and copy sign bit)
+    ILSHIFTL,    // ILSHIFTL () [..., left-integer, right-integer] => [..., lsl-integer] : left <<< right (as unsigned)
+    ILSHIFTR,    // ILSHIFTL () [..., left-integer, right-integer] => [..., lsr-integer] : left >>> right (as unsigned)
+    INOT,
+    IAND,
+    IOR,
+    IXOR,
+    IEQ,          // IEQ () [..., left-integer, right-integer] => [..., eq-boolean] : left == right
+    INE,          // INE () [..., left-integer, right-integer] => [..., ne-boolean] : left != right
+    ILT,          // ILT () [..., left-integer, right-integer] => [..., lt-boolean] : left <  right
+    ILE,          // ILE () [..., left-integer, right-integer] => [..., le-boolean] : left <= right
+    IGT,          // IGT () [..., left-integer, right-integer] => [..., gt-boolean] : left >  right
+    IGE,          // IGE () [..., left-integer, right-integer] => [..., ge-boolean] : left >= right
+    GET_IVAR,
+    SET_IVAR,
+    GET_IARR1D,
+    SET_IARR1D,
+    GET_IARR2D,
+    SET_IARR2D,
+    GET_IARR3D,
+    SET_IARR3D,
+    SPUSH,        // SPUSH ( strLiteralId ) [...] => [..., lit-string] : load string from literal-pool
+    SCONCAT,      // SCONCAT () [..., left-string, right-string] => [..., concat-string] : left + right
+    SEQ,          // SEQ () [..., left-string, right-string] => [..., eq-boolean] : left == right
+    SNE,          // SNE () [..., left-string, right-string] => [..., ne-boolean] : left != right
+    SLT,          // SLT () [..., left-string, right-string] => [..., lt-boolean] : left <  right
+    SLE,          // SLE () [..., left-string, right-string] => [..., le-boolean] : left <= right
+    SGT,          // SGT () [..., left-string, right-string] => [..., gt-boolean] : left >  right
+    SGE,          // SGE () [..., left-string, right-string] => [..., ge-boolean] : left >= right
+    GET_SVAR,     // GET_SVAR ( blockId, blockVarId ) => [...] => [..., value-string] : load value from var
+    SET_SVAR,     // SET_SVAR ( blockId, blockVarId ) => [..., value-string] => [...] : store value into var
+    GET_SARR1D,
+    SET_SARR1D,
+    GET_SARR2D,
+    SET_SARR2D,
+    GET_SARR3D,
+    SET_SARR3D,
+    APUSH_BARR1D,  // APUSH_BARR1D ( blockId, blockVarId ) [...] => [..., blockId-integer, blockVarId-integer]
+    APUSH_BARR2D,  // APUSH_BARR2D ( blockId, blockVarId ) [...] => [..., blockId-integer, blockVarId-integer]
+    APUSH_BARR3D,  // APUSH_BARR3D ( blockId, blockVarId ) [...] => [..., blockId-integer, blockVarId-integer]
+    APUSH_FARR1D,
+    APUSH_FARR2D,
+    APUSH_FARR3D,
+    APUSH_IARR1D,
+    APUSH_IARR2D,
+    APUSH_IARR3D,
+    APUSH_SARR1D,
+    APUSH_SARR2D,
+    APUSH_SARR3D,
+    INIT_BARR1D,    // INIT_BARR1D ( blockId, blockVarId, size1 ) : allocate arr[size1] and fill false
+    INIT_BARR2D,    // INIT_BARR1D ( blockId, blockVarId, size1, size2 ) : allocate arr[size1][size2] and fill false
+    INIT_BARR3D,    // INIT_BARR1D ( blockId, blockVarId, size1, size2, size3 ) : allocate arr[size1][size2][size3] and fill false
+    INIT_FARR1D,    // INIT_FARR1D ( blockId, blockVarId, size1 ) : allocate arr[size1] and fill 0.0
+    INIT_FARR2D,
+    INIT_FARR3D,
+    INIT_IARR1D,    // INIT_IARR1D ( blockId, blockVarId, size1 ) : allocate arr[size1] and fill 0
+    INIT_IARR2D,
+    INIT_IARR3D,
+    INIT_SARR1D,    // INIT_SARR1D ( blockId, blockVarId, size1 ) : allocate arr[size1] and fill ""
+    INIT_SARR2D,
+    INIT_SARR3D,
+    JUMP,           // JUMP ( address )
+    JUMP_IF_TRUE,   // JUMP_IF_TRUE ( address ) [..., value-boolean] => [...] : consume value. jump to address if value is true
+    JUMP_IF_FALSE,  // JUMP_IF_FALSE ( address ) [..., value-boolean] => [...] : consume value. jump to address if value is false
+    CALL_STDFUNC,   // CALL_STDFUNC ( stdfuncId ) [..., { arg1-any, arg2-any, ... argN-any } ] => [..., { retvalue-any } ] : call stdfunc(arg1,arg2,... argN). args or retvalue if exists
+    CALL_USERFUNC,  // CALL_USERFUNC ( userfuncAddress, returnAddress ) [..., { arg1-any, arg2-any, ... argN-any } ] => [..., { retvalue-any } ] : call userfunc(arg1,arg2,... argN). push returnAddress to addressStack and jump to userfuncAddress. args or retvalue if exists
+    RET,            // RET () : stop userfunc process. pop returnAddress from addressStack and jump to the retrunAddress.
+    PUSH_BLOCK,     // PUSH_BLOCK ( blockId, blockVarCount ) : push new block to Id's blockStack and reserve var area (vars are uninitialied)
+    POP_BLOCK,      // POP_BLOCK ( blockId ) : pop block from Id's blockStack
+    PRINT,          // PRINT ( N ) [..., value1-any, value2-any, ... valueN-any] => [...] : print N values on stderr
+    DRAW_LINE,      // DRAW_LINE () [..., x1, y1, x2, y2] => [...]
+    SET_COLOR,      // SET_COLOR () [..., R, G, B] => [...]
+    RANDOMIZE_TIME, // RANDOMIZE_TIME () [...] => [...]
+    RANDOMIZE_SEED, // RANDOMZIE_SEED () [..., seed-integer] => [...]
+    REQ_POINTER_EV, // REQ_POINTER_EV () [...] => [...]
+    GET_POINTER_EV, // GET_POINTER_EV ( xBId, xBVId, yBId, yBVId, kindBId, kindBVId, timeBId, timeBVId ) : [...] => [...]
+    FLUSH,          // FLUSH () [...] => [...]
+    TRANSFER,       // TRANSFER () [...] => [...]
+    AWAIT,          // AWAIT ( waitTime ) [...] => [...]
+    DRAW_RECT,      // DRAW_RECT () [...,left,top,width,height] => [...]
+    DRAW_ARC,       // DRAW_ARC () [...,left,top,diameter,startAngle,endAngle] => [...]
+    FILL_RECT,      // FILL_RECT () [...,left,top,width,height] => [...]
+    FILL_ARC,       // FILL_ARC () [...,left,top,diameter,startAngle,endAngle] => [...]
+    SET_FONT_SIZE,  // SET_FONT_SIZE () [...,size] => [...]
+    DRAW_TEXT       // DRAW_TEXT () [...,left,top,text] => [...]
+}
+
+export enum StdFunc {
+    CBOOL_FROM_BOOLEAN,
+    CBOOL_FROM_FLOAT,
+    CBOOL_FROM_INTEGER,
+    CBOOL_FROM_STRING,
+    CFLOAT_FROM_BOOLEAN,
+    CFLOAT_FROM_FLOAT,
+    CFLOAT_FROM_INTEGER,
+    CFLOAT_FROM_STRING,
+    CINT_FROM_BOOLEAN,
+    CINT_FROM_FLOAT,
+    CINT_FROM_INTEGER,
+    CINT_FROM_STRING,
+    CSTR_FROM_BOOLEAN,
+    CSTR_FROM_FLOAT,
+    CSTR_FROM_INTEGER,
+    CSTR_FROM_STRING,
+    SIN,
+    COS,
+    TAN,
+    ABS_FLOAT,
+    ABS_INTGER,
+    SIGN_FLOAT,
+    SIGN_INTEGER,
+    MIN_FLOAT,
+    MIN_INTEGER,
+    MAX_FLOAT,
+    MAX_INTEGER,
+    POW,
+    SQRT,
+    FLOOR,
+    CEIL,
+    SIZE_BARR1D,
+    SIZE_BARR2D,
+    SIZE_BARR3D,
+    SIZE_FARR1D,
+    SIZE_FARR2D,
+    SIZE_FARR3D,
+    SIZE_IARR1D,
+    SIZE_IARR2D,
+    SIZE_IARR3D,
+    SIZE_SARR1D,
+    SIZE_SARR2D,
+    SIZE_SARR3D,
+    SEL_BOOLEAN,
+    SEL_FLOAT,
+    SEL_INTEGER,
+    SEL_STRING,
+    RANDOM,
+    LOG,
+    LOG2,
+    LOG10,
+    WIDTH,
+    HEIGHT
+}
+
+export default {};

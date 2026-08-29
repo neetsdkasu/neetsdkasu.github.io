@@ -1,0 +1,52 @@
+
+canvas {
+    border: 1px black solid;
+}
+
+main {
+    margin: 1em;
+}
+
+button {
+    margin: 0.5em;
+}
+
+textarea {
+    padding: 1em;
+}
+
+summary + label {
+    display: none;
+}
+
+footer {
+    margin-top: 5em;
+    margin-bottom: 5em;
+}
+
+#filelist {
+    min-width: 30em;
+}
+
+.indent {
+    margin-left: 1em;
+}
+
+.con {
+    margin-top: 1em;
+    margin-bottom: 1em;
+}
+
+.status {
+    display: inline-block;
+    font-size: small;
+    margin: 2px;
+    padding: 2px 1em;
+    width: 15em;
+    height: 1.5em;
+    border: 1px dotted black;
+}
+
+.cin, .cout {
+    display: none;
+}
