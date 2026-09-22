@@ -97,6 +97,7 @@ function workerOnMessage(ev: MessageEvent<M.SendData>): any {
                 {
                     updateStatus("RuntimeError");
                     toggleItemsDisabled();
+                    StopButton.disabled = true;
                     openErrorDetails(sd.msg, sd.src);
                 }
                 break;
@@ -205,7 +206,7 @@ interface Sample {
     path: string;
 }
 
-const samples: Sample[] = [
+const samples: readonly Readonly<Sample>[] = [
     {
         id: -1,
         title: "Draw Stars",
@@ -215,6 +216,16 @@ const samples: Sample[] = [
         id: -2,
         title: "ブロック崩し",
         path: "./glang/samples/blocksandball.glang"
+    },
+    {
+        id: -3,
+        title: "Mine Sweeper",
+        path: "./glang/samples/minesweeper.glang"
+    },
+    {
+        id: -4,
+        title: "Ultimate Tic-Tac-Toe",
+        path: "./glang/samples/ultimatetictactoe.glang"
     }
 ];
 

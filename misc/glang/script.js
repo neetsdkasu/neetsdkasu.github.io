@@ -85,6 +85,7 @@ function workerOnMessage(ev) {
                 {
                     updateStatus("RuntimeError");
                     toggleItemsDisabled();
+                    StopButton.disabled = true;
                     openErrorDetails(sd.msg, sd.src);
                 }
                 break;
@@ -179,6 +180,7 @@ Canvas.addEventListener("pointerup", ev => {
     pstate.kind = runner.PointerStateKind.UP;
     pstate.time = Date.now();
 });
+let currentFileId = 0;
 const samples = [
     {
         id: -1,
@@ -189,6 +191,16 @@ const samples = [
         id: -2,
         title: "ブロック崩し",
         path: "./glang/samples/blocksandball.glang"
+    },
+    {
+        id: -3,
+        title: "Mine Sweeper",
+        path: "./glang/samples/minesweeper.glang"
+    },
+    {
+        id: -4,
+        title: "Ultimate Tic-Tac-Toe",
+        path: "./glang/samples/ultimatetictactoe.glang"
     }
 ];
 function loadFileList() {
