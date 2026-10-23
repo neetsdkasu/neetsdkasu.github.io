@@ -26,6 +26,57 @@ class Lib {
     static withDefault(m, k, d) {
         return m.has(k) ? m.get(k) : d;
     }
+    static fformat(value, pLen) {
+        const s = `${value}`;
+        const i = s.indexOf(".");
+        if (i < 0) {
+            return s + ".".padEnd(pLen + 1, "0");
+        }
+        const ss = s.split(".");
+        if (ss[1].length < pLen) {
+            return ss[0] + "." + ss[1].padEnd(pLen, "0");
+        }
+        else {
+            return ss[0] + "." + ss[1].slice(0, pLen);
+        }
+    }
+}
+class TableRowCreator {
+    row;
+    isHeader;
+    constructor(tableSectionElement, isHeader) {
+        this.row = tableSectionElement.appendChild(document.createElement("tr"));
+        this.isHeader = isHeader ?? false;
+    }
+    add(colValue, isHeader) {
+        if (this.isHeader || (isHeader ?? false)) {
+            this.row.appendChild(document.createElement("th")).textContent = `${colValue}`;
+        }
+        else {
+            this.row.appendChild(document.createElement("td")).textContent = `${colValue}`;
+        }
+        return this;
+    }
+    addCols(...colValues) {
+        for (const value of colValues) {
+            this.add(value);
+        }
+    }
+}
+class TableCreator {
+    table;
+    thead;
+    header;
+    tbody;
+    constructor(parentElement) {
+        this.table = parentElement.appendChild(document.createElement("table"));
+        this.thead = this.table.appendChild(document.createElement("thead"));
+        this.header = new TableRowCreator(this.thead, true);
+        this.tbody = this.table.appendChild(document.createElement("tbody"));
+    }
+    addRow() {
+        return new TableRowCreator(this.tbody);
+    }
 }
 /* CP補正値（ネット調べ） */
 const CPM = [
@@ -643,16 +694,22 @@ const WEATHER_BOOST_MAP = WEATHER_BOOST_LIST.reduce((acc, e) => {
     return acc;
 }, new Map());
 const monsters = [];
-function calcAttack(mon) {
-    const f = Math.floor(mon.level) - 1;
-    const c = Math.ceil(mon.level) - 1;
+function getCPM(level) {
+    const f = Math.floor(level) - 1;
+    const c = Math.ceil(level) - 1;
     if (f === c) {
-        return Math.floor((mon.attackBase + mon.attackUniq) * CPM[f]);
+        return CPM[f];
     }
     else {
         const cpm = Math.sqrt((CPM[f] * CPM[f] + CPM[c] * CPM[c]) / 2);
-        return Math.floor((mon.attackBase + mon.attackUniq) * cpm);
+        return cpm;
     }
+}
+function calcStatusValue(level, baseValue, uniqValue) {
+    return (baseValue + uniqValue) * getCPM(level);
+}
+function calcAttack(mon) {
+    return Math.floor(calcStatusValue(mon.level, mon.attackBase, mon.attackUniq));
 }
 function addList(mon) {
     const ul = document.getElementById("pokemon_list");
@@ -799,6 +856,352 @@ function calcRanking() {
             効果:${item.effectiveness}`;
     }
 }
+function showStatus() {
+    const form = document.getElementById("status_form");
+    const el = (name) => form.elements.namedItem(name).value;
+    const name = el("name");
+    const level = Lib.parseFloat(el("level")) ?? 1.0;
+    const attackBase = Lib.parseInt(el("attack_base")) ?? 100;
+    const defenceBase = Lib.parseInt(el("defence_base")) ?? 100;
+    const hpBase = Lib.parseInt(el("hp_base")) ?? 100;
+    const attackUniq = Lib.parseInt(el("attack_uniq")) ?? 0;
+    const defenceUniq = Lib.parseInt(el("defence_uniq")) ?? 0;
+    const hpUniq = Lib.parseInt(el("hp_uniq")) ?? 0;
+    const cp = Math.floor((attackBase + attackUniq)
+        * Math.sqrt(defenceBase + defenceUniq)
+        * Math.sqrt(hpBase + hpUniq)
+        * (getCPM(level) ** 2)
+        / 10);
+    const resDiv = document.getElementById("status_result");
+    resDiv.innerHTML = "";
+    const append = (element, tagname) => element.appendChild(document.createElement(tagname));
+    const table = new TableCreator(resDiv);
+    table.header.addCols("項目名", "値");
+    const add = (key, value) => table.addRow().addCols(key, value);
+    add("名前", name);
+    add("レベル", level);
+    add("こうげき種族値", attackBase);
+    add("ぼうぎょ種族値", defenceBase);
+    add("HP種族値", hpBase);
+    add("こうげき個体値", attackUniq);
+    add("ぼうぎょ個体値", defenceUniq);
+    add("HP個体値", hpUniq);
+    add("CPM", getCPM(level));
+    add("CP", cp);
+    add("こうげき", calcStatusValue(level, attackBase, attackUniq));
+    add("ぼうぎょ", calcStatusValue(level, defenceBase, defenceUniq));
+    add("HP", Math.floor(calcStatusValue(level, hpBase, hpUniq)));
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = `CP表 ( ${name} 個体値 A:${attackUniq} D:${defenceUniq} H:${hpUniq} )`;
+    const cpTable = new TableCreator(resDiv);
+    cpTable.header.add("Lv", true);
+    for (let i = 0; i <= 55; i += 5)
+        cpTable.header.add(Math.min(51, Math.max(1, i)));
+    const cpRow = cpTable.addRow().add("CP", true);
+    for (let i = 0; i <= 55; i += 5) {
+        cpRow.add(Math.floor((attackBase + attackUniq)
+            * Math.sqrt(defenceBase + defenceUniq)
+            * Math.sqrt(hpBase + hpUniq)
+            * (getCPM(Math.min(51, Math.max(1, i))) ** 2)
+            / 10));
+    }
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = `個体値表 ( ${name} Lv ${level} )`;
+    const ivTable = new TableCreator(resDiv);
+    ivTable.header.add("");
+    for (let i = 0; i < 16; i++)
+        ivTable.header.add(i);
+    const aRow = ivTable.addRow().add("こうげき", true);
+    for (let i = 0; i < 16; i++)
+        aRow.add(Lib.fformat(calcStatusValue(level, attackBase, i), 2));
+    const dRow = ivTable.addRow().add("ぼうぎょ", true);
+    for (let i = 0; i < 16; i++)
+        dRow.add(Lib.fformat(calcStatusValue(level, defenceBase, i), 2));
+    const hRow = ivTable.addRow().add("HP", true);
+    for (let i = 0; i < 16; i++)
+        hRow.add(Math.floor(calcStatusValue(level, hpBase, i)));
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = `GBL表 ( ${name} 個体値 A:${attackUniq} D:${defenceUniq} H:${hpUniq} )`;
+    const gTable = new TableCreator(resDiv);
+    gTable.header.addCols("", "CP", "Lv", "こうげき", "ぼうぎょ", "HP");
+    const titles = ["リトル(500)", "スーパー(1500)", "ハイパー(2500)"];
+    for (let cpLimit = 500; cpLimit <= 2500; cpLimit += 1000) {
+        const lv2 = Lib.bsearch(101, i => {
+            const cp = Math.floor((attackBase + attackUniq)
+                * Math.sqrt(defenceBase + defenceUniq)
+                * Math.sqrt(hpBase + hpUniq)
+                * (getCPM(i / 2) ** 2)
+                / 10);
+            return cp <= cpLimit;
+        });
+        const cpRow = gTable.addRow().add(titles[(cpLimit - 500) / 1000], true);
+        if (lv2 < 1) {
+            cpRow.addCols("-", "-", "-", "-", "-");
+        }
+        else {
+            cpRow.addCols(Math.floor((attackBase + attackUniq)
+                * Math.sqrt(defenceBase + defenceUniq)
+                * Math.sqrt(hpBase + hpUniq)
+                * (getCPM(lv2 / 2) ** 2)
+                / 10), lv2 / 2, Lib.fformat(calcStatusValue(lv2 / 2, attackBase, attackUniq), 2), Lib.fformat(calcStatusValue(lv2 / 2, defenceBase, defenceUniq), 2), Math.floor(calcStatusValue(lv2 / 2, hpBase, hpUniq)));
+        }
+    }
+}
+function calcStatusRanking() {
+    const form = document.getElementById("status_ranking_form");
+    const el = (name) => form.elements.namedItem(name).value;
+    const elm = (name) => form.elements.namedItem(name);
+    const name = el("name");
+    const cpLimit = Lib.parseInt(el("cp_limit")) ?? 1500;
+    const order = el("order");
+    const attackBase = Lib.parseInt(el("attack_base")) ?? 100;
+    const defenceBase = Lib.parseInt(el("defence_base")) ?? 100;
+    const hpBase = Lib.parseInt(el("hp_base")) ?? 100;
+    const attackMax = Lib.parseInt(el("attack_max")) ?? 999;
+    const attackMin = Lib.parseInt(el("attack_min")) ?? 0;
+    const defenceMax = Lib.parseInt(el("defence_max")) ?? 999;
+    const defenceMin = Lib.parseInt(el("defence_min")) ?? 0;
+    const hpMax = Lib.parseInt(el("hp_max")) ?? 9999;
+    const hpMin = Lib.parseInt(el("hp_min")) ?? 0;
+    const resDiv = document.getElementById("status_ranking_result");
+    resDiv.innerHTML = "";
+    const append = (element, tagname) => element.appendChild(document.createElement(tagname));
+    append(resDiv, "div").textContent = "入力";
+    const iTable = new TableCreator(resDiv);
+    iTable.header.addCols("項目名", "値");
+    iTable.addRow().addCols("順序", order);
+    iTable.addRow().addCols("CP上限", cpLimit);
+    iTable.addRow().addCols("名前", name);
+    iTable.addRow().addCols("こうげき種族値", attackBase);
+    iTable.addRow().addCols("ぼうぎょ種族値", defenceBase);
+    iTable.addRow().addCols("HP種族値", hpBase);
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = "フィルター";
+    const fTable = new TableCreator(resDiv);
+    fTable.header.addCols("項目名", "下限値", "上限値");
+    fTable.addRow().addCols("こうげき", attackMin, attackMax);
+    fTable.addRow().addCols("ぼうぎょ", defenceMin, defenceMax);
+    fTable.addRow().addCols("HP", hpMin, hpMax);
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = "ランキング100";
+    const list = [];
+    for (let a = 0; a < 16; a++) {
+        for (let d = 0; d < 16; d++) {
+            for (let h = 0; h < 16; h++) {
+                const lv2 = Lib.bsearch(101, i => {
+                    const cp = Math.floor((attackBase + a)
+                        * Math.sqrt(defenceBase + d)
+                        * Math.sqrt(hpBase + h)
+                        * (getCPM(i / 2) ** 2)
+                        / 10);
+                    return cp <= cpLimit;
+                });
+                if (lv2 < 0) {
+                    console.error(`wrong level: lv2=${lv2}, a=${a}, d=${d}, h=${d}`);
+                    continue;
+                }
+                const level = lv2 / 2;
+                const st = {
+                    cp: Math.floor((attackBase + a)
+                        * Math.sqrt(defenceBase + d)
+                        * Math.sqrt(hpBase + h)
+                        * (getCPM(level) ** 2)
+                        / 10),
+                    level: level,
+                    attackUniq: a,
+                    defenceUniq: d,
+                    hpUniq: h,
+                    attack: calcStatusValue(level, attackBase, a),
+                    defence: calcStatusValue(level, defenceBase, d),
+                    hp: Math.floor(calcStatusValue(level, hpBase, h))
+                };
+                if (attackMin <= st.attack && st.attack <= attackMax
+                    && defenceMin <= st.defence && st.defence <= defenceMax
+                    && hpMin <= st.hp && st.hp <= hpMax) {
+                    list.push(st);
+                }
+            }
+        }
+    }
+    switch (order) {
+        case "ADH":
+            list.sort((a, b) => {
+                if (a.attack !== b.attack)
+                    return b.attack - a.attack;
+                if (a.defence !== b.defence)
+                    return b.defence - a.defence;
+                if (a.hp !== b.hp)
+                    return b.hp - a.hp;
+                return 0;
+            });
+            break;
+        case "AHD":
+            list.sort((a, b) => {
+                if (a.attack !== b.attack)
+                    return b.attack - a.attack;
+                if (a.hp !== b.hp)
+                    return b.hp - a.hp;
+                if (a.defence !== b.defence)
+                    return b.defence - a.defence;
+                return 0;
+            });
+            break;
+        case "DAH":
+            list.sort((a, b) => {
+                if (a.defence !== b.defence)
+                    return b.defence - a.defence;
+                if (a.attack !== b.attack)
+                    return b.attack - a.attack;
+                if (a.hp !== b.hp)
+                    return b.hp - a.hp;
+                return 0;
+            });
+            break;
+        case "DHA":
+            list.sort((a, b) => {
+                if (a.defence !== b.defence)
+                    return b.defence - a.defence;
+                if (a.hp !== b.hp)
+                    return b.hp - a.hp;
+                if (a.attack !== b.attack)
+                    return b.attack - a.attack;
+                return 0;
+            });
+            break;
+        case "HAD":
+            list.sort((a, b) => {
+                if (a.hp !== b.hp)
+                    return b.hp - a.hp;
+                if (a.attack !== b.attack)
+                    return b.attack - a.attack;
+                if (a.defence !== b.defence)
+                    return b.defence - a.defence;
+                return 0;
+            });
+            break;
+        case "HDA":
+            list.sort((a, b) => {
+                if (a.hp !== b.hp)
+                    return b.hp - a.hp;
+                if (a.defence !== b.defence)
+                    return b.defence - a.defence;
+                if (a.attack !== b.attack)
+                    return b.attack - a.attack;
+                return 0;
+            });
+            break;
+        case "SUM":
+            list.sort((a, b) => {
+                const sa = a.attack + a.defence + a.hp;
+                const sb = b.attack + b.defence + b.hp;
+                return sb - sa;
+            });
+            break;
+        case "SAD":
+            list.sort((a, b) => {
+                const sa = a.attack + a.defence;
+                const sb = b.attack + b.defence;
+                if (sa !== sb)
+                    return sb - sa;
+                return b.hp - a.hp;
+            });
+            break;
+        case "SDH":
+            list.sort((a, b) => {
+                const sa = a.defence + a.hp;
+                const sb = b.defence + b.hp;
+                if (sa !== sb)
+                    return sb - sa;
+                return b.attack - a.attack;
+            });
+            break;
+        case "SHA":
+            list.sort((a, b) => {
+                const sa = a.hp + a.attack;
+                const sb = b.hp + b.attack;
+                if (sa !== sb)
+                    return sb - sa;
+                return b.defence - a.defence;
+            });
+            break;
+    }
+    const rTable = new TableCreator(resDiv);
+    rTable.header.addCols("Rank", "CP", "Lv", "A", "D", "H", "こうげき", "ぼうぎょ", "HP");
+    for (let i = 0; i < Math.min(100, list.length); i++) {
+        const st = list[i];
+        rTable.addRow().addCols(i + 1, st.cp, st.level, st.attackUniq, st.defenceUniq, st.hpUniq, Lib.fformat(st.attack, 2), Lib.fformat(st.defence, 2), st.hp);
+    }
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = "こうげき分布 (小数点以下切り捨て)";
+    const aMap = new Map();
+    for (const st of list) {
+        const key = Math.floor(st.attack);
+        aMap.set(key, (aMap.get(key) ?? 0) + 1);
+    }
+    const aList = [...aMap.keys()];
+    aList.sort((a, b) => b - a);
+    const aTable = new TableCreator(resDiv);
+    aTable.header.addCols("こうげき", "度数");
+    for (const key of aList) {
+        aTable.addRow().addCols(key, aMap.get(key) ?? 0);
+    }
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = "ぼうぎょ分布 (小数点以下切り捨て)";
+    const dMap = new Map();
+    for (const st of list) {
+        const key = Math.floor(st.defence);
+        dMap.set(key, (dMap.get(key) ?? 0) + 1);
+    }
+    const dList = [...dMap.keys()];
+    dList.sort((a, b) => b - a);
+    const dTable = new TableCreator(resDiv);
+    dTable.header.addCols("ぼうぎょ", "度数");
+    for (const key of dList) {
+        dTable.addRow().addCols(key, dMap.get(key) ?? 0);
+    }
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = "HP分布";
+    const hMap = new Map();
+    for (const st of list) {
+        const key = st.hp;
+        hMap.set(key, (hMap.get(key) ?? 0) + 1);
+    }
+    const hList = [...hMap.keys()];
+    hList.sort((a, b) => b - a);
+    const hTable = new TableCreator(resDiv);
+    hTable.header.addCols("HP", "度数");
+    for (const key of hList) {
+        hTable.addRow().addCols(key, hMap.get(key) ?? 0);
+    }
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = "Lv分布";
+    const lvMap = new Map();
+    for (const st of list) {
+        const key = st.level;
+        lvMap.set(key, (lvMap.get(key) ?? 0) + 1);
+    }
+    const lvList = [...lvMap.keys()];
+    lvList.sort((a, b) => b - a);
+    const lvTable = new TableCreator(resDiv);
+    lvTable.header.addCols("Lv", "度数");
+    for (const key of lvList) {
+        lvTable.addRow().addCols(key, lvMap.get(key) ?? 0);
+    }
+    append(resDiv, "hr");
+    append(resDiv, "div").textContent = "CP分布";
+    const cpMap = new Map();
+    for (const st of list) {
+        const key = st.cp;
+        cpMap.set(key, (cpMap.get(key) ?? 0) + 1);
+    }
+    const cpList = [...cpMap.keys()];
+    cpList.sort((a, b) => b - a);
+    const cpTable = new TableCreator(resDiv);
+    cpTable.header.addCols("CP", "度数");
+    for (const key of cpList) {
+        cpTable.addRow().addCols(key, cpMap.get(key) ?? 0);
+    }
+}
 document.getElementById("add_button").addEventListener("click", () => {
     const dialog = document.getElementById("add_form_dialog");
     const cancel = dialog.querySelector(".cancel");
@@ -834,6 +1237,28 @@ document.getElementById("calc_button").addEventListener("click", () => {
     }
     dialog.showModal();
 });
+document.getElementById("status_button").addEventListener("click", () => {
+    const dialog = document.getElementById("status_form_dialog");
+    const cancel = dialog.querySelector(".cancel");
+    if (!(cancel.onclick)) {
+        cancel.onclick = () => dialog.close();
+    }
+    if (!(dialog.onsubmit)) {
+        dialog.onsubmit = () => showStatus();
+    }
+    dialog.showModal();
+});
+document.getElementById("status_ranking_button").addEventListener("click", () => {
+    const dialog = document.getElementById("status_ranking_form_dialog");
+    const cancel = dialog.querySelector(".cancel");
+    if (!(cancel.onclick)) {
+        cancel.onclick = () => dialog.close();
+    }
+    if (!(dialog.onsubmit)) {
+        dialog.onsubmit = () => calcStatusRanking();
+    }
+    dialog.showModal();
+});
 document.querySelectorAll(".types").forEach(e => {
     TYPELIST.forEach(t => {
         const opt = e.appendChild(document.createElement("option"));
@@ -854,6 +1279,7 @@ function loadMonsterSample() {
         .then(json => {
         const samples = json;
         samples.forEach(mon => addList(mon));
+        document.querySelector("#force_ranking > details").open = true;
     })
         .catch(err => {
         console.log(`${err}`);
@@ -866,6 +1292,7 @@ function loadMonsterSample2() {
         .then(json => {
         const samples = json;
         samples.forEach(mon => addList(mon));
+        document.querySelector("#force_ranking > details").open = true;
     })
         .catch(err => {
         console.log(`${err}`);

@@ -12,14 +12,41 @@
             <hr />
         </header>
         <main>
-            <h6>威力ランキング</h6>
-            <button id="calc_button" type="button">計算</button>
-            <div id="target_info"></div>
-            <ol id="ranking" class="list"></ol>
-            <hr />
-            <h6>モンスターリスト</h6>
-            <button id="add_button" type="button">追加</button>
-            <ul id="pokemon_list" class="list"></ul>
+            <article id="force_ranking">
+                <h5>威力ランキング</h5>
+                <details>
+                    <summary>詳細</summary>
+                    <hr />
+                    <button id="calc_button" type="button">計算</button>
+                    <div id="target_info"></div>
+                    <ol id="ranking" class="list"></ol>
+                    <hr />
+                    <h6>モンスターリスト</h6>
+                    <button id="add_button" type="button">追加</button>
+                    <ul id="pokemon_list" class="list"></ul>
+                </details>
+            </article>
+            
+            <article>
+                <h5>ステータス計算</h5>
+                <details>
+                    <summary>詳細</summary>
+                    <button id="status_button" type="button">計算</button>
+                    <hr />
+                    <div id="status_result"></div>
+                </details>
+            </article>
+
+            <article>
+                <h5>ステータスランキング</h5>
+                <details>
+                    <summary>詳細</summary>
+                    <button id="status_ranking_button" type="button">計算</button>
+                    <hr />
+                    <div id="status_ranking_result"></div>
+                </details>
+            </article>
+
         </main>
         <footer></footer>
 
@@ -93,7 +120,7 @@
             <form id="add_form" method="dialog">
                 <div>
                     <span>表示名:</span>
-                    <input name="name" type="text" placeholder="サンダー" required />
+                    <input name="name" type="text" placeholder="サンダー" required autocomplete="off" />
                 </div>
                 <div>
                     <span>
@@ -132,7 +159,7 @@
                 </div>
                 <div>
                     <span>こうげき種族値:</span>
-                    <input name="attack_base" type="number" placeholder="208" min="1" step="1" list="attack_list" required />
+                    <input name="attack_base" type="number" placeholder="253" min="1" step="1" list="attack_list" required />
                 </div>
                 <div>
                     <span>こうげき個体値:</span>
@@ -205,5 +232,125 @@
                 </div>
             </form>
         </dialog>
+
+        <dialog id="status_form_dialog">
+            <h6>計算の設定</h6>
+            <hr />
+            <form id="status_form" method="dialog">
+                <div>
+                    <span>表示名:</span>
+                    <input name="name" type="text" placeholder="サンダー" required autocomplete="off" />
+                </div>
+                <div>
+                    <span>レベル:</span>
+                    <input name="level" type="number" placeholder="39.0" min="1.0" max="51.0" step="0.5" required />
+                </div>
+                <div>
+                    <span>こうげき種族値:</span>
+                    <input name="attack_base" type="number" placeholder="253" min="1" step="1" required />
+                </div>
+                <div>
+                    <span>ぼうぎょ種族値:</span>
+                    <input name="defence_base" type="number" placeholder="185" min="1" step="1" required />
+                </div>
+                <div>
+                    <span>HP種族値:</span>
+                    <input name="hp_base" type="number" placeholder="207" min="1" step="1" required />
+                </div>
+                <div>
+                    <span>こうげき個体値:</span>
+                    <input name="attack_uniq" type="number" placeholder="12" min="0" max="15" step="1" required />
+                </div>
+                <div>
+                    <span>ぼうぎょ個体値:</span>
+                    <input name="defence_uniq" type="number" placeholder="12" min="0" max="15" step="1" required />
+                </div>
+                <div>
+                    <span>HP個体値:</span>
+                    <input name="hp_uniq" type="number" placeholder="12" min="0" max="15" step="1" required />
+                </div>
+                <hr />
+                <div>
+                    <button type="button" class="cancel">キャンセル</button>
+                    <button type="submit">計算</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="status_ranking_form_dialog">
+            <h6>計算の設定</h6>
+            <hr />
+            <form id="status_ranking_form" method="dialog">
+                <div>
+                    <span>順序:</span>
+                    <select name="order">
+                        <option value="ADH">比較優先順位 1:こうげき 2:ぼうぎょ 3:HP</option>
+                        <option value="AHD">比較優先順位 1:こうげき 2:HP 3:ぼうぎょ</option>
+                        <option value="DAH">比較優先順位 1:ぼうぎょ 2:こうげき 3:HP</option>
+                        <option value="DHA">比較優先順位 1:ぼうぎょ 2:HP 3:こうげき</option>
+                        <option value="HAD">比較優先順位 1:HP 2:こうげき 3:ぼうぎょ</option>
+                        <option value="HDA">比較優先順位 1:HP 2:ぼうぎょ 3:こうげき</option>
+                        <option value="SUM">合計 ( こうげき + ぼうぎょ + HP )</option>
+                        <option value="SAD">合計 ( こうげき + ぼうぎょ )</option>
+                        <option value="SDH">合計 ( ぼうぎょ + HP )</option>
+                        <option value="SHA">合計 ( HP + こうげき )</option>
+                    </select>
+                </div>
+                <div>
+                    <span>CP上限:</span>
+                    <input name="cp_limit" type="number" value="1500" placeholder="1500" min="500" max="20000" step="1000" required />
+                </div>
+                <div>
+                    <span>表示名:</span>
+                    <input name="name" type="text" placeholder="サンダー" required autocomplete="off" />
+                </div>
+                <div>
+                    <span>こうげき種族値:</span>
+                    <input name="attack_base" type="number" placeholder="253" min="1" step="1" required />
+                </div>
+                <div>
+                    <span>ぼうぎょ種族値:</span>
+                    <input name="defence_base" type="number" placeholder="185" min="1" step="1" required />
+                </div>
+                <div>
+                    <span>HP種族値:</span>
+                    <input name="hp_base" type="number" placeholder="207" min="1" step="1" required />
+                </div>
+                <hr />
+                <div>
+                    フィルター
+                </div>
+                <div>
+                    <span>こうげき上限値:</span>
+                    <input name="attack_max" type="number" value="999" placeholder="999" min="0" step="1" required />
+                </div>
+                <div>
+                    <span>こうげき下限値:</span>
+                    <input name="attack_min" type="number" value="0" placeholder="0" min="0" step="1" required />
+                </div>
+                <div>
+                    <span>ぼうぎょ上限値:</span>
+                    <input name="defence_max" type="number" value="999" placeholder="999" min="0" step="1" required />
+                </div>
+                <div>
+                    <span>ぼうぎょ下限値:</span>
+                    <input name="defence_min" type="number" value="0" placeholder="0" min="0" step="1" required />
+                </div>
+                <div>
+                    <span>HP上限値:</span>
+                    <input name="hp_max" type="number" value="9999" placeholder="9999" min="0" step="1" required />
+                </div>
+                <div>
+                    <span>HP下限値:</span>
+                    <input name="hp_min" type="number" value="0" placeholder="0" min="0" step="1" required />
+                </div>
+                <hr />
+                <div>
+                    <button type="button" class="cancel">キャンセル</button>
+                    <button type="submit">計算</button>
+                </div>
+            </form>
+        </dialog>
+
     </body>
 </html>
